@@ -122,10 +122,11 @@ configuration = openfga_sdk.Configuration(
     api_host = 'api.fga.example'
 )
 
-# Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+async def api_setup():
+    # Enter a context with an instance of the API client
+    async with openfga_sdk.ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = open_fga_api.OpenFgaApi(api_client)
 
 ```
 
@@ -143,10 +144,11 @@ configuration = openfga_sdk.Configuration(
     store_id = 'YOUR_STORE_ID'
 )
 
-# Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+async def api_setup():
+    # Enter a context with an instance of the API client
+    async with openfga_sdk.ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = open_fga_api.OpenFgaApi(api_client)
 
 ```
 
@@ -161,12 +163,13 @@ configuration = openfga_sdk.Configuration(
     api_host = 'api.fga.example'
 )
 
-configuration.store_id = 'YOUR_STORE_ID'
+async def api_setup():
+    configuration.store_id = 'YOUR_STORE_ID'
 
-# Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+    # Enter a context with an instance of the API client
+    async with openfga_sdk.ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = open_fga_api.OpenFgaApi(api_client)
 
 ```
 
@@ -186,10 +189,11 @@ configuration = openfga_sdk.Configuration(
     credentials = credentials
 )
 
-# Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+async def api_setup():
+    # Enter a context with an instance of the API client
+    async with openfga_sdk.ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = open_fga_api.OpenFgaApi(api_client)
 
 ```
 
@@ -212,14 +216,16 @@ configuration = openfga_sdk.Configuration(
     api_host = os.environ.get(OPENFGA_API_HOST),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-
 # Get all stores
-response = api_instance.list_stores()
-# response = ListStoreResponse(...)
-# response.stores = [Store({"id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z"})]
+async def list_stores():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
 
+    response = await api_instance.list_stores()
+    # response = ListStoreResponse(...)
+    # response.stores = [Store({"id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z"})]
+    await api_client.close()
 ```
 
 #### Create Store
@@ -232,15 +238,18 @@ configuration = openfga_sdk.Configuration(
     api_host = os.environ.get(OPENFGA_API_HOST),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-
 # Create a store
-body = CreateStoreRequest(
-    name = "FGA Demo Store",
-)
-response = api_instance.create_store(body)
-# response.id = "01FQH7V8BEG3GPQW93KTRFR8JB"
+async def create_store():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+
+    body = CreateStoreRequest(
+        name = "FGA Demo Store",
+    )
+    response = await api_instance.create_store(body)
+    # response.id = "01FQH7V8BEG3GPQW93KTRFR8JB"
+    await api_client.close()
 ```
 
 
@@ -257,12 +266,15 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-
 # Get a store
-response = api_instance.get_store()
-# response = Store({"id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z"})
+async def get_store():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+
+    response = await api_instance.get_store()
+    # response = Store({"id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z"})
+    await api_client.close()
 ```
 
 
@@ -279,11 +291,14 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-
 # Delete a store
-api_instance.delete_store()
+async def delete_store():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+
+    await api_instance.delete_store()
+    await api_client.close()
 ```
 
 #### Write Authorization Model
@@ -303,35 +318,38 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-type_definitions = TypeDefinitions(
-    type_definitions=[
-        TypeDefinition(
-            type="document",
-            relations=dict(
-                writer=Userset(
-                    this=dict(),
-                ),
-                viewer=Userset(
-                    union=Usersets(
-                        child=[
-                            Userset(this=dict()),
-                            Userset(computed_userset=ObjectRelation(
-                                object="",
-                                relation="writer",
-                            )),
-                        ],
-                    ),
-                ),
-            )
-        ),
-    ],
-)
-
 # Create a new authorization model
-response = api_instance.write_authorization_model(type_definitions)
-# response.id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw"
+async def write_authorization_model():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    type_definitions = WriteAuthorizationModelRequest(
+        type_definitions=[
+            TypeDefinition(
+                type="document",
+                relations=dict(
+                    writer=Userset(
+                        this=dict(),
+                    ),
+                    viewer=Userset(
+                        union=Usersets(
+                            child=[
+                                Userset(this=dict()),
+                                Userset(computed_userset=ObjectRelation(
+                                    object="",
+                                    relation="writer",
+                                )),
+                            ],
+                        ),
+                    ),
+                )
+            ),
+        ],
+    )
+
+    response = await api_instance.write_authorization_model(type_definitions)
+    # response.id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw"
+    await api_client.close()
 ```
 
 
@@ -346,13 +364,16 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw" #  Assuming `1uHxCSuTP0VKPYSnkq1pbb1jeZw` is an id of an existing model
-
 # Return a particular version of an authorization model
-response = api_instance.read_authorization_model(id)
-# response.authorization_model =  AuthorizationModel(id='1uHxCSuTP0VKPYSnkq1pbb1jeZw', type_definitions=type_definitions[...])
+async def read_authorization_id():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw" #  Assuming `1uHxCSuTP0VKPYSnkq1pbb1jeZw` is an id of an existing model
+
+    response = await api_instance.read_authorization_model(id)
+    # response.authorization_model =  AuthorizationModel(id='1uHxCSuTP0VKPYSnkq1pbb1jeZw', type_definitions=type_definitions[...])
+    await api_client.close()
 ```
 
 #### Read Authorization Model IDs
@@ -366,12 +387,15 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-
 # Return all the authorization models for a particular store
-response = api_instance.read_authorization_models()
-# response.authorization_models = [AuthorizationModel(id='1uHxCSuTP0VKPYSnkq1pbb1jeZw', type_definitions=type_definitions[...], AuthorizationModel(id='GtQpMohWezFmIbyXxVEocOCxxgq', type_definitions=type_definitions[...])]
+async def read_authorization_models():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+
+    response = await api_instance.read_authorization_models()
+    # response.authorization_models = [AuthorizationModel(id='1uHxCSuTP0VKPYSnkq1pbb1jeZw', type_definitions=type_definitions[...], AuthorizationModel(id='GtQpMohWezFmIbyXxVEocOCxxgq', type_definitions=type_definitions[...])]
+    await api_client.close()
 ```
 
 
@@ -386,19 +410,22 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-body = CheckRequest(
-    tuple_key=TupleKey(
-        user="81684243-9356-4421-8fbf-a4f8d36aa31b",
-        relation="admin",
-        object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-    ),
-)
-
 # Check whether a user is authorized to access an object
-response = api_instance.check(body)
-# response.allowed = True
+async def check():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    body = CheckRequest(
+        tuple_key=TupleKey(
+            user="81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="admin",
+            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+        ),
+    )
+
+    response = await api_instance.check(body)
+    # response.allowed = True
+    await api_client.close()
 ```
 
 
@@ -413,22 +440,25 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-body = WriteRequest(
-    writes=TupleKeys(
-        tuple_keys=[
-            TupleKey(
-                user="81684243-9356-4421-8fbf-a4f8d36aa31b",
-                relation="admin",
-                object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-            ),
-        ],
-    ),
-)
-
 # Add tuples from the store
-response = api_instance.write(body)
+async def write():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    body = WriteRequest(
+        writes=TupleKeys(
+            tuple_keys=[
+                TupleKey(
+                    user="81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    relation="admin",
+                    object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+                ),
+            ],
+        ),
+    )
+
+    response = await api_instance.write(body)
+    await api_client.close()
 ```
 
 #### Delete Tuples
@@ -442,22 +472,25 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-body = WriteRequest(
-    deletes=TupleKeys(
-        tuple_keys=[
-            TupleKey(
-                user="81684243-9356-4421-8fbf-a4f8d36aa31b",
-                relation="reader",
-                object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-            ),
-        ],
-    ),
-) 
-
 # Delete tuples from the store
-response = api_instance.write(body)
+async def delete():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    body = WriteRequest(
+        deletes=TupleKeys(
+            tuple_keys=[
+                TupleKey(
+                    user="81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    relation="reader",
+                    object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+                ),
+            ],
+        ),
+    ) 
+
+    response = await api_instance.write(body)
+    await api_client.close()
 ```
 
 #### Expand
@@ -471,18 +504,21 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-body = ExpandRequest(
-    tuple_key=TupleKey(
-        relation="admin",
-        object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-    ),
-)
-
 # Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
-response = api_instance.expand(body)
-# response = ExpandResponse({"tree": UsersetTree({"root": Node({"name": "workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6#admin", "leaf": Leaf({"users": Users({"users": ["anne", "beth"]})})})})})
+async def expand():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    body = ExpandRequest(
+        tuple_key=TupleKey(
+            relation="admin",
+            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+        ),
+    )
+
+    response = await api_instance.expand(body)
+    # response = ExpandResponse({"tree": UsersetTree({"root": Node({"name": "workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6#admin", "leaf": Leaf({"users": Users({"users": ["anne", "beth"]})})})})})
+    await api_client.close()
 ```
 
 #### Read Changes
@@ -496,44 +532,47 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
+async def read():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
 
-# Find if a relationship tuple stating that a certain user is an admin on a certain workspace
-body = ReadRequest(
-    tuple_key=TupleKey(
-        user="81684243-9356-4421-8fbf-a4f8d36aa31b",
-        relation="admin",
-        object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-    ),
-) 
+    # Find if a relationship tuple stating that a certain user is an admin on a certain workspace
+    body = ReadRequest(
+        tuple_key=TupleKey(
+            user="81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="admin",
+            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+        ),
+    ) 
 
-# Find all relationship tuples where a certain user has a relationship as any relation to a certain workspace
-body = ReadRequest(
-    tuple_key=TupleKey(
-        user="81684243-9356-4421-8fbf-a4f8d36aa31b",
-        object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-    ),
-) 
+    # Find all relationship tuples where a certain user has a relationship as any relation to a certain workspace
+    body = ReadRequest(
+        tuple_key=TupleKey(
+            user="81684243-9356-4421-8fbf-a4f8d36aa31b",
+            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+        ),
+    ) 
 
-# Find all relationship tuples where a certain user is an admin on any workspace
-body = ReadRequest(
-    tuple_key=TupleKey(
-        user="81684243-9356-4421-8fbf-a4f8d36aa31b",
-        relation="admin",
-        object="workspace:",
-    ),
-)
+    # Find all relationship tuples where a certain user is an admin on any workspace
+    body = ReadRequest(
+        tuple_key=TupleKey(
+            user="81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="admin",
+            object="workspace:",
+        ),
+    )
 
-# Find all relationship tuples where any user has a relationship as any relation with a particular workspace
-body = ReadRequest(
-    tuple_key=TupleKey(
-        object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
-    ),
-)
+    # Find all relationship tuples where any user has a relationship as any relation with a particular workspace
+    body = ReadRequest(
+        tuple_key=TupleKey(
+            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+        ),
+    )
 
-response = api_instance.read(body)
-# response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
+    response = await api_instance.read(body)
+    # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
+    await api_client.close()
 ```
 
 #### Read Changes (Watch)
@@ -547,17 +586,20 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-type = "workspace"
-page_size = 25
-continuation_token = "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-
 # Return a list of all the tuple changes
-response = api_instance.read_changes(type=type, page_size=page_size, continuation_token=continuation_token)
-# response.continuation_token = ...
-# response.changes = [TupleChange(tuple_key=TupleKey(object="...",relation="...",user="..."),operation=TupleOperation("TUPLE_OPERATION_WRITE"),timestamp=datetime.fromisoformat("..."))]
+async def read_changes():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+
+    type = "workspace"
+    page_size = 25
+    continuation_token = "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+
+    response = await api_instance.read_changes(type=type, page_size=page_size, continuation_token=continuation_token)
+    # response.continuation_token = ...
+    # response.changes = [TupleChange(tuple_key=TupleKey(object="...",relation="...",user="..."),operation=TupleOperation("TUPLE_OPERATION_WRITE"),timestamp=datetime.fromisoformat("..."))]
+    await api_client.close()
 ```
 
 #### List Objects
@@ -571,32 +613,35 @@ configuration = openfga_sdk.Configuration(
     store_id = os.environ.get(OPENFGA_STORE_ID),
 )
 
-# Create an instance of the API class
-api_instance = open_fga_api.OpenFgaApi(openfga_sdk.ApiClient(configuration))
-body = ListObjectsRequest(
-    authorization_model_id="01GAHCE4YVKPQEKZQHT2R89MQV",
-    user="anne",
-    relation="can_read",
-    type="document",
-    contextual_tuples=ContextualTupleKeys( # optional
-        tuple_keys=[
-            TupleKey(
-                user="anne",
-                relation="editor",
-                object="folder:product",
-            ),
-            TupleKey(
-                user="folder:product",
-                relation="parent",
-                object="document:roadmap",
-            ),
-        ],
-    ),
-)
-
 # ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
-response = api_instance.list_objects(body)
-# response.object_ids = ["roadmap"]
+async def list_objects():
+    # Create an instance of the API class
+    api_client = openfga_sdk.ApiClient(configuration)
+    api_instance = open_fga_api.OpenFgaApi(api_client)
+    body = ListObjectsRequest(
+        authorization_model_id="01GAHCE4YVKPQEKZQHT2R89MQV",
+        user="anne",
+        relation="can_read",
+        type="document",
+        contextual_tuples=ContextualTupleKeys( # optional
+            tuple_keys=[
+                TupleKey(
+                    user="anne",
+                    relation="editor",
+                    object="folder:product",
+                ),
+                TupleKey(
+                    user="folder:product",
+                    relation="parent",
+                    object="document:roadmap",
+                ),
+            ],
+        ),
+    )
+
+    response = await api_instance.list_objects(body)
+    # response.object_ids = ["roadmap"]
+    await api_client.close()
 ```
 
 
@@ -645,6 +690,7 @@ Class | Method | HTTP request | Description
  - [ListObjectsRequest](docs/ListObjectsRequest.md)
  - [ListObjectsResponse](docs/ListObjectsResponse.md)
  - [ListStoresResponse](docs/ListStoresResponse.md)
+ - [Metadata](docs/Metadata.md)
  - [Node](docs/Node.md)
  - [Nodes](docs/Nodes.md)
  - [NotFoundErrorCode](docs/NotFoundErrorCode.md)
@@ -656,6 +702,8 @@ Class | Method | HTTP request | Description
  - [ReadChangesResponse](docs/ReadChangesResponse.md)
  - [ReadRequest](docs/ReadRequest.md)
  - [ReadResponse](docs/ReadResponse.md)
+ - [RelationMetadata](docs/RelationMetadata.md)
+ - [RelationReference](docs/RelationReference.md)
  - [Status](docs/Status.md)
  - [Store](docs/Store.md)
  - [Tuple](docs/Tuple.md)
@@ -665,7 +713,6 @@ Class | Method | HTTP request | Description
  - [TupleOperation](docs/TupleOperation.md)
  - [TupleToUserset](docs/TupleToUserset.md)
  - [TypeDefinition](docs/TypeDefinition.md)
- - [TypeDefinitions](docs/TypeDefinitions.md)
  - [Users](docs/Users.md)
  - [Userset](docs/Userset.md)
  - [UsersetTree](docs/UsersetTree.md)
@@ -674,6 +721,7 @@ Class | Method | HTTP request | Description
  - [Usersets](docs/Usersets.md)
  - [ValidationErrorMessageResponse](docs/ValidationErrorMessageResponse.md)
  - [WriteAssertionsRequest](docs/WriteAssertionsRequest.md)
+ - [WriteAuthorizationModelRequest](docs/WriteAuthorizationModelRequest.md)
  - [WriteAuthorizationModelResponse](docs/WriteAuthorizationModelResponse.md)
  - [WriteRequest](docs/WriteRequest.md)
 
@@ -697,4 +745,4 @@ All changes made to this repo will be overwritten on the next generation, so we 
 
 This project is licensed under the Apache-2.0 license. See the [LICENSE](https://github.com/openfga/python-sdk/blob/main/LICENSE) file for more info.
 
-The code in this repo was auto generated by [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) from a template based on the [python template](https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/resources/python), licensed under the [Apache License 2.0](https://github.com/OpenAPITools/openapi-generator/blob/master/LICENSE).
+The code in this repo was auto generated by [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) from a template based on the [python legacy template](https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/resources/python-legacy), licensed under the [Apache License 2.0](https://github.com/OpenAPITools/openapi-generator/blob/master/LICENSE).

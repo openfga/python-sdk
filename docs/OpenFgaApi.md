@@ -30,16 +30,10 @@ The Check API queries to check if the user has a certain relationship with an ob
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.check_response import CheckResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
-from openfga_sdk.model.check_request import CheckRequest
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -63,34 +57,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    body = CheckRequest(
-        tuple_key=TupleKey(
-            object="document:2021-budget",
-            relation="reader",
-            user="anne",
-        ),
-        contextual_tuples=ContextualTupleKeys(
-            tuple_keys=[
-                TupleKey(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="anne",
-                ),
-            ],
-        ),
-        authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
-    ) # CheckRequest | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.CheckRequest() # CheckRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Check whether a user is authorized to access an object
-        api_response = api_instance.check(body)
+        api_response = await api_instance.api_instance.check(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->check: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -113,9 +91,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -134,20 +110,15 @@ Create a unique OpenFGA store which will be used to store authorization models a
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.create_store_request import CreateStoreRequest
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.create_store_response import CreateStoreResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
 # api_scheme is optional and default to https
+# store_id is mandatory
 # See configuration.py for a list of all supported configuration parameters.
 configuration = openfga_sdk.Configuration(
     scheme = "https",
@@ -164,20 +135,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.CreateStoreRequest() # CreateStoreRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Create a store
-        body = CreateStoreRequest(
-            name = "my-store-name",
-        )
-        api_response = api_instance.create_store(body)
+        api_response = await api_instance.api_instance.create_store(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->create_store: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -200,9 +169,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **201** | A successful response. |  -  |
@@ -221,14 +188,10 @@ Delete an OpenFGA store. This does not delete the data associated to it, like tu
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -252,16 +215,16 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
 
-    # example passing only required values which don't have defaults set
     try:
         # Delete a store
-        api_instance.delete_store()
-    except openfga_sdk.ApiException as e:
+        await api_instance.api_instance.delete_store()
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->delete_store: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -283,9 +246,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **204** | A successful response. |  -  |
@@ -304,16 +265,10 @@ The Expand API will return all users (including user and userset) that have cert
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.expand_request import ExpandRequest
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
-from openfga_sdk.model.expand_response import ExpandResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -337,25 +292,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    body = ExpandRequest(
-        tuple_key=TupleKey(
-            object="document:2021-budget",
-            relation="reader",
-            user="anne",
-        ),
-        authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
-    ) # ExpandRequest | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.ExpandRequest() # ExpandRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
-        api_response = api_instance.expand(body)
+        api_response = await api_instance.api_instance.expand(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->expand: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -378,9 +326,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -399,15 +345,10 @@ Returns an OpenFGA store.
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.get_store_response import GetStoreResponse
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -431,17 +372,17 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
 
-    # example passing only required values which don't have defaults set
     try:
         # Get a store
-        api_response = api_instance.get_store()
+        api_response = await api_instance.api_instance.get_store()
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->get_store: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -463,9 +404,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -482,16 +421,10 @@ ListObjects lists all of the object ids for objects of the provided type that th
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.list_objects_response import ListObjectsResponse
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.list_objects_request import ListObjectsRequest
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -515,32 +448,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    body = ListObjectsRequest(
-        authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
-        type="type_example",
-        relation="relation_example",
-        user="user_example",
-        contextual_tuples=ContextualTupleKeys(
-            tuple_keys=[
-                TupleKey(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="anne",
-                ),
-            ],
-        ),
-    ) # ListObjectsRequest | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.ListObjectsRequest() # ListObjectsRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
-        api_response = api_instance.list_objects(body)
+        api_response = await api_instance.api_instance.list_objects(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->list_objects: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -563,9 +482,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -584,15 +501,10 @@ Returns a paginated list of OpenFGA stores.
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.list_stores_response import ListStoresResponse
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -613,20 +525,19 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    page_size = 1 # int |  (optional)
-    continuation_token = "continuation_token_example" # str |  (optional)
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    page_size = 56 # int |  (optional)
+    continuation_token = 'continuation_token_example' # str |  (optional)
 
-    # example passing only required values which don't have defaults set
-    # and optional values
     try:
         # Get all stores
-        api_response = api_instance.list_stores(page_size=page_size, continuation_token=continuation_token)
+        api_response = await api_instance.api_instance.list_stores(page_size=page_size, continuation_token=continuation_token)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->list_stores: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -650,9 +561,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -671,16 +580,10 @@ The POST read API will return the tuples for a certain store that matches a quer
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.read_response import ReadResponse
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
-from openfga_sdk.model.read_request import ReadRequest
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -704,27 +607,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    body = ReadRequest(
-        tuple_key=TupleKey(
-            object="document:2021-budget",
-            relation="reader",
-            user="anne",
-        ),
-        authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
-        page_size=50,
-        continuation_token="eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
-    ) # ReadRequest | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.ReadRequest() # ReadRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Get tuples from the store that matches a query, without following userset rewrite rules
-        api_response = api_instance.read(body)
+        api_response = await api_instance.api_instance.read(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->read: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -747,9 +641,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -768,15 +660,10 @@ The GET assertions API will return, for a given authorization model id, all the 
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.read_assertions_response import ReadAssertionsResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -800,18 +687,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    authorization_model_id = "authorization_model_id_example" # str | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    authorization_model_id = 'authorization_model_id_example' # str | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Read assertions for an authorization model ID
-        api_response = api_instance.read_assertions(authorization_model_id)
+        api_response = await api_instance.api_instance.read_assertions(authorization_model_id)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->read_assertions: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -834,9 +721,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -855,15 +740,10 @@ The GET authorization-models by ID API will return a particular version of autho
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.read_authorization_model_response import ReadAuthorizationModelResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -887,18 +767,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    id = "id_example" # str | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    id = 'id_example' # str | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Return a particular version of an authorization model
-        api_response = api_instance.read_authorization_model(id)
+        api_response = await api_instance.api_instance.read_authorization_model(id)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->read_authorization_model: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -921,9 +801,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -942,15 +820,10 @@ The GET authorization-models API will return all the authorization models for a 
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.read_authorization_models_response import ReadAuthorizationModelsResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -974,28 +847,19 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    page_size = 1 # int |  (optional)
-    continuation_token = "continuation_token_example" # str |  (optional)
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    page_size = 56 # int |  (optional)
+    continuation_token = 'continuation_token_example' # str |  (optional)
 
-    # example passing only required values which don't have defaults set
     try:
         # Return all the authorization models for a particular store
-        api_response = api_instance.read_authorization_models()
+        api_response = await api_instance.api_instance.read_authorization_models(page_size=page_size, continuation_token=continuation_token)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->read_authorization_models: %s\n" % e)
-
-    # example passing only required values which don't have defaults set
-    # and optional values
-    try:
-        # Return all the authorization models for a particular store
-        api_response = api_instance.read_authorization_models(page_size=page_size, continuation_token=continuation_token)
-        pprint(api_response)
-    except openfga_sdk.ApiException as e:
-        print("Exception when calling OpenFgaApi->read_authorization_models: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -1019,9 +883,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -1040,15 +902,10 @@ The GET changes API will return a paginated list of tuple changes (additions and
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.read_changes_response import ReadChangesResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -1072,29 +929,20 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    type = "type_example" # str |  (optional)
-    page_size = 1 # int |  (optional)
-    continuation_token = "continuation_token_example" # str |  (optional)
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    type = 'type_example' # str |  (optional)
+    page_size = 56 # int |  (optional)
+    continuation_token = 'continuation_token_example' # str |  (optional)
 
-    # example passing only required values which don't have defaults set
     try:
         # Return a list of all the tuple changes
-        api_response = api_instance.read_changes()
+        api_response = await api_instance.api_instance.read_changes(type=type, page_size=page_size, continuation_token=continuation_token)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->read_changes: %s\n" % e)
-
-    # example passing only required values which don't have defaults set
-    # and optional values
-    try:
-        # Return a list of all the tuple changes
-        api_response = api_instance.read_changes(type=type, page_size=page_size, continuation_token=continuation_token)
-        pprint(api_response)
-    except openfga_sdk.ApiException as e:
-        print("Exception when calling OpenFgaApi->read_changes: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -1119,9 +967,7 @@ No authorization required
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -1132,7 +978,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **write**
-> bool, date, datetime, dict, float, int, list, str, none_type write(body)
+> object write(body)
 
 Add or delete tuples from the store
 
@@ -1140,15 +986,10 @@ The POST write API will update the tuples for a certain store.  Tuples and type 
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.write_request import WriteRequest
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -1172,38 +1013,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    body = WriteRequest(
-        writes=TupleKeys(
-            tuple_keys=[
-                TupleKey(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="anne",
-                ),
-            ],
-        ),
-        deletes=TupleKeys(
-            tuple_keys=[
-                TupleKey(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="anne",
-                ),
-            ],
-        ),
-        authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
-    ) # WriteRequest | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.WriteRequest() # WriteRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Add or delete tuples from the store
-        api_response = api_instance.write(body)
+        api_response = await api_instance.api_instance.write(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->write: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -1215,7 +1036,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**bool, date, datetime, dict, float, int, list, str, none_type**
+**object**
 
 ### Authorization
 
@@ -1226,9 +1047,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A successful response. |  -  |
@@ -1247,15 +1066,10 @@ The Write Assertions API will add new assertions for an authorization model id, 
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.write_assertions_request import WriteAssertionsRequest
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -1279,29 +1093,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    authorization_model_id = "authorization_model_id_example" # str | 
-    body = WriteAssertionsRequest(
-        assertions=[
-            Assertion(
-                tuple_key=TupleKey(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="anne",
-                ),
-                expectation=True,
-            ),
-        ],
-    ) # WriteAssertionsRequest | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    authorization_model_id = 'authorization_model_id_example' # str | 
+    body = openfga_sdk.WriteAssertionsRequest() # WriteAssertionsRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Upsert assertions for an authorization model ID
-        api_instance.write_assertions(authorization_model_id, body)
-    except openfga_sdk.ApiException as e:
+        await api_instance.api_instance.write_assertions(authorization_model_id, body)
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->write_assertions: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -1325,9 +1128,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **204** | A successful response. |  -  |
@@ -1338,7 +1139,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **write_authorization_model**
-> WriteAuthorizationModelResponse write_authorization_model(type_definitions)
+> WriteAuthorizationModelResponse write_authorization_model(body)
 
 Create a new authorization model
 
@@ -1346,16 +1147,10 @@ The POST authorization-model API will update the authorization model for a certa
 
 ### Example
 
-
 ```python
 import time
 import openfga_sdk
-from openfga_sdk.api import open_fga_api
-from openfga_sdk.model.write_authorization_model_response import WriteAuthorizationModelResponse
-from openfga_sdk.model.type_definitions import TypeDefinitions
-from openfga_sdk.model.validation_error_message_response import ValidationErrorMessageResponse
-from openfga_sdk.model.path_unknown_error_message_response import PathUnknownErrorMessageResponse
-from openfga_sdk.model.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.rest import ApiException
 from pprint import pprint
 # To configure the configuration
 # host is mandatory
@@ -1379,57 +1174,18 @@ configuration = openfga_sdk.Configuration(
 )
 
 # Enter a context with an instance of the API client
-with openfga_sdk.ApiClient(configuration) as api_client:
+async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = open_fga_api.OpenFgaApi(api_client)
-    type_definitions = TypeDefinitions(
-        type_definitions=[
-            TypeDefinition(
-                type="document",
-                relations={
-                    key=Userset(
-                        this={},
-                        computed_userset=ObjectRelation(
-                            object="object_example",
-                            relation="relation_example",
-                        ),
-                        tuple_to_userset=TupleToUserset(
-                            tupleset=ObjectRelation(
-                                object="object_example",
-                                relation="relation_example",
-                            ),
-                            computed_userset=ObjectRelation(
-                                object="object_example",
-                                relation="relation_example",
-                            ),
-                        ),
-                        union=Usersets(
-                            child=[
-                                Userset(),
-                            ],
-                        ),
-                        intersection=Usersets(
-                            child=[
-                                Userset(),
-                            ],
-                        ),
-                        difference=Difference(
-                            base=Userset(),
-                            subtract=Userset(),
-                        ),
-                    ),
-                },
-            ),
-        ],
-    ) # TypeDefinitions | 
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.WriteAuthorizationModelRequest() # WriteAuthorizationModelRequest | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Create a new authorization model
-        api_response = api_instance.write_authorization_model(type_definitions)
+        api_response = await api_instance.api_instance.write_authorization_model(body)
         pprint(api_response)
-    except openfga_sdk.ApiException as e:
+    except ApiException as e:
         print("Exception when calling OpenFgaApi->write_authorization_model: %s\n" % e)
+    await api_client.close()
 ```
 
 
@@ -1437,7 +1193,7 @@ with openfga_sdk.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **type_definitions** | [**TypeDefinitions**](TypeDefinitions.md)|  |
+ **body** | [**WriteAuthorizationModelRequest**](WriteAuthorizationModelRequest.md)|  |
 
 ### Return type
 
@@ -1452,9 +1208,7 @@ No authorization required
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **201** | A successful response. |  -  |
