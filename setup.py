@@ -34,7 +34,7 @@ setup(
     author_email="community@openfga.dev",
     url="https://github.com/openfga/python-sdk",
     classifiers=[
-      'Development Status :: 5 - Production',
+      'Development Status :: 5 - Production/Stable',
       'Intended Audience :: Developers',
       'License :: OSI Approved :: Apache Software License',
       'Programming Language :: Python :: 3.9',
