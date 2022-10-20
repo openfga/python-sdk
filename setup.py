@@ -26,6 +26,13 @@ VERSION = "0.0.1"
 REQUIRES = ["urllib3 >= 1.26.11", "six >= 1.10", "python-dateutil >= 2.8.2"]
 REQUIRES.append("aiohttp >= 3.8.1")
 
+from setuptools import setup
+
+# read the contents of your README file
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     name=NAME,
     version=VERSION,
@@ -49,10 +56,5 @@ setup(
     include_package_data=True,
     license="Apache-2.0",
     long_description_content_type='text/markdown',
-    long_description="""\
-    [OpenFGA](https://openfga.dev) is an open source Fine-Grained Authorization solution inspired by [Google's Zanzibar paper](https://research.google/pubs/pub48190/). It was created by the FGA team at [Auth0](https://auth0.com) based on [Auth0 Fine-Grained Authorization (FGA)](https://fga.dev), available under [a permissive license (Apache-2)](https://github.com/openfga/rfcs/blob/main/LICENSE) and welcomes community contributions.
-
-OpenFGA is designed to make it easy for application builders to model their permission layer, and to add and integrate fine-grained authorization into their applications. OpenFGA’s design is optimized for reliability and low latency at a high scale.
-
-    """
+    long_description=long_description
 )
