@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**tuple_key** | [**TupleKey**](TupleKey.md) |  | [optional] 
+**tuple_key** | [**TupleKey**](TupleKey.md) |  | 
 **contextual_tuples** | [**ContextualTupleKeys**](ContextualTupleKeys.md) |  | [optional] 
 **authorization_model_id** | **str** |  | [optional] 
 **trace** | **bool** | Defaults to false. Making it true has performance implications. | [optional] [readonly] 

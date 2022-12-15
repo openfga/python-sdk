@@ -57,10 +57,8 @@ class Difference(object):
         self._subtract = None
         self.discriminator = None
 
-        if base is not None:
-            self.base = base
-        if subtract is not None:
-            self.subtract = subtract
+        self.base = base
+        self.subtract = subtract
 
     @property
     def base(self):
@@ -80,6 +78,8 @@ class Difference(object):
         :param base: The base of this Difference.  # noqa: E501
         :type base: Userset
         """
+        if self.local_vars_configuration.client_side_validation and base is None:  # noqa: E501
+            raise ValueError("Invalid value for `base`, must not be `None`")  # noqa: E501
 
         self._base = base
 
@@ -101,6 +101,8 @@ class Difference(object):
         :param subtract: The subtract of this Difference.  # noqa: E501
         :type subtract: Userset
         """
+        if self.local_vars_configuration.client_side_validation and subtract is None:  # noqa: E501
+            raise ValueError("Invalid value for `subtract`, must not be `None`")  # noqa: E501
 
         self._subtract = subtract
 

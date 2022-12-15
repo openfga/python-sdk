@@ -57,8 +57,7 @@ class WriteAuthorizationModelRequest(object):
         self._schema_version = None
         self.discriminator = None
 
-        if type_definitions is not None:
-            self.type_definitions = type_definitions
+        self.type_definitions = type_definitions
         if schema_version is not None:
             self.schema_version = schema_version
 
@@ -80,6 +79,8 @@ class WriteAuthorizationModelRequest(object):
         :param type_definitions: The type_definitions of this WriteAuthorizationModelRequest.  # noqa: E501
         :type type_definitions: list[TypeDefinition]
         """
+        if self.local_vars_configuration.client_side_validation and type_definitions is None:  # noqa: E501
+            raise ValueError("Invalid value for `type_definitions`, must not be `None`")  # noqa: E501
 
         self._type_definitions = type_definitions
 

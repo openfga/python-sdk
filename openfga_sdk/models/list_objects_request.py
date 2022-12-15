@@ -68,12 +68,9 @@ class ListObjectsRequest(object):
 
         if authorization_model_id is not None:
             self.authorization_model_id = authorization_model_id
-        if type is not None:
-            self.type = type
-        if relation is not None:
-            self.relation = relation
-        if user is not None:
-            self.user = user
+        self.type = type
+        self.relation = relation
+        self.user = user
         if contextual_tuples is not None:
             self.contextual_tuples = contextual_tuples
 
@@ -116,6 +113,8 @@ class ListObjectsRequest(object):
         :param type: The type of this ListObjectsRequest.  # noqa: E501
         :type type: str
         """
+        if self.local_vars_configuration.client_side_validation and type is None:  # noqa: E501
+            raise ValueError("Invalid value for `type`, must not be `None`")  # noqa: E501
 
         self._type = type
 
@@ -137,6 +136,8 @@ class ListObjectsRequest(object):
         :param relation: The relation of this ListObjectsRequest.  # noqa: E501
         :type relation: str
         """
+        if self.local_vars_configuration.client_side_validation and relation is None:  # noqa: E501
+            raise ValueError("Invalid value for `relation`, must not be `None`")  # noqa: E501
 
         self._relation = relation
 
@@ -158,9 +159,14 @@ class ListObjectsRequest(object):
         :param user: The user of this ListObjectsRequest.  # noqa: E501
         :type user: str
         """
+        if self.local_vars_configuration.client_side_validation and user is None:  # noqa: E501
+            raise ValueError("Invalid value for `user`, must not be `None`")  # noqa: E501
         if (self.local_vars_configuration.client_side_validation and
                 user is not None and len(user) > 512):
             raise ValueError("Invalid value for `user`, length must be less than or equal to `512`")  # noqa: E501
+        if (self.local_vars_configuration.client_side_validation and
+                user is not None and len(user) < 1):
+            raise ValueError("Invalid value for `user`, length must be greater than or equal to `1`")  # noqa: E501
 
         self._user = user
 

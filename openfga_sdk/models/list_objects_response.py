@@ -38,45 +38,45 @@ class ListObjectsResponse(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'object_ids': 'list[str]'
+        'objects': 'list[str]'
     }
 
     attribute_map = {
-        'object_ids': 'object_ids'
+        'objects': 'objects'
     }
 
-    def __init__(self, object_ids=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, objects=None, local_vars_configuration=None):  # noqa: E501
         """ListObjectsResponse - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
-        self._object_ids = None
+        self._objects = None
         self.discriminator = None
 
-        if object_ids is not None:
-            self.object_ids = object_ids
+        if objects is not None:
+            self.objects = objects
 
     @property
-    def object_ids(self):
-        """Gets the object_ids of this ListObjectsResponse.  # noqa: E501
+    def objects(self):
+        """Gets the objects of this ListObjectsResponse.  # noqa: E501
 
 
-        :return: The object_ids of this ListObjectsResponse.  # noqa: E501
+        :return: The objects of this ListObjectsResponse.  # noqa: E501
         :rtype: list[str]
         """
-        return self._object_ids
+        return self._objects
 
-    @object_ids.setter
-    def object_ids(self, object_ids):
-        """Sets the object_ids of this ListObjectsResponse.
+    @objects.setter
+    def objects(self, objects):
+        """Sets the objects of this ListObjectsResponse.
 
 
-        :param object_ids: The object_ids of this ListObjectsResponse.  # noqa: E501
-        :type object_ids: list[str]
+        :param objects: The objects of this ListObjectsResponse.  # noqa: E501
+        :type objects: list[str]
         """
 
-        self._object_ids = object_ids
+        self._objects = objects
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

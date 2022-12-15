@@ -39,34 +39,29 @@ class ReadRequest(object):
     """
     openapi_types = {
         'tuple_key': 'TupleKey',
-        'authorization_model_id': 'str',
         'page_size': 'int',
         'continuation_token': 'str'
     }
 
     attribute_map = {
         'tuple_key': 'tuple_key',
-        'authorization_model_id': 'authorization_model_id',
         'page_size': 'page_size',
         'continuation_token': 'continuation_token'
     }
 
-    def __init__(self, tuple_key=None, authorization_model_id=None, page_size=None, continuation_token=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, tuple_key=None, page_size=None, continuation_token=None, local_vars_configuration=None):  # noqa: E501
         """ReadRequest - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
         self._tuple_key = None
-        self._authorization_model_id = None
         self._page_size = None
         self._continuation_token = None
         self.discriminator = None
 
         if tuple_key is not None:
             self.tuple_key = tuple_key
-        if authorization_model_id is not None:
-            self.authorization_model_id = authorization_model_id
         if page_size is not None:
             self.page_size = page_size
         if continuation_token is not None:
@@ -92,27 +87,6 @@ class ReadRequest(object):
         """
 
         self._tuple_key = tuple_key
-
-    @property
-    def authorization_model_id(self):
-        """Gets the authorization_model_id of this ReadRequest.  # noqa: E501
-
-
-        :return: The authorization_model_id of this ReadRequest.  # noqa: E501
-        :rtype: str
-        """
-        return self._authorization_model_id
-
-    @authorization_model_id.setter
-    def authorization_model_id(self, authorization_model_id):
-        """Sets the authorization_model_id of this ReadRequest.
-
-
-        :param authorization_model_id: The authorization_model_id of this ReadRequest.  # noqa: E501
-        :type authorization_model_id: str
-        """
-
-        self._authorization_model_id = authorization_model_id
 
     @property
     def page_size(self):

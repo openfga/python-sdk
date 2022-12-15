@@ -57,8 +57,7 @@ class ExpandRequest(object):
         self._authorization_model_id = None
         self.discriminator = None
 
-        if tuple_key is not None:
-            self.tuple_key = tuple_key
+        self.tuple_key = tuple_key
         if authorization_model_id is not None:
             self.authorization_model_id = authorization_model_id
 
@@ -80,6 +79,8 @@ class ExpandRequest(object):
         :param tuple_key: The tuple_key of this ExpandRequest.  # noqa: E501
         :type tuple_key: TupleKey
         """
+        if self.local_vars_configuration.client_side_validation and tuple_key is None:  # noqa: E501
+            raise ValueError("Invalid value for `tuple_key`, must not be `None`")  # noqa: E501
 
         self._tuple_key = tuple_key
 

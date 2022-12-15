@@ -39,15 +39,17 @@ class RelationReference(object):
     """
     openapi_types = {
         'type': 'str',
-        'relation': 'str'
+        'relation': 'str',
+        'wildcard': 'object'
     }
 
     attribute_map = {
         'type': 'type',
-        'relation': 'relation'
+        'relation': 'relation',
+        'wildcard': 'wildcard'
     }
 
-    def __init__(self, type=None, relation=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, type=None, relation=None, wildcard=None, local_vars_configuration=None):  # noqa: E501
         """RelationReference - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -55,11 +57,14 @@ class RelationReference(object):
 
         self._type = None
         self._relation = None
+        self._wildcard = None
         self.discriminator = None
 
         self.type = type
         if relation is not None:
             self.relation = relation
+        if wildcard is not None:
+            self.wildcard = wildcard
 
     @property
     def type(self):
@@ -104,6 +109,27 @@ class RelationReference(object):
         """
 
         self._relation = relation
+
+    @property
+    def wildcard(self):
+        """Gets the wildcard of this RelationReference.  # noqa: E501
+
+
+        :return: The wildcard of this RelationReference.  # noqa: E501
+        :rtype: object
+        """
+        return self._wildcard
+
+    @wildcard.setter
+    def wildcard(self, wildcard):
+        """Sets the wildcard of this RelationReference.
+
+
+        :param wildcard: The wildcard of this RelationReference.  # noqa: E501
+        :type wildcard: object
+        """
+
+        self._wildcard = wildcard
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

@@ -63,8 +63,7 @@ class CheckRequest(object):
         self._trace = None
         self.discriminator = None
 
-        if tuple_key is not None:
-            self.tuple_key = tuple_key
+        self.tuple_key = tuple_key
         if contextual_tuples is not None:
             self.contextual_tuples = contextual_tuples
         if authorization_model_id is not None:
@@ -90,6 +89,8 @@ class CheckRequest(object):
         :param tuple_key: The tuple_key of this CheckRequest.  # noqa: E501
         :type tuple_key: TupleKey
         """
+        if self.local_vars_configuration.client_side_validation and tuple_key is None:  # noqa: E501
+            raise ValueError("Invalid value for `tuple_key`, must not be `None`")  # noqa: E501
 
         self._tuple_key = tuple_key
 

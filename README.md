@@ -327,6 +327,9 @@ async def write_authorization_model():
     type_definitions = WriteAuthorizationModelRequest(
         type_definitions=[
             TypeDefinition(
+                type="user",
+            ),
+            TypeDefinition(
                 type="document",
                 relations=dict(
                     writer=Userset(
@@ -349,7 +352,7 @@ async def write_authorization_model():
     )
 
     response = await api_instance.write_authorization_model(type_definitions)
-    # response.id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw"
+    # response.authorization_model_id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw"
     await api_client.close()
 ```
 
@@ -419,9 +422,10 @@ async def check():
     body = CheckRequest(
         tuple_key=TupleKey(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="admin",
-            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+            relation="viewer",
+            object="document:roadmap",
         ),
+        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
     )
 
     response = await api_instance.check(body)
@@ -451,11 +455,12 @@ async def write():
             tuple_keys=[
                 TupleKey(
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    relation="admin",
-                    object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+                    relation="viewer",
+                    object="document:roadmap",
                 ),
             ],
         ),
+        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
     )
 
     response = await api_instance.write(body)
@@ -483,11 +488,12 @@ async def delete():
             tuple_keys=[
                 TupleKey(
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    relation="reader",
-                    object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+                    relation="viewer",
+                    object="document:roadmap",
                 ),
             ],
         ),
+        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
     ) 
 
     response = await api_instance.write(body)
@@ -512,13 +518,14 @@ async def expand():
     api_instance = open_fga_api.OpenFgaApi(api_client)
     body = ExpandRequest(
         tuple_key=TupleKey(
-            relation="admin",
-            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+            relation="viewer",
+            object="document:roadmap",
         ),
+        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
     )
 
     response = await api_instance.expand(body)
-    # response = ExpandResponse({"tree": UsersetTree({"root": Node({"name": "workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6#admin", "leaf": Leaf({"users": Users({"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b", "user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]})})})})})
+    # response = ExpandResponse({"tree": UsersetTree({"root": Node({"name": "document:roadmap#viewer", "leaf": Leaf({"users": Users({"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b", "user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]})})})})})
     await api_client.close()
 ```
 
@@ -538,38 +545,41 @@ async def read():
     api_client = openfga_sdk.ApiClient(configuration)
     api_instance = open_fga_api.OpenFgaApi(api_client)
 
-    # Find if a relationship tuple stating that a certain user is an admin on a certain workspace
+    # Find if a relationship tuple stating that a certain user is a viewer of certain document
     body = ReadRequest(
         tuple_key=TupleKey(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="admin",
-            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+            relation="viewer",
+            object="document:roadmap",
         ),
     ) 
 
-    # Find all relationship tuples where a certain user has a relationship as any relation to a certain workspace
+    # Find all relationship tuples where a certain user has a relationship as any relation to a certain document
     body = ReadRequest(
         tuple_key=TupleKey(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+            object="document:roadmap",
         ),
     ) 
 
-    # Find all relationship tuples where a certain user is an admin on any workspace
+    # Find all relationship tuples where a certain user is a viewer of any document
     body = ReadRequest(
         tuple_key=TupleKey(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="admin",
-            object="workspace:",
+            relation="viewer",
+            object="document:",
         ),
     )
 
-    # Find all relationship tuples where any user has a relationship as any relation with a particular workspace
+    # Find all relationship tuples where any user has a relationship as any relation with a particular document
     body = ReadRequest(
         tuple_key=TupleKey(
-            object="workspace:675bcac4-ad38-4fb1-a19a-94a5648c91d6",
+            object="document:roadmap",
         ),
     )
+
+    // Read all stored relationship tuples
+    body := ReadRequest()
 
     response = await api_instance.read(body)
     # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
@@ -593,7 +603,7 @@ async def read_changes():
     api_client = openfga_sdk.ApiClient(configuration)
     api_instance = open_fga_api.OpenFgaApi(api_client)
 
-    type = "workspace"
+    type = "document"
     page_size = 25
     continuation_token = "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 
@@ -620,28 +630,23 @@ async def list_objects():
     api_client = openfga_sdk.ApiClient(configuration)
     api_instance = open_fga_api.OpenFgaApi(api_client)
     body = ListObjectsRequest(
-        authorization_model_id="01GAHCE4YVKPQEKZQHT2R89MQV",
+        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        relation="can_read",
+        relation="viewer",
         type="document",
         contextual_tuples=ContextualTupleKeys( # optional
             tuple_keys=[
                 TupleKey(
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    relation="editor",
-                    object="folder:product",
-                ),
-                TupleKey(
-                    user="folder:product",
-                    relation="parent",
-                    object="document:roadmap",
+                    relation="writer",
+                    object="document:budget",
                 ),
             ],
         ),
     )
 
     response = await api_instance.list_objects(body)
-    # response.object_ids = ["roadmap"]
+    # response.objects = ["document:roadmap"]
     await api_client.close()
 ```
 
@@ -655,8 +660,8 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**delete_store**](docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
 *OpenFgaApi* | [**expand**](docs/OpenFgaApi.md#expand) | **POST** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 *OpenFgaApi* | [**get_store**](docs/OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
-*OpenFgaApi* | [**list_objects**](docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | ListObjects lists all of the object ids for objects of the provided type that the given user has a specific relation with.
-*OpenFgaApi* | [**list_stores**](docs/OpenFgaApi.md#list_stores) | **GET** /stores | Get all stores
+*OpenFgaApi* | [**list_objects**](docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all object ids of the given type that the user has a relation with
+*OpenFgaApi* | [**list_stores**](docs/OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
 *OpenFgaApi* | [**read**](docs/OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**read_assertions**](docs/OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 *OpenFgaApi* | [**read_authorization_model**](docs/OpenFgaApi.md#read_authorization_model) | **GET** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -747,5 +752,3 @@ All changes made to this repo will be overwritten on the next generation, so we 
 This project is licensed under the Apache-2.0 license. See the [LICENSE](https://github.com/openfga/python-sdk/blob/main/LICENSE) file for more info.
 
 The code in this repo was auto generated by [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) from a template based on the [python legacy template](https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/resources/python-legacy), licensed under the [Apache License 2.0](https://github.com/OpenAPITools/openapi-generator/blob/master/LICENSE).
-
-

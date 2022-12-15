@@ -92,7 +92,7 @@ class ApiClient(object):
         self.cookie = cookie
         # Set default User-Agent.
         self.user_agent = 'openfga-sdk {sdkId}/{packageVersion}'.replace(
-            '{sdkId}', '').replace('{packageVersion}', '0.0.1')
+            '{sdkId}', '').replace('{packageVersion}', '0.1.0')
         self.client_side_validation = configuration.client_side_validation
 
     async def __aenter__(self):
