@@ -728,9 +728,9 @@ class OpenFgaApi(object):
             _request_auth=local_var_params.get('_request_auth')))
 
     async def list_objects(self, body, **kwargs):  # noqa: E501
-        """[EXPERIMENTAL] Get all object ids of the given type that the user has a relation with  # noqa: E501
+        """[EXPERIMENTAL] Get all objects of the given type that the user has a relation with  # noqa: E501
 
-        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. You may also specify `contextual_tuples` that will be treated as regular tuples.   # noqa: E501
+        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\")    # noqa: E501
 
         >>> thread = await api.list_objects(body)
 
@@ -755,9 +755,9 @@ class OpenFgaApi(object):
         return await(self.list_objects_with_http_info(body, **kwargs))  # noqa: E501
 
     async def list_objects_with_http_info(self, body, **kwargs):  # noqa: E501
-        """[EXPERIMENTAL] Get all object ids of the given type that the user has a relation with  # noqa: E501
+        """[EXPERIMENTAL] Get all objects of the given type that the user has a relation with  # noqa: E501
 
-        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. You may also specify `contextual_tuples` that will be treated as regular tuples.   # noqa: E501
+        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\")    # noqa: E501
 
         >>> thread = api.list_objects_with_http_info(body)
 

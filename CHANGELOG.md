@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.1
+
+### [0.1.1](https://github.com/openfga/python-sdk/compare/v0.1.0...v0.1.1) (2023-01-17)
+
+- chore(deps): upgrade dependencies
+
 ## v0.1.0
 
 ### [0.1.0](https://github.com/openfga/python-sdk/compare/v0.0.1...v0.1.0) (2022-12-14)

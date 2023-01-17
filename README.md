@@ -655,81 +655,81 @@ async def list_objects():
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*OpenFgaApi* | [**check**](docs/OpenFgaApi.md#check) | **POST** /stores/{store_id}/check | Check whether a user is authorized to access an object
-*OpenFgaApi* | [**create_store**](docs/OpenFgaApi.md#create_store) | **POST** /stores | Create a store
-*OpenFgaApi* | [**delete_store**](docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
-*OpenFgaApi* | [**expand**](docs/OpenFgaApi.md#expand) | **POST** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
-*OpenFgaApi* | [**get_store**](docs/OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
-*OpenFgaApi* | [**list_objects**](docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all object ids of the given type that the user has a relation with
-*OpenFgaApi* | [**list_stores**](docs/OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
-*OpenFgaApi* | [**read**](docs/OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
-*OpenFgaApi* | [**read_assertions**](docs/OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
-*OpenFgaApi* | [**read_authorization_model**](docs/OpenFgaApi.md#read_authorization_model) | **GET** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
-*OpenFgaApi* | [**read_authorization_models**](docs/OpenFgaApi.md#read_authorization_models) | **GET** /stores/{store_id}/authorization-models | Return all the authorization models for a particular store
-*OpenFgaApi* | [**read_changes**](docs/OpenFgaApi.md#read_changes) | **GET** /stores/{store_id}/changes | Return a list of all the tuple changes
-*OpenFgaApi* | [**write**](docs/OpenFgaApi.md#write) | **POST** /stores/{store_id}/write | Add or delete tuples from the store
-*OpenFgaApi* | [**write_assertions**](docs/OpenFgaApi.md#write_assertions) | **PUT** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
-*OpenFgaApi* | [**write_authorization_model**](docs/OpenFgaApi.md#write_authorization_model) | **POST** /stores/{store_id}/authorization-models | Create a new authorization model
+*OpenFgaApi* | [**check**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#check) | **POST** /stores/{store_id}/check | Check whether a user is authorized to access an object
+*OpenFgaApi* | [**create_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#create_store) | **POST** /stores | Create a store
+*OpenFgaApi* | [**delete_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
+*OpenFgaApi* | [**expand**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#expand) | **POST** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
+*OpenFgaApi* | [**get_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
+*OpenFgaApi* | [**list_objects**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+*OpenFgaApi* | [**list_stores**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
+*OpenFgaApi* | [**read**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
+*OpenFgaApi* | [**read_assertions**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
+*OpenFgaApi* | [**read_authorization_model**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_authorization_model) | **GET** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
+*OpenFgaApi* | [**read_authorization_models**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_authorization_models) | **GET** /stores/{store_id}/authorization-models | Return all the authorization models for a particular store
+*OpenFgaApi* | [**read_changes**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_changes) | **GET** /stores/{store_id}/changes | Return a list of all the tuple changes
+*OpenFgaApi* | [**write**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#write) | **POST** /stores/{store_id}/write | Add or delete tuples from the store
+*OpenFgaApi* | [**write_assertions**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#write_assertions) | **PUT** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
+*OpenFgaApi* | [**write_authorization_model**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#write_authorization_model) | **POST** /stores/{store_id}/authorization-models | Create a new authorization model
 
 
 ### Models
 
 ## Documentation For Models
 
- - [Any](docs/Any.md)
- - [Assertion](docs/Assertion.md)
- - [AuthorizationModel](docs/AuthorizationModel.md)
- - [CheckRequest](docs/CheckRequest.md)
- - [CheckResponse](docs/CheckResponse.md)
- - [Computed](docs/Computed.md)
- - [ContextualTupleKeys](docs/ContextualTupleKeys.md)
- - [CreateStoreRequest](docs/CreateStoreRequest.md)
- - [CreateStoreResponse](docs/CreateStoreResponse.md)
- - [Difference](docs/Difference.md)
- - [ErrorCode](docs/ErrorCode.md)
- - [ExpandRequest](docs/ExpandRequest.md)
- - [ExpandResponse](docs/ExpandResponse.md)
- - [GetStoreResponse](docs/GetStoreResponse.md)
- - [InternalErrorCode](docs/InternalErrorCode.md)
- - [InternalErrorMessageResponse](docs/InternalErrorMessageResponse.md)
- - [Leaf](docs/Leaf.md)
- - [ListObjectsRequest](docs/ListObjectsRequest.md)
- - [ListObjectsResponse](docs/ListObjectsResponse.md)
- - [ListStoresResponse](docs/ListStoresResponse.md)
- - [Metadata](docs/Metadata.md)
- - [Node](docs/Node.md)
- - [Nodes](docs/Nodes.md)
- - [NotFoundErrorCode](docs/NotFoundErrorCode.md)
- - [ObjectRelation](docs/ObjectRelation.md)
- - [PathUnknownErrorMessageResponse](docs/PathUnknownErrorMessageResponse.md)
- - [ReadAssertionsResponse](docs/ReadAssertionsResponse.md)
- - [ReadAuthorizationModelResponse](docs/ReadAuthorizationModelResponse.md)
- - [ReadAuthorizationModelsResponse](docs/ReadAuthorizationModelsResponse.md)
- - [ReadChangesResponse](docs/ReadChangesResponse.md)
- - [ReadRequest](docs/ReadRequest.md)
- - [ReadResponse](docs/ReadResponse.md)
- - [RelationMetadata](docs/RelationMetadata.md)
- - [RelationReference](docs/RelationReference.md)
- - [Status](docs/Status.md)
- - [Store](docs/Store.md)
- - [Tuple](docs/Tuple.md)
- - [TupleChange](docs/TupleChange.md)
- - [TupleKey](docs/TupleKey.md)
- - [TupleKeys](docs/TupleKeys.md)
- - [TupleOperation](docs/TupleOperation.md)
- - [TupleToUserset](docs/TupleToUserset.md)
- - [TypeDefinition](docs/TypeDefinition.md)
- - [Users](docs/Users.md)
- - [Userset](docs/Userset.md)
- - [UsersetTree](docs/UsersetTree.md)
- - [UsersetTreeDifference](docs/UsersetTreeDifference.md)
- - [UsersetTreeTupleToUserset](docs/UsersetTreeTupleToUserset.md)
- - [Usersets](docs/Usersets.md)
- - [ValidationErrorMessageResponse](docs/ValidationErrorMessageResponse.md)
- - [WriteAssertionsRequest](docs/WriteAssertionsRequest.md)
- - [WriteAuthorizationModelRequest](docs/WriteAuthorizationModelRequest.md)
- - [WriteAuthorizationModelResponse](docs/WriteAuthorizationModelResponse.md)
- - [WriteRequest](docs/WriteRequest.md)
+ - [Any](https://github.com/openfga/python-sdk/blob/main/docs/Any.md)
+ - [Assertion](https://github.com/openfga/python-sdk/blob/main/docs/Assertion.md)
+ - [AuthorizationModel](https://github.com/openfga/python-sdk/blob/main/docs/AuthorizationModel.md)
+ - [CheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequest.md)
+ - [CheckResponse](https://github.com/openfga/python-sdk/blob/main/docs/CheckResponse.md)
+ - [Computed](https://github.com/openfga/python-sdk/blob/main/docs/Computed.md)
+ - [ContextualTupleKeys](https://github.com/openfga/python-sdk/blob/main/docs/ContextualTupleKeys.md)
+ - [CreateStoreRequest](https://github.com/openfga/python-sdk/blob/main/docs/CreateStoreRequest.md)
+ - [CreateStoreResponse](https://github.com/openfga/python-sdk/blob/main/docs/CreateStoreResponse.md)
+ - [Difference](https://github.com/openfga/python-sdk/blob/main/docs/Difference.md)
+ - [ErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/ErrorCode.md)
+ - [ExpandRequest](https://github.com/openfga/python-sdk/blob/main/docs/ExpandRequest.md)
+ - [ExpandResponse](https://github.com/openfga/python-sdk/blob/main/docs/ExpandResponse.md)
+ - [GetStoreResponse](https://github.com/openfga/python-sdk/blob/main/docs/GetStoreResponse.md)
+ - [InternalErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/InternalErrorCode.md)
+ - [InternalErrorMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/InternalErrorMessageResponse.md)
+ - [Leaf](https://github.com/openfga/python-sdk/blob/main/docs/Leaf.md)
+ - [ListObjectsRequest](https://github.com/openfga/python-sdk/blob/main/docs/ListObjectsRequest.md)
+ - [ListObjectsResponse](https://github.com/openfga/python-sdk/blob/main/docs/ListObjectsResponse.md)
+ - [ListStoresResponse](https://github.com/openfga/python-sdk/blob/main/docs/ListStoresResponse.md)
+ - [Metadata](https://github.com/openfga/python-sdk/blob/main/docs/Metadata.md)
+ - [Node](https://github.com/openfga/python-sdk/blob/main/docs/Node.md)
+ - [Nodes](https://github.com/openfga/python-sdk/blob/main/docs/Nodes.md)
+ - [NotFoundErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/NotFoundErrorCode.md)
+ - [ObjectRelation](https://github.com/openfga/python-sdk/blob/main/docs/ObjectRelation.md)
+ - [PathUnknownErrorMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/PathUnknownErrorMessageResponse.md)
+ - [ReadAssertionsResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadAssertionsResponse.md)
+ - [ReadAuthorizationModelResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadAuthorizationModelResponse.md)
+ - [ReadAuthorizationModelsResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadAuthorizationModelsResponse.md)
+ - [ReadChangesResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadChangesResponse.md)
+ - [ReadRequest](https://github.com/openfga/python-sdk/blob/main/docs/ReadRequest.md)
+ - [ReadResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadResponse.md)
+ - [RelationMetadata](https://github.com/openfga/python-sdk/blob/main/docs/RelationMetadata.md)
+ - [RelationReference](https://github.com/openfga/python-sdk/blob/main/docs/RelationReference.md)
+ - [Status](https://github.com/openfga/python-sdk/blob/main/docs/Status.md)
+ - [Store](https://github.com/openfga/python-sdk/blob/main/docs/Store.md)
+ - [Tuple](https://github.com/openfga/python-sdk/blob/main/docs/Tuple.md)
+ - [TupleChange](https://github.com/openfga/python-sdk/blob/main/docs/TupleChange.md)
+ - [TupleKey](https://github.com/openfga/python-sdk/blob/main/docs/TupleKey.md)
+ - [TupleKeys](https://github.com/openfga/python-sdk/blob/main/docs/TupleKeys.md)
+ - [TupleOperation](https://github.com/openfga/python-sdk/blob/main/docs/TupleOperation.md)
+ - [TupleToUserset](https://github.com/openfga/python-sdk/blob/main/docs/TupleToUserset.md)
+ - [TypeDefinition](https://github.com/openfga/python-sdk/blob/main/docs/TypeDefinition.md)
+ - [Users](https://github.com/openfga/python-sdk/blob/main/docs/Users.md)
+ - [Userset](https://github.com/openfga/python-sdk/blob/main/docs/Userset.md)
+ - [UsersetTree](https://github.com/openfga/python-sdk/blob/main/docs/UsersetTree.md)
+ - [UsersetTreeDifference](https://github.com/openfga/python-sdk/blob/main/docs/UsersetTreeDifference.md)
+ - [UsersetTreeTupleToUserset](https://github.com/openfga/python-sdk/blob/main/docs/UsersetTreeTupleToUserset.md)
+ - [Usersets](https://github.com/openfga/python-sdk/blob/main/docs/Usersets.md)
+ - [ValidationErrorMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/ValidationErrorMessageResponse.md)
+ - [WriteAssertionsRequest](https://github.com/openfga/python-sdk/blob/main/docs/WriteAssertionsRequest.md)
+ - [WriteAuthorizationModelRequest](https://github.com/openfga/python-sdk/blob/main/docs/WriteAuthorizationModelRequest.md)
+ - [WriteAuthorizationModelResponse](https://github.com/openfga/python-sdk/blob/main/docs/WriteAuthorizationModelResponse.md)
+ - [WriteRequest](https://github.com/openfga/python-sdk/blob/main/docs/WriteRequest.md)
 
 
 
