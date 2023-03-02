@@ -39,7 +39,7 @@ class TypeDefinition(object):
     """
     openapi_types = {
         'type': 'str',
-        'relations': 'dict(str, Userset)',
+        'relations': 'dict[str, Userset]',
         'metadata': 'Metadata'
     }
 
@@ -95,7 +95,7 @@ class TypeDefinition(object):
 
 
         :return: The relations of this TypeDefinition.  # noqa: E501
-        :rtype: dict(str, Userset)
+        :rtype: dict[str, Userset]
         """
         return self._relations
 
@@ -105,7 +105,7 @@ class TypeDefinition(object):
 
 
         :param relations: The relations of this TypeDefinition.  # noqa: E501
-        :type relations: dict(str, Userset)
+        :type relations: dict[str, Userset]
         """
 
         self._relations = relations

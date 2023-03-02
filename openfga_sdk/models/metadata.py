@@ -38,7 +38,7 @@ class Metadata(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'relations': 'dict(str, RelationMetadata)'
+        'relations': 'dict[str, RelationMetadata]'
     }
 
     attribute_map = {
@@ -63,7 +63,7 @@ class Metadata(object):
 
 
         :return: The relations of this Metadata.  # noqa: E501
-        :rtype: dict(str, RelationMetadata)
+        :rtype: dict[str, RelationMetadata]
         """
         return self._relations
 
@@ -73,7 +73,7 @@ class Metadata(object):
 
 
         :param relations: The relations of this Metadata.  # noqa: E501
-        :type relations: dict(str, RelationMetadata)
+        :type relations: dict[str, RelationMetadata]
         """
 
         self._relations = relations
