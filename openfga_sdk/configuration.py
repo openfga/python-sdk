@@ -42,7 +42,7 @@ class RetryParams(object):
     :param min_wait_in_ms: Minimum wait (in ms) between retry
     """
 
-    def __init__(self, max_retry=3, min_wait_in_ms=100):
+    def __init__(self, max_retry=15, min_wait_in_ms=100):
         self._max_retry = max_retry
         self._min_wait_in_ms = min_wait_in_ms
 

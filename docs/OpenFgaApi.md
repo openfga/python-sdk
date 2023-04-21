@@ -9,7 +9,7 @@ Method | HTTP request | Description
 [**delete_store**](OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
 [**expand**](OpenFgaApi.md#expand) | **POST** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 [**get_store**](OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
-[**list_objects**](OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+[**list_objects**](OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | Get all objects of the given type that the user has a relation with
 [**list_stores**](OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
 [**read**](OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 [**read_assertions**](OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
@@ -417,9 +417,9 @@ No authorization required
 # **list_objects**
 > ListObjectsResponse list_objects(body)
 
-[EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+Get all objects of the given type that the user has a relation with
 
-The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\")  
+The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3). 
 
 ### Example
 
@@ -456,7 +456,7 @@ async with openfga_sdk.ApiClient(configuration) as api_client:
     body = openfga_sdk.ListObjectsRequest() # ListObjectsRequest | 
 
     try:
-        # [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+        # Get all objects of the given type that the user has a relation with
         api_response = await api_instance.api_instance.list_objects(body)
         pprint(api_response)
     except ApiException as e:

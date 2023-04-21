@@ -124,7 +124,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                     relation="reader",
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                 ),
-                authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+                authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
             )
             api_response = await api_instance.check(
                 body=body,
@@ -139,7 +139,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 query_params=[],
                 post_params=[],
                 body={"tuple_key": {"object": "document:2021-budget",
-                                    "relation": "reader", "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b"}, "authorization_model_id": "1uHxCSuTP0VKPYSnkq1pbb1jeZw"},
+                                    "relation": "reader", "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b"}, "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
                 _preload_content=ANY,
                 _request_timeout=None
             )
@@ -225,7 +225,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                     object="document:budget",
                     relation="reader",
                 ),
-                authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+                authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
             )
             api_response = await api_instance.expand(
                 body=body,
@@ -244,7 +244,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 query_params=[],
                 post_params=[],
                 body={"tuple_key": {"object": "document:budget", "relation": "reader"},
-                      "authorization_model_id": "1uHxCSuTP0VKPYSnkq1pbb1jeZw"},
+                      "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
                 _preload_content=ANY,
                 _request_timeout=None
             )
@@ -505,6 +505,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
 {
   "authorization_model": {
     "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+    "schema_version":"1.1",
     "type_definitions": [
       {
         "type": "document",
@@ -567,7 +568,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                     )
                 )
             ]
-            authorization_model = AuthorizationModel(id='01G5JAVJ41T49E9TT3SKVS7X1J',
+            authorization_model = AuthorizationModel(id='01G5JAVJ41T49E9TT3SKVS7X1J', schema_version="1.1",
                                                      type_definitions=type_definitions)
             self.assertEqual(api_response.authorization_model, authorization_model)
             mock_request.assert_called_once_with(
@@ -784,6 +785,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
 
             # example passing only required values which don't have defaults set
             body = WriteAuthorizationModelRequest(
+                schema_version="1.1",
                 type_definitions=[
                     TypeDefinition(
                         type="document",
@@ -821,8 +823,8 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 headers=ANY,
                 query_params=[],
                 post_params=[],
-                body={"type_definitions": [{"type": "document", "relations": {"writer": {"this": {}}, "reader": {
-                    "union": {"child": [{"this": {}}, {"computedUserset": {"object": "", "relation": "writer"}}]}}}}]},
+                body={"schema_version": "1.1", "type_definitions": [{"type": "document", "relations": {"writer": {"this": {
+                }}, "reader": {"union": {"child": [{"this": {}}, {"computedUserset": {"object": "", "relation": "writer"}}]}}}}]},
                 _preload_content=ANY,
                 _request_timeout=None
             )
@@ -1161,7 +1163,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
             expectedHeader = urllib3.response.HTTPHeaderDict(
-                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk /0.1.1', 'Authorization': 'Bearer TOKEN1'})
+                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.1.1', 'Authorization': 'Bearer TOKEN1'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/d12345abc/check',
@@ -1204,7 +1206,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
             expectedHeader = urllib3.response.HTTPHeaderDict(
-                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk /0.1.1', 'Custom Header': 'custom value'})
+                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.1.1', 'Custom Header': 'custom value'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/d12345abc/check',

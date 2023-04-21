@@ -324,7 +324,8 @@ async def write_authorization_model():
     # Create an instance of the API class
     api_client = openfga_sdk.ApiClient(configuration)
     api_instance = open_fga_api.OpenFgaApi(api_client)
-    type_definitions = WriteAuthorizationModelRequest(
+    body = WriteAuthorizationModelRequest(
+        schema_version = "1.1",
         type_definitions=[
             TypeDefinition(
                 type="user",
@@ -351,8 +352,8 @@ async def write_authorization_model():
         ],
     )
 
-    response = await api_instance.write_authorization_model(type_definitions)
-    # response.authorization_model_id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw"
+    response = await api_instance.write_authorization_model(body)
+    # response.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
     await api_client.close()
 ```
 
@@ -373,10 +374,10 @@ async def read_authorization_id():
     # Create an instance of the API class
     api_client = openfga_sdk.ApiClient(configuration)
     api_instance = open_fga_api.OpenFgaApi(api_client)
-    id = "1uHxCSuTP0VKPYSnkq1pbb1jeZw" #  Assuming `1uHxCSuTP0VKPYSnkq1pbb1jeZw` is an id of an existing model
+    id = "01GXSA8YR785C4FYS3C0RTG7B1" #  Assuming `01GXSA8YR785C4FYS3C0RTG7B1` is an id of an existing model
 
     response = await api_instance.read_authorization_model(id)
-    # response.authorization_model =  AuthorizationModel(id='1uHxCSuTP0VKPYSnkq1pbb1jeZw', type_definitions=type_definitions[...])
+    # response.authorization_model =  AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...])
     await api_client.close()
 ```
 
@@ -398,7 +399,7 @@ async def read_authorization_models():
     api_instance = open_fga_api.OpenFgaApi(api_client)
 
     response = await api_instance.read_authorization_models()
-    # response.authorization_models = [AuthorizationModel(id='1uHxCSuTP0VKPYSnkq1pbb1jeZw', type_definitions=type_definitions[...], AuthorizationModel(id='GtQpMohWezFmIbyXxVEocOCxxgq', type_definitions=type_definitions[...])]
+    # response.authorization_models = [AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...], AuthorizationModel(id='01GXSBM5PVYHCJNRNKXMB4QZTW', schema_version = '1.1', type_definitions=type_definitions[...])]
     await api_client.close()
 ```
 
@@ -425,7 +426,7 @@ async def check():
             relation="viewer",
             object="document:roadmap",
         ),
-        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+        authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
     )
 
     response = await api_instance.check(body)
@@ -460,7 +461,7 @@ async def write():
                 ),
             ],
         ),
-        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+        authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
     )
 
     response = await api_instance.write(body)
@@ -493,7 +494,7 @@ async def delete():
                 ),
             ],
         ),
-        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+        authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
     ) 
 
     response = await api_instance.write(body)
@@ -521,7 +522,7 @@ async def expand():
             relation="viewer",
             object="document:roadmap",
         ),
-        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+        authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
     )
 
     response = await api_instance.expand(body)
@@ -630,7 +631,7 @@ async def list_objects():
     api_client = openfga_sdk.ApiClient(configuration)
     api_instance = open_fga_api.OpenFgaApi(api_client)
     body = ListObjectsRequest(
-        authorization_model_id="1uHxCSuTP0VKPYSnkq1pbb1jeZw",
+        authorization_model_id="01GXSA8YR785C4FYS3C0RTG7B1",
         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         relation="viewer",
         type="document",
@@ -660,7 +661,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**delete_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
 *OpenFgaApi* | [**expand**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#expand) | **POST** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 *OpenFgaApi* | [**get_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
-*OpenFgaApi* | [**list_objects**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | [EXPERIMENTAL] Get all objects of the given type that the user has a relation with
+*OpenFgaApi* | [**list_objects**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | Get all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**list_stores**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
 *OpenFgaApi* | [**read**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**read_assertions**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID

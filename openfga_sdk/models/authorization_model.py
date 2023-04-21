@@ -62,8 +62,7 @@ class AuthorizationModel(object):
 
         if id is not None:
             self.id = id
-        if schema_version is not None:
-            self.schema_version = schema_version
+        self.schema_version = schema_version
         if type_definitions is not None:
             self.type_definitions = type_definitions
 
@@ -106,6 +105,8 @@ class AuthorizationModel(object):
         :param schema_version: The schema_version of this AuthorizationModel.  # noqa: E501
         :type schema_version: str
         """
+        if self.local_vars_configuration.client_side_validation and schema_version is None:  # noqa: E501
+            raise ValueError("Invalid value for `schema_version`, must not be `None`")  # noqa: E501
 
         self._schema_version = schema_version
 
