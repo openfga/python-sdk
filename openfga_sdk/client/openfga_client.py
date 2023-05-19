@@ -37,7 +37,11 @@ from openfga_sdk.models.write_authorization_model_request import WriteAuthorizat
 from openfga_sdk.models.write_request import WriteRequest
 
 import asyncio
+import uuid
 from typing import List
+
+CLIENT_METHOD_HEADER = "X-OpenFGA-Client-Method"
+CLIENT_BULK_REQUEST_ID_HEADER = "X-OpenFGA-Client-Bulk-Request-Id"
 
 
 def _chuck_array(array, max_size):
@@ -45,6 +49,21 @@ def _chuck_array(array, max_size):
     Helper function to chuck array into arrays of max_size
     """
     return [array[i * max_size:(i + 1) * max_size] for i in range((len(array) + max_size - 1) // max_size)]
+
+
+def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str):
+    """
+    Set heading to the value if it is not set
+    """
+    if options is None:
+        options = {}
+    headers = options.get("headers")
+    if headers is None:
+        headers = {}
+    if headers.get(name) is None:
+        headers[name] = value
+    options["headers"] = headers
+    return options
 
 
 def options_to_kwargs(options: dict[str, int | str]):
@@ -124,6 +143,7 @@ class OpenFgaClient():
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         # convert options to kargs
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListStores")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.list_stores(
             **kwargs,
@@ -138,6 +158,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "CreateStore")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.create_store(
             body,
@@ -153,6 +174,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "GetStore")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.get_store(
             **kwargs,
@@ -167,6 +189,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "DeleteStore")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.delete_store(
             **kwargs,
@@ -185,6 +208,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadAuthorizationModels")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.read_authorization_models(
             **kwargs,
@@ -200,6 +224,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "WriteAuthorizationModel")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.write_authorization_model(
             body,
@@ -215,6 +240,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadAuthorizationModel")
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
         api_response = await self._api.read_authorization_model(
@@ -231,6 +257,8 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(
+            options, CLIENT_METHOD_HEADER, "ReadLatestAuthoriationModel")
         options["page_size"] = 1
         api_response = await self.read_authorization_models(options)
         return api_response
@@ -250,6 +278,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadChanges")
         kwargs = options_to_kwargs(options)
         kwargs["type"] = body.type
         api_response = await self._api.read_changes(
@@ -268,6 +297,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Read")
         page_size = None
         continuation_token = None
         if options:
@@ -358,11 +388,13 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Writes")
         transaction = options_to_transaction_info(options)
         if not transaction.disabled:
             results = await self._write_with_transaction(body, options)
             return results
 
+        options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
         # otherwise, it is not a transaction and it is a batch write requests
         writes_response = None
         if body.writes:
@@ -381,6 +413,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "WriteTuples")
         result = await self.writes(ClientWriteRequest(body, None), options)
         return result
 
@@ -393,6 +426,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "DeleteTuples")
         result = await self.writes(ClientWriteRequest(None, body), options)
         return result
 
@@ -409,6 +443,8 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Check")
+
         kwargs = options_to_kwargs(options)
 
         req_body = CheckRequest(
@@ -450,6 +486,9 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
+        options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+
         max_parallel_requests = 10
         if options is not None and "max_parallel_requests" in options:
             max_parallel_requests = options["max_parallel_requests"]
@@ -472,6 +511,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Expand")
         kwargs = options_to_kwargs(options)
 
         req_body = ExpandRequest(
@@ -497,6 +537,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListObjects")
         kwargs = options_to_kwargs(options)
 
         req_body = ListObjectsRequest(
@@ -525,6 +566,9 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListRelations")
+        options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+
         request_body = [construct_check_request_body(
             user=body.user, relation=i, object=body.object, contextual_tuples=body.contextual_tuples) for i in body.relations]
         result = await self.batch_check(request_body, options)
@@ -546,6 +590,8 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadAssertions")
+
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
         api_response = await self._api.read_assertions(authorization_model_id, **kwargs)
@@ -561,6 +607,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "WriteAssertions")
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
         api_response = await self._api.write_assertions(authorization_model_id, WriteAssertionsRequest(body), **kwargs)
