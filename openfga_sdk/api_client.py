@@ -705,3 +705,15 @@ class ApiClient(object):
                 'store_id is required but not configured'
             )
         return configuration.store_id
+
+    def set_store_id(self, value):
+        """
+        Update the store ID in the configuration
+        """
+        self.configuration.store_id = value
+
+    def get_store_id(self):
+        """
+        Return the store id (if any) store in the configuration
+        """
+        return self.configuration.store_id

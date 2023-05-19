@@ -177,7 +177,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             '''
         mock_request.return_value = mock_response(response_body, 201)
         configuration = self.configuration
-        configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.create_store(
                 CreateStoreRequest(name="test-store"),
@@ -1903,6 +1902,102 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_request.assert_called_once_with(
                 'PUT',
                 'http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J',
+                headers=ANY,
+                body={"assertions": [{"tuple_key": {"object": "document:2021-budget",
+                                                    "relation": "reader", "user": "user:anne"}, "expectation": True}]},
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None
+            )
+
+    @patch.object(rest.RESTClientObject, 'request')
+    async def test_set_store_id(self, mock_request):
+        """Test case for write assertions
+
+        Get all stores  # noqa: E501
+        """
+        mock_request.return_value = mock_response('', 204)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            api_client.set_store_id("01YCP46JKYM8FJCQ37NMBYHE5Y")
+            await api_client.write_assertions(
+                [Assertion(
+                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
+                                       user="user:anne"),
+                    expectation=True,
+                )],
+                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+            )
+            self.assertEqual(api_client.get_store_id(), "01YCP46JKYM8FJCQ37NMBYHE5Y")
+            mock_request.assert_called_once_with(
+                'PUT',
+                'http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5Y/assertions/01G5JAVJ41T49E9TT3SKVS7X1J',
+                headers=ANY,
+                body={"assertions": [{"tuple_key": {"object": "document:2021-budget",
+                                                    "relation": "reader", "user": "user:anne"}, "expectation": True}]},
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None
+            )
+
+    @patch.object(rest.RESTClientObject, 'request')
+    async def test_config_auth_model(self, mock_request):
+        """Test case for write assertions
+
+        Get all stores  # noqa: E501
+        """
+        mock_request.return_value = mock_response('', 204)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
+        async with OpenFgaClient(configuration) as api_client:
+            await api_client.write_assertions(
+                [Assertion(
+                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
+                                       user="user:anne"),
+                    expectation=True,
+                )],
+                options={}
+            )
+            self.assertEqual(api_client.get_authorization_model_id(), "01G5JAVJ41T49E9TT3SKVS7X1J")
+            mock_request.assert_called_once_with(
+                'PUT',
+                'http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J',
+                headers=ANY,
+                body={"assertions": [{"tuple_key": {"object": "document:2021-budget",
+                                                    "relation": "reader", "user": "user:anne"}, "expectation": True}]},
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None
+            )
+
+    @patch.object(rest.RESTClientObject, 'request')
+    async def test_update_auth_model(self, mock_request):
+        """Test case for write assertions
+
+        Get all stores  # noqa: E501
+        """
+        mock_request.return_value = mock_response('', 204)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
+        async with OpenFgaClient(configuration) as api_client:
+            api_client.set_authorization_model_id("01G5JAVJ41T49E9TT3SKVS7X2J")
+            await api_client.write_assertions(
+                [Assertion(
+                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
+                                       user="user:anne"),
+                    expectation=True,
+                )],
+                options={}
+            )
+            mock_request.assert_called_once_with(
+                'PUT',
+                'http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X2J',
                 headers=ANY,
                 body={"assertions": [{"tuple_key": {"object": "document:2021-budget",
                                                     "relation": "reader", "user": "user:anne"}, "expectation": True}]},

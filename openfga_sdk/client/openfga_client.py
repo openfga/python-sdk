@@ -128,6 +128,30 @@ class OpenFgaClient():
         else:
             return self._client_configuration.authorization_model_id
 
+    def set_store_id(self, value):
+        """
+        Update the store ID in the configuration
+        """
+        self._api_client.set_store_id(value)
+
+    def get_store_id(self):
+        """
+        Return the store id (if any) store in the configuration
+        """
+        return self._api_client.get_store_id()
+
+    def set_authorization_model_id(self, value):
+        """
+        Update the authorizaiton model id in the configuration
+        """
+        self._client_configuration.authorization_model_id = value
+
+    def get_authorization_model_id(self):
+        """
+        Return the authorizaiton model id
+        """
+        return self._client_configuration.authorization_model_id
+
     #################
     # Stores
     #################
