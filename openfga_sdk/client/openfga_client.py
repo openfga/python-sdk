@@ -313,7 +313,8 @@ class OpenFgaClient():
         for write_batch in write_batches:
             request = [self._write_single_batch(i, options, is_write) for i in write_batch]
             response = await asyncio.gather(*request)
-            flatten_list = [item for sublist in response for item in sublist]
+            flatten_list = [
+                item for batch_single_response in response for item in batch_single_response]
             batch_write_responses.extend(flatten_list)
 
         return batch_write_responses
