@@ -71,6 +71,20 @@ openfga_sdk/__init__.py
 openfga_sdk/api/__init__.py
 openfga_sdk/api/open_fga_api.py
 openfga_sdk/api_client.py
+openfga_sdk/client/__init__.py
+openfga_sdk/client/batch_check_response.py
+openfga_sdk/client/check_request_body.py
+openfga_sdk/client/client_tuple.py
+openfga_sdk/client/client_write_request.py
+openfga_sdk/client/client_write_response.py
+openfga_sdk/client/configuration.py
+openfga_sdk/client/expand_request_body.py
+openfga_sdk/client/list_objects_request_body.py
+openfga_sdk/client/list_relations_request_body.py
+openfga_sdk/client/openfga_client.py
+openfga_sdk/client/read_changes_body.py
+openfga_sdk/client/single_write_response.py
+openfga_sdk/client/write_transaction.py
 openfga_sdk/configuration.py
 openfga_sdk/credentials.py
 openfga_sdk/exceptions.py
@@ -137,3 +151,4 @@ test-requirements.txt
 test/__init__.py
 test/test_credentials.py
 test/test_open_fga_api.py
+test/test_openfga_client.py

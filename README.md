@@ -661,7 +661,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**delete_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
 *OpenFgaApi* | [**expand**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#expand) | **POST** /stores/{store_id}/expand | Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 *OpenFgaApi* | [**get_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
-*OpenFgaApi* | [**list_objects**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | Get all objects of the given type that the user has a relation with
+*OpenFgaApi* | [**list_objects**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | List all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**list_stores**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
 *OpenFgaApi* | [**read**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**read_assertions**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
