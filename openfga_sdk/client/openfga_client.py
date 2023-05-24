@@ -159,6 +159,16 @@ class OpenFgaClient():
         """
         return self._client_configuration.authorization_model_id
 
+    async def _check_valid_api_connection(self, options: dict[str, int | str]):
+        """
+        Checks that a connection with the given configuration can be established
+        """
+        authorization_model_id = self._get_authorization_model_id(options)
+        if authorization_model_id is not None and authorization_model_id != "":
+            await self.read_authorization_model(options)
+        else:
+            await self.read_latest_authorization_model(options)
+
     #################
     # Stores
     #################
@@ -426,6 +436,9 @@ class OpenFgaClient():
             return results
 
         options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+        # TODO: this should be run in parallel
+        await self._check_valid_api_connection(options)
+
         # otherwise, it is not a transaction and it is a batch write requests
         writes_response = None
         if body.writes:
@@ -519,6 +532,9 @@ class OpenFgaClient():
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
         options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+
+        # TODO: this should be run in parallel
+        await self._check_valid_api_connection(options)
 
         max_parallel_requests = 10
         if options is not None and "max_parallel_requests" in options:
