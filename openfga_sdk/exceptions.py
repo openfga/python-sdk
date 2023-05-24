@@ -15,7 +15,7 @@
 import six
 
 
-# Specifc FGA header to be parsed
+# Specific FGA header to be parsed
 X_RATELIMIT_LIMIT = 'x-ratelimit-limit'
 X_RATELIMIT_REMAINING = 'x_ratelimit_remaining'
 X_RATELIMIT_RESET = 'x_ratelimit_reset'
@@ -121,7 +121,7 @@ class ApiException(OpenApiException):
             self.reason = http_resp.reason
             self.body = http_resp.data
             self._parsed_exception = None
-            normalized_headers = dict((k.lower(), v) for k, v in http_resp.getheaders().items())
+            normalized_headers = dict((k.lower(), v) for k, v in http_resp.headers.items())
             self.header = dict()
             for key in RESPONSE_HEADERS_TO_KEEP:
                 self.header[key] = normalized_headers.get(key)
