@@ -420,7 +420,7 @@ class OpenFgaClient():
                 i, True, None) for i in body.deletes]
         return ClientWriteResponse(writes=writes_response, deletes=deletes_response)
 
-    async def writes(self, body: ClientWriteRequest, options: dict[str, str]):
+    async def write(self, body: ClientWriteRequest, options: dict[str, str]):
         """
         Write or deletes tuples
         :param body - the write request
@@ -458,7 +458,7 @@ class OpenFgaClient():
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "WriteTuples")
-        result = await self.writes(ClientWriteRequest(body, None), options)
+        result = await self.write(ClientWriteRequest(body, None), options)
         return result
 
     async def delete_tuples(self, body: List[ClientTuple], options: dict[str, str]):
@@ -471,7 +471,7 @@ class OpenFgaClient():
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "DeleteTuples")
-        result = await self.writes(ClientWriteRequest(None, body), options)
+        result = await self.write(ClientWriteRequest(None, body), options)
         return result
 
     #######################

@@ -757,7 +757,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            await api_client.writes(
+            await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
             )
@@ -794,7 +794,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            await api_client.writes(
+            await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
             )
@@ -847,7 +847,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             transaction = WriteTransaction(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
-            response = await api_client.writes(
+            response = await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                          "transaction": transaction}
@@ -961,7 +961,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ],
             )
             transaction = WriteTransaction(disabled=True, max_per_chunk=1, max_parallel_requests=1)
-            response = await api_client.writes(
+            response = await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                          "transaction": transaction}
@@ -1074,7 +1074,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ],
             )
             transaction = WriteTransaction(disabled=True, max_per_chunk=2, max_parallel_requests=2)
-            response = await api_client.writes(
+            response = await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                          "transaction": transaction}
@@ -1185,7 +1185,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             transaction = WriteTransaction(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
-            response = await api_client.writes(
+            response = await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                          "transaction": transaction}
@@ -1289,7 +1289,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             transaction = WriteTransaction(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
-            await api_client.writes(
+            await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                          "transaction": transaction}
@@ -1425,7 +1425,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 )
                 transaction = WriteTransaction(
                     disabled=True, max_per_chunk=1, max_parallel_requests=10)
-                await api_client.writes(
+                await api_client.write(
                     body,
                     options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                              "transaction": transaction}
