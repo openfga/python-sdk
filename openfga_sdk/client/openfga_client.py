@@ -24,6 +24,7 @@ from openfga_sdk.client.single_write_response import construct_single_write_resp
 from openfga_sdk.client.write_transaction import WriteTransaction
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.read_changes_body import ReadChangesBody
+from openfga_sdk.exceptions import FgaValidationException
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
@@ -35,6 +36,7 @@ from openfga_sdk.models.tuple_key import TupleKey
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
 from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
 from openfga_sdk.models.write_request import WriteRequest
+from openfga_sdk.validation import is_well_formed_ulid_string
 
 import asyncio
 import uuid
@@ -118,15 +120,20 @@ class OpenFgaClient():
     async def close(self):
         await self._api.close()
 
-    def _get_authorization_model_id(self, options):
+    def _get_authorization_model_id(self, options: object) -> str | None:
         """
         Return the authorization model ID if specified in the options.
         Otherwise return the authorization model ID stored in the client's configuration
         """
+        authorization_model_id = self._client_configuration.authorization_model_id
         if options is not None and "authorization_model_id" in options:
-            return options["authorization_model_id"]
-        else:
-            return self._client_configuration.authorization_model_id
+            authorization_model_id = options["authorization_model_id"]
+        if authorization_model_id is None or authorization_model_id == "":
+            return None
+        if is_well_formed_ulid_string(authorization_model_id) is False:
+            raise FgaValidationException(
+                "authorization_model_id ('%s') is not in a valid ulid format" % authorization_model_id)
+        return authorization_model_id
 
     def set_store_id(self, value):
         """

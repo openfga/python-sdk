@@ -21,6 +21,7 @@ import six
 from six.moves import http_client as httplib
 from urllib.parse import urlparse
 from openfga_sdk.exceptions import FgaValidationException, ApiValueError
+from openfga_sdk.validation import is_well_formed_ulid_string
 
 
 JSON_SCHEMA_VALIDATION_KEYWORDS = {
@@ -519,6 +520,11 @@ class Configuration(object):
         if (parsed_url.query != ''):
             raise ApiValueError(
                 'api_host `{}` is not expected to have query specified'.format(self.api_scheme))
+
+        if self.store_id is not None and self.store_id != "" and is_well_formed_ulid_string(self.store_id) is False:
+            raise FgaValidationException(
+                "store_id ('%s') is not in a valid ulid format" % self.store_id)
+
         if self._credentials is not None:
             self._credentials.validate_credentials_config()
 

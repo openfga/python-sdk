@@ -30,7 +30,7 @@ from openfga_sdk.client.list_relations_request_body import ListRelationsRequestB
 from openfga_sdk.client.read_changes_body import ReadChangesBody
 from openfga_sdk.client.single_write_response import SingleWriteResponse
 from openfga_sdk.client.write_transaction import WriteTransaction
-from openfga_sdk.exceptions import ValidationException
+from openfga_sdk.exceptions import ValidationException, FgaValidationException
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.authorization_model import AuthorizationModel
 from openfga_sdk.models.check_response import CheckResponse
@@ -2006,3 +2006,26 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 _preload_content=ANY,
                 _request_timeout=None
             )
+
+    def test_configuration_store_id_invalid(self):
+        """
+        Test whether ApiValueError is raised if host has query
+        """
+        configuration = ClientConfiguration(
+            api_host='localhost',
+            api_scheme='http',
+            store_id="abcd"
+        )
+        self.assertRaises(FgaValidationException, configuration.is_valid)
+
+    def test_configuration_authorization_model_id_invalid(self):
+        """
+        Test whether ApiValueError is raised if host has query
+        """
+        configuration = ClientConfiguration(
+            api_host='localhost',
+            api_scheme='http',
+            store_id="01H15K9J85050XTEDPVM8DJM78",
+            authorization_model_id="abcd"
+        )
+        self.assertRaises(FgaValidationException, configuration.is_valid)
