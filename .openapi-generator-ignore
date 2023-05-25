@@ -3,7 +3,7 @@ test/*
 !test/__init__.py
 !test/test_open_fga_api.py
 !test/test_credentials.py
-!test/test_openfga_client.py
+!test/test_client.py
 .gitlab-ci.yml
 .travis.yml
 tox.ini

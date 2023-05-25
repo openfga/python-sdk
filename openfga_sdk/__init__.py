@@ -16,7 +16,7 @@
 
 __version__ = "0.1.1"
 
-from openfga_sdk.client.openfga_client import OpenFgaClient
+from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.configuration import ClientConfiguration
 
 # import apis into sdk package

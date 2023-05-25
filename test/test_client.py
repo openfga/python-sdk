@@ -20,16 +20,17 @@ import urllib3
 
 from openfga_sdk import rest
 from openfga_sdk.client import ClientConfiguration
-from openfga_sdk.client.openfga_client import OpenFgaClient
-from openfga_sdk.client.check_request_body import CheckRequestBody
-from openfga_sdk.client.client_tuple import ClientTuple
-from openfga_sdk.client.client_write_request import ClientWriteRequest
-from openfga_sdk.client.expand_request_body import ExpandRequestBody
-from openfga_sdk.client.list_objects_request_body import ListObjectsRequestBody
-from openfga_sdk.client.list_relations_request_body import ListRelationsRequestBody
-from openfga_sdk.client.read_changes_body import ReadChangesBody
-from openfga_sdk.client.single_write_response import SingleWriteResponse
-from openfga_sdk.client.write_transaction import WriteTransaction
+from openfga_sdk.client.client import OpenFgaClient
+from openfga_sdk.client.models.assertion import ClientAssertion
+from openfga_sdk.client.models.check_request import ClientCheckRequest
+from openfga_sdk.client.models.tuple import ClientTuple
+from openfga_sdk.client.models.write_request import ClientWriteRequest
+from openfga_sdk.client.models.expand_request import ClientExpandRequest
+from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
+from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
+from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
+from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
+from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
 from openfga_sdk.exceptions import ValidationException, FgaValidationException, UnauthorizedException
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.authorization_model import AuthorizationModel
@@ -531,7 +532,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             api_response = await api_client.read_latest_authorization_model(
                 options={}
             )
-            self.assertIsInstance(api_response, ReadAuthorizationModelsResponse)
+            self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
             type_definitions = [
                 TypeDefinition(
                     type="document",
@@ -555,9 +556,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             ]
             authorization_model = AuthorizationModel(id='01G5JAVJ41T49E9TT3SKVS7X1J', schema_version="1.1",
                                                      type_definitions=type_definitions)
-            self.assertEqual(api_response.authorization_models, [authorization_model])
-            self.assertEqual(api_response.continuation_token,
-                             "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==")
+            self.assertEqual(api_response.authorization_model, authorization_model)
             mock_request.assert_called_once_with(
                 'GET',
                 'http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models',
@@ -597,7 +596,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
             # Return a particular version of an authorization model
             api_response = await api_client.read_changes(
-                ReadChangesBody("document"),
+                ClientReadChangesRequest("document"),
                 options={"page_size": 1, "continuation_token": "abcdefg"}
             )
 
@@ -845,7 +844,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            transaction = WriteTransaction(
+            transaction = WriteTransactionOpts(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
             response = await api_client.write(
                 body,
@@ -856,7 +855,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertEqual(response.deletes, None)
             self.assertEqual(response.writes,
                              [
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -864,7 +863,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                      ),
                                      success=True,
                                      error=None),
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -872,7 +871,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                      ),
                                      success=True,
                                      error=None),
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -960,7 +959,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            transaction = WriteTransaction(disabled=True, max_per_chunk=1, max_parallel_requests=1)
+            transaction = WriteTransactionOpts(
+                disabled=True, max_per_chunk=1, max_parallel_requests=1)
             response = await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
@@ -970,7 +970,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertEqual(response.deletes, None)
             self.assertEqual(response.writes,
                              [
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -978,7 +978,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                      ),
                                      success=True,
                                      error=None),
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -986,7 +986,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                      ),
                                      success=True,
                                      error=None),
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -1073,7 +1073,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            transaction = WriteTransaction(disabled=True, max_per_chunk=2, max_parallel_requests=2)
+            transaction = WriteTransactionOpts(
+                disabled=True, max_per_chunk=2, max_parallel_requests=2)
             response = await api_client.write(
                 body,
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
@@ -1083,7 +1084,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertEqual(response.deletes, None)
             self.assertEqual(response.writes,
                              [
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -1091,7 +1092,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                      ),
                                      success=True,
                                      error=None),
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -1099,7 +1100,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                      ),
                                      success=True,
                                      error=None),
-                                 SingleWriteResponse(
+                                 ClientWriteSingleResponse(
                                      tuple_key=ClientTuple(
                                          object="document:2021-budget",
                                          relation="reader",
@@ -1183,7 +1184,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            transaction = WriteTransaction(
+            transaction = WriteTransactionOpts(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
             response = await api_client.write(
                 body,
@@ -1194,7 +1195,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertEqual(response.deletes, None)
             self.assertEqual(len(response.writes), 3)
             self.assertEqual(response.writes[0],
-                             SingleWriteResponse(
+                             ClientWriteSingleResponse(
                 tuple_key=ClientTuple(
                     object="document:2021-budget",
                     relation="reader",
@@ -1213,7 +1214,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertIsInstance(
                 response.writes[1].error.parsed_exception, ValidationErrorMessageResponse)
             self.assertEqual(response.writes[2],
-                             SingleWriteResponse(
+                             ClientWriteSingleResponse(
                 tuple_key=ClientTuple(
                     object="document:2021-budget",
                     relation="reader",
@@ -1287,7 +1288,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     )
                 ],
             )
-            transaction = WriteTransaction(
+            transaction = WriteTransactionOpts(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
             await api_client.write(
                 body,
@@ -1423,7 +1424,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         )
                     ],
                 )
-                transaction = WriteTransaction(
+                transaction = WriteTransactionOpts(
                     disabled=True, max_per_chunk=1, max_parallel_requests=10)
                 await api_client.write(
                     body,
@@ -1455,7 +1456,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         # First, mock the response
         response_body = '{"allowed": true, "resolution": "1234"}'
         mock_request.return_value = mock_response(response_body, 200)
-        body = CheckRequestBody(
+        body = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -1493,7 +1494,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         # First, mock the response
         response_body = '{"allowed": true, "resolution": "1234"}'
         mock_request.return_value = mock_response(response_body, 200)
-        body = CheckRequestBody(
+        body = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -1535,7 +1536,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response('{}', 200),
             mock_response(response_body, 200),
         ]
-        body = CheckRequestBody(
+        body = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -1588,17 +1589,17 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
         ]
-        body1 = CheckRequestBody(
+        body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         )
-        body2 = CheckRequestBody(
+        body2 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
         )
-        body3 = CheckRequestBody(
+        body3 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
@@ -1686,17 +1687,17 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             ValidationException(http_resp=http_mock_response(response_body, 400)),
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
         ]
-        body1 = CheckRequestBody(
+        body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         )
-        body2 = CheckRequestBody(
+        body2 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
         )
-        body3 = CheckRequestBody(
+        body3 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
@@ -1779,7 +1780,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            body = ExpandRequestBody(
+            body = ClientExpandRequest(
                 object="document:budget",
                 relation="reader",
             )
@@ -1824,7 +1825,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            body = ListObjectsRequestBody(
+            body = ClientListObjectsRequest(
                 type="document",
                 relation="reader",
                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -1863,7 +1864,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            body = ListObjectsRequestBody(
+            body = ClientListObjectsRequest(
                 type="document",
                 relation="reader",
                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -1911,9 +1912,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.list_relations(
-                body=ListRelationsRequestBody(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                                              relations=["reader", "owner", "viewer"],
-                                              object="document:2021-budget"),
+                body=ClientListRelationsRequest(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                                                relations=["reader", "owner", "viewer"],
+                                                object="document:2021-budget"),
                 options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
             )
             self.assertEqual(api_response, ["reader", "viewer"])
@@ -1975,9 +1976,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(UnauthorizedException) as api_exception:
                 await api_client.list_relations(
-                    body=ListRelationsRequestBody(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                                                  relations=["reader", "owner", "viewer"],
-                                                  object="document:2021-budget"),
+                    body=ClientListRelationsRequest(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                                                    relations=["reader", "owner", "viewer"],
+                                                    object="document:2021-budget"),
                     options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
                 )
 
@@ -2051,11 +2052,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
             await api_client.write_assertions(
-                [Assertion(
-                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
-                                       user="user:anne"),
-                    expectation=True,
-                )],
+                [ClientAssertion(user="user:anne", relation="reader",
+                                 object="document:2021-budget", expectation=True)],
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
             )
             mock_request.assert_called_once_with(
@@ -2081,12 +2079,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
             api_client.set_store_id("01YCP46JKYM8FJCQ37NMBYHE5Y")
+
             await api_client.write_assertions(
-                [Assertion(
-                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
-                                       user="user:anne"),
-                    expectation=True,
-                )],
+                [ClientAssertion(user="user:anne", relation="reader",
+                                 object="document:2021-budget", expectation=True)],
                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
             )
             self.assertEqual(api_client.get_store_id(), "01YCP46JKYM8FJCQ37NMBYHE5Y")
@@ -2114,11 +2110,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
         async with OpenFgaClient(configuration) as api_client:
             await api_client.write_assertions(
-                [Assertion(
-                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
-                                       user="user:anne"),
-                    expectation=True,
-                )],
+                [ClientAssertion(user="user:anne", relation="reader",
+                                 object="document:2021-budget", expectation=True)],
                 options={}
             )
             self.assertEqual(api_client.get_authorization_model_id(), "01G5JAVJ41T49E9TT3SKVS7X1J")
@@ -2146,12 +2139,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
         async with OpenFgaClient(configuration) as api_client:
             api_client.set_authorization_model_id("01G5JAVJ41T49E9TT3SKVS7X2J")
+
             await api_client.write_assertions(
-                [Assertion(
-                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
-                                       user="user:anne"),
-                    expectation=True,
-                )],
+                [ClientAssertion(user="user:anne", relation="reader",
+                                 object="document:2021-budget", expectation=True)],
                 options={}
             )
             mock_request.assert_called_once_with(

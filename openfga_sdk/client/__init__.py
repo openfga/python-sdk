@@ -13,6 +13,6 @@
 """
 
 # import openfga client + configurations
-from openfga_sdk.client.openfga_client import OpenFgaClient
+from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.configuration import ClientConfiguration
-from openfga_sdk.client.check_request_body import CheckRequestBody
+from openfga_sdk.client.models.check_request import ClientCheckRequest

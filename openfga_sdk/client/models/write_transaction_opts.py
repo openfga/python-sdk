@@ -12,7 +12,7 @@
 """
 
 
-class WriteTransaction:
+class WriteTransactionOpts:
     """
     OpenFGA client write transaction info
     """

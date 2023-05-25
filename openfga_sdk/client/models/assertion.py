@@ -12,14 +12,23 @@
 """
 
 
-class ExpandRequestBody():
+class ClientAssertion():
     """
-    ExpandRequestBody encapsulates the parameters required to expand request
+    ClientAssertion flattens the input necessary for an Assertion
     """
 
-    def __init__(self, relation: str, object: str):
+    def __init__(self, user: str, relation: str, object: str, expectation: bool):
+        self._user = user
         self._relation = relation
         self._object = object
+        self._expectation = expectation
+
+    @property
+    def user(self):
+        """
+        Return user
+        """
+        return self._user
 
     @property
     def relation(self):
@@ -34,3 +43,10 @@ class ExpandRequestBody():
         Return object
         """
         return self._object
+
+    @property
+    def expectation(self):
+        """
+        Return expectation
+        """
+        return self._expectation

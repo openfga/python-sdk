@@ -12,9 +12,9 @@
 """
 
 
-class ReadChangesBody():
+class ClientReadChangesRequest():
     """
-    ReadChangesBody encapsulates the parameters required to read changes
+    ClientReadChangesRequest encapsulates the parameters required to read changes
     """
 
     def __init__(self, type: str):
