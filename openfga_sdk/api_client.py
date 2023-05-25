@@ -92,7 +92,7 @@ class ApiClient(object):
         self.cookie = cookie
         # Set default User-Agent.
         self.user_agent = 'openfga-sdk {sdkId}/{packageVersion}'.replace(
-            '{sdkId}', 'python').replace('{packageVersion}', '0.1.1')
+            '{sdkId}', 'python').replace('{packageVersion}', '0.2.0')
         self.client_side_validation = configuration.client_side_validation
 
     async def __aenter__(self):
@@ -138,7 +138,7 @@ class ApiClient(object):
             response_types_map=None, auth_settings=None,
             _return_http_data_only=None, collection_formats=None,
             _preload_content=True, _request_timeout=None, _host=None,
-            _request_auth=None):
+            _request_auth=None, _retry_params=None):
 
         self.configuration.is_valid()
         config = self.configuration
@@ -198,6 +198,11 @@ class ApiClient(object):
             self.configuration.retry_params is not None and self.configuration.retry_params.max_retry is not None) else 0
         min_wait_in_ms = self.configuration.retry_params.min_wait_in_ms if (
             self.configuration.retry_params is not None and self.configuration.retry_params.min_wait_in_ms is not None) else 0
+        if _retry_params is not None:
+            if _retry_params.max_retry is not None:
+                max_retry = _retry_params.max_retry
+            if _retry_params.min_wait_in_ms is not None:
+                max_retry = _retry_params.min_wait_in_ms
         for x in range(max_retry + 1):
             try:
                 # perform request and return response
@@ -360,7 +365,8 @@ class ApiClient(object):
                        response_types_map=None, auth_settings=None,
                        async_req=None, _return_http_data_only=None,
                        collection_formats=None, _preload_content=True,
-                       _request_timeout=None, _host=None, _request_auth=None):
+                       _request_timeout=None, _host=None, _request_auth=None,
+                       _retry_params=None):
         """Makes the HTTP request (synchronous) and returns deserialized data.
 
         To make an async_req request, set the async_req parameter.
@@ -392,6 +398,7 @@ class ApiClient(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_params: If specified, override the default retry parameters
         :type _request_token: dict, optional
         :return:
             If async_req parameter is True,
@@ -407,7 +414,7 @@ class ApiClient(object):
                                          response_types_map, auth_settings,
                                          _return_http_data_only, collection_formats,
                                          _preload_content, _request_timeout, _host,
-                                         _request_auth))
+                                         _request_auth, _retry_params))
 
         return self.pool.apply_async(self.__call_api, (resource_path,
                                                        method, path_params,
@@ -420,7 +427,7 @@ class ApiClient(object):
                                                        collection_formats,
                                                        _preload_content,
                                                        _request_timeout,
-                                                       _host, _request_auth))
+                                                       _host, _request_auth, _retry_params))
 
     async def request(self, method, url, query_params=None, headers=None,
                       post_params=None, body=None, _preload_content=True,
@@ -698,3 +705,15 @@ class ApiClient(object):
                 'store_id is required but not configured'
             )
         return configuration.store_id
+
+    def set_store_id(self, value):
+        """
+        Update the store ID in the configuration
+        """
+        self.configuration.store_id = value
+
+    def get_store_id(self):
+        """
+        Return the store id (if any) store in the configuration
+        """
+        return self.configuration.store_id

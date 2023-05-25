@@ -67,7 +67,7 @@ from openfga_sdk.models.write_authorization_model_request import WriteAuthorizat
 from openfga_sdk.models.write_authorization_model_response import WriteAuthorizationModelResponse
 from openfga_sdk.models.write_request import WriteRequest
 
-store_id = 'd12345abc'
+store_id = '01H0H015178Y2V4CX10C2KGHF4'
 request_id = 'x1y2z3'
 
 # Helper function to construct mock response
@@ -134,7 +134,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             # Make sure the API was called with the right data
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/check',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -197,7 +197,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             await api_instance.delete_store()
             mock_request.assert_called_once_with(
                 'DELETE',
-                'http://api.fga.example/stores/d12345abc',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4',
                 headers=ANY,
                 query_params=[],
                 body=None,
@@ -239,7 +239,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response, expected_response)
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/expand',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/expand',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -257,7 +257,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         Get a store  # noqa: E501
         """
         response_body = '''{
-  "id": "d12345abc",
+  "id": "01H0H015178Y2V4CX10C2KGHF4",
   "name": "test_store",
   "created_at": "2022-07-25T20:45:10.485Z",
   "updated_at": "2022-07-25T20:45:10.485Z"
@@ -271,11 +271,11 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             # Get a store
             api_response = await api_instance.get_store()
             self.assertIsInstance(api_response, GetStoreResponse)
-            self.assertEqual(api_response.id, 'd12345abc')
+            self.assertEqual(api_response.id, '01H0H015178Y2V4CX10C2KGHF4')
             self.assertEqual(api_response.name, 'test_store')
             mock_request.assert_called_once_with(
                 'GET',
-                'http://api.fga.example/stores/d12345abc',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4',
                 headers=ANY,
                 query_params=[],
                 _preload_content=ANY,
@@ -313,7 +313,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response.objects, ['document:abcd1234'])
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/list-objects',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/list-objects',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -436,7 +436,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/read',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/read',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -488,7 +488,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response.assertions, [assertion])
             mock_request.assert_called_once_with(
                 'GET',
-                'http://api.fga.example/stores/d12345abc/assertions/01G5JAVJ41T49E9TT3SKVS7X1J',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/assertions/01G5JAVJ41T49E9TT3SKVS7X1J',
                 headers=ANY,
                 query_params=[],
                 _preload_content=ANY,
@@ -573,7 +573,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response.authorization_model, authorization_model)
             mock_request.assert_called_once_with(
                 'GET',
-                'http://api.fga.example/stores/d12345abc/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J',
                 headers=ANY,
                 query_params=[],
                 _preload_content=ANY,
@@ -628,7 +628,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response, read_changes)
             mock_request.assert_called_once_with(
                 'GET',
-                'http://api.fga.example/stores/d12345abc/changes',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/changes',
                 headers=ANY,
                 query_params=[('type', 'document'), ('page_size', 1),
                               ('continuation_token', 'abcdefg')],
@@ -670,7 +670,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             )
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/write',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/write',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -714,7 +714,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             )
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/write',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/write',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -759,7 +759,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             )
             mock_request.assert_called_once_with(
                 'PUT',
-                'http://api.fga.example/stores/d12345abc/assertions/xyz0123',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/assertions/xyz0123',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -819,7 +819,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertEqual(api_response, expected_response)
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/authorization-models',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/authorization-models',
                 headers=ANY,
                 query_params=[],
                 post_params=[],
@@ -905,6 +905,17 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             api_scheme='http'
         )
         self.assertRaises(ApiValueError, configuration.is_valid)
+
+    def test_configuration_store_id_invalid(self):
+        """
+        Test whether ApiValueError is raised if host has query
+        """
+        configuration = openfga_sdk.Configuration(
+            api_host='localhost',
+            api_scheme='http',
+            store_id="abcd"
+        )
+        self.assertRaises(FgaValidationException, configuration.is_valid)
 
     async def test_bad_configuration_read_authorization_model(self):
         """
@@ -1163,10 +1174,10 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
             expectedHeader = urllib3.response.HTTPHeaderDict(
-                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.1.1', 'Authorization': 'Bearer TOKEN1'})
+                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.2.0', 'Authorization': 'Bearer TOKEN1'})
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/check',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
                 headers=expectedHeader,
                 query_params=[],
                 post_params=[],
@@ -1206,10 +1217,10 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
             expectedHeader = urllib3.response.HTTPHeaderDict(
-                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.1.1', 'Custom Header': 'custom value'})
+                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.2.0', 'Custom Header': 'custom value'})
             mock_request.assert_called_once_with(
                 'POST',
-                'http://api.fga.example/stores/d12345abc/check',
+                'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
                 headers=expectedHeader,
                 query_params=[],
                 post_params=[],

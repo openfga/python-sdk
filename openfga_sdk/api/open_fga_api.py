@@ -98,6 +98,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -121,7 +122,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -188,6 +190,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -243,6 +246,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -266,7 +270,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -326,6 +331,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -377,6 +383,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -398,7 +405,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -450,6 +458,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -505,6 +514,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -528,7 +538,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -595,6 +606,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -646,6 +658,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -667,7 +680,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -724,13 +738,14 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
     async def list_objects(self, body, **kwargs):  # noqa: E501
-        """Get all objects of the given type that the user has a relation with  # noqa: E501
+        """List all objects of the given type that the user has a relation with  # noqa: E501
 
-        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).   # noqa: E501
+        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.  Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).   # noqa: E501
 
         >>> thread = await api.list_objects(body)
 
@@ -755,9 +770,9 @@ class OpenFgaApi(object):
         return await(self.list_objects_with_http_info(body, **kwargs))  # noqa: E501
 
     async def list_objects_with_http_info(self, body, **kwargs):  # noqa: E501
-        """Get all objects of the given type that the user has a relation with  # noqa: E501
+        """List all objects of the given type that the user has a relation with  # noqa: E501
 
-        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).   # noqa: E501
+        The ListObjects API returns a list of all the objects of the given type that the user has a relation with. To achieve this, both the store tuples and the authorization model are used. An `authorization_model_id` may be specified in the body. If it is, it will be used to decide the underlying implementation used. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first.  Note: If you have `and` or `but not` in your model while using ListObjects, checkout the [caveats](https://openfga.dev/docs/interacting/relationship-queries#caveats-and-when-not-to-use-it-3).   # noqa: E501
 
         >>> thread = api.list_objects_with_http_info(body)
 
@@ -779,6 +794,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -802,7 +818,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -869,6 +886,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -928,6 +946,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -951,7 +970,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1008,6 +1028,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1063,6 +1084,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1086,7 +1108,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1153,6 +1176,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1208,6 +1232,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1231,7 +1256,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1295,6 +1321,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1350,6 +1377,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1373,7 +1401,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1436,6 +1465,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1495,6 +1525,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1518,7 +1549,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1579,6 +1611,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1642,6 +1675,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1666,7 +1700,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1729,6 +1764,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1784,6 +1820,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1807,7 +1844,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -1874,6 +1912,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -1933,6 +1972,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -1958,7 +1998,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -2027,6 +2068,7 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
 
@@ -2082,6 +2124,7 @@ class OpenFgaApi(object):
         :param _request_auth: set to override the auth_settings for an a single
                               request; this effectively ignores the authentication
                               in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
         :type _request_auth: dict, optional
         :type _content_type: string, optional: force content-type for the request
         :return: Returns the result object.
@@ -2105,7 +2148,8 @@ class OpenFgaApi(object):
                 '_request_timeout',
                 '_request_auth',
                 '_content_type',
-                '_headers'
+                '_headers',
+                '_retry_parms'
             ]
         )
 
@@ -2172,5 +2216,6 @@ class OpenFgaApi(object):
             _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
             _preload_content=local_var_params.get('_preload_content', True),
             _request_timeout=local_var_params.get('_request_timeout'),
+            _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
             _request_auth=local_var_params.get('_request_auth')))
