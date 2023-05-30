@@ -220,7 +220,7 @@ Get a paginated list of stores.
 
 ```python
 options = {"page_size": 25, "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}
-response = await fga_client.get_store(options)
+response = await fga_client.list_stores(options)
 # response = ListStoresResponse(...)
 # response.stores = [Store({"id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z"})]
 ```
