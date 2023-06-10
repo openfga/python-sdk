@@ -410,7 +410,7 @@ body = TupleKey(
     object="document:roadmap",
 )
 
-// Read all stored relationship tuples
+# Read all stored relationship tuples
 body := ReadRequest()
 
 response = await api_instance.read(body)
@@ -680,7 +680,7 @@ body = ClientListRelationsRequest(
 )
 var response = await fga_client.list_relations(body, options);
 
-// response.relations = ["can_view", "can_edit"]
+# response.relations = ["can_view", "can_edit"]
 ```
 
 #### Assertions
