@@ -391,32 +391,39 @@ body = TupleKey(
     relation="viewer",
     object="document:roadmap",
 )
+```
 
+```python
 # Find all relationship tuples where a certain user has a relationship as any relation to a certain document
 body = TupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     object="document:roadmap",
 )
+```
 
+```python
 # Find all relationship tuples where a certain user is a viewer of any document
 body = TupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:",
 )
+```
 
+```python
 # Find all relationship tuples where any user has a relationship as any relation with a particular document
 body = TupleKey(
     object="document:roadmap",
 )
+```
 
-// Read all stored relationship tuples
+```python
+# Read all stored relationship tuples
 body := ReadRequest()
 
 response = await api_instance.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 ```
-
 
 ##### Write (Create and Delete) Relationship Tuples
 
