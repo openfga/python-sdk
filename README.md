@@ -386,37 +386,57 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 
 ```python
 # Find if a relationship tuple stating that a certain user is a viewer of certain document
-body = TupleKey(
+body = ReadRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:roadmap",
 )
-
-# Find all relationship tuples where a certain user has a relationship as any relation to a certain document
-body = TupleKey(
-    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    object="document:roadmap",
-)
-
-# Find all relationship tuples where a certain user is a viewer of any document
-body = TupleKey(
-    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    relation="viewer",
-    object="document:",
-)
-
-# Find all relationship tuples where any user has a relationship as any relation with a particular document
-body = TupleKey(
-    object="document:roadmap",
-)
-
-// Read all stored relationship tuples
-body := ReadRequest()
 
 response = await fga_client.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 ```
 
+```python
+# Find all relationship tuples where a certain user has a relationship as any relation to a certain document
+body = ReadRequest(
+    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    object="document:roadmap",
+)
+
+response = await fga_client.read(body)
+# response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
+
+```
+
+```python
+# Find all relationship tuples where a certain user is a viewer of any document
+body = ReadRequest(
+    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    relation="viewer",
+    object="document:",
+)
+
+response = await fga_client.read(body)
+# response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
+```
+
+```python
+# Find all relationship tuples where any user has a relationship as any relation with a particular document
+body = ReadRequest(
+    object="document:roadmap",
+)
+
+response = await fga_client.read(body)
+# response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
+```
+
+```python
+# Read all stored relationship tuples
+body = ReadRequest()
+
+response = await fga_client.read(body)
+# response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
+```
 
 ##### Write (Create and Delete) Relationship Tuples
 
