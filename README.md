@@ -373,7 +373,7 @@ options = {
 }
 body = ClientReadChangesRequest("document")
 
-response = await api_instance.read_changes(body, options)
+response = await fga_client.read_changes(body, options)
 # response.continuation_token = ...
 # response.changes = [TupleChange(tuple_key=TupleKey(object="...",relation="...",user="..."),operation=TupleOperation("TUPLE_OPERATION_WRITE"),timestamp=datetime.fromisoformat("..."))]
 ```
@@ -392,7 +392,7 @@ body = ReadRequest(
     object="document:roadmap",
 )
 
-response = await api_instance.read(body)
+response = await fga_client.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 ```
 
@@ -403,7 +403,7 @@ body = ReadRequest(
     object="document:roadmap",
 )
 
-response = await api_instance.read(body)
+response = await fga_client.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 
 ```
@@ -416,7 +416,7 @@ body = ReadRequest(
     object="document:",
 )
 
-response = await api_instance.read(body)
+response = await fga_client.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 ```
 
@@ -426,7 +426,7 @@ body = ReadRequest(
     object="document:roadmap",
 )
 
-response = await api_instance.read(body)
+response = await fga_client.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 ```
 
@@ -434,7 +434,7 @@ response = await api_instance.read(body)
 # Read all stored relationship tuples
 body = ReadRequest()
 
-response = await api_instance.read(body)
+response = await fga_client.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
 ```
 
@@ -673,7 +673,7 @@ body = ClientListObjectsRequest(
     ]
 )
 
-response = await api_instance.list_objects(body)
+response = await fga_client.list_objects(body)
 # response.objects = ["document:roadmap"]
 ```
 
