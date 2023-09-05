@@ -74,7 +74,7 @@ class ClientTuple():
     @property
     def tuple_key(self):
         """
-                Return the tuple as tuple_key
+        Return the tuple as tuple_key
         """
         return TupleKey(
             object=self.object,
