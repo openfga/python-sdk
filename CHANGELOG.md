@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1
+
+### [0.2.1](https://github.com/openfga/python-sdk/compare/v0.2.0...v0.2.1) (2023-09-05)
+- fix(client): fix a crash when calling check with contextual tuples (https://github.com/openfga/python-sdk/commit/dded83f9a75dc1f01c1cfbd8385a25654129f78f)
+- chore(docs): update README and fix a few typos (https://github.com/openfga/python-sdk/pull/21, https://github.com/openfga/python-sdk/pull/31, https://github.com/openfga/python-sdk/pull/32, https://github.com/openfga/python-sdk/pull/33, https://github.com/openfga/python-sdk/pull/34, https://github.com/openfga/python-sdk/pull/37)
+
 ## v0.2.0
 
 ### [0.2.0](https://github.com/openfga/python-sdk/compare/v0.1.1...v0.2.0) (2023-05-25)

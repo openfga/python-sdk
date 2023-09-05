@@ -215,7 +215,7 @@ class Credentials:
             'grant_type': "client_credentials",
         }
         headers = urllib3.response.HTTPHeaderDict(
-            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.2.0'})
+            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.2.1'})
         raw_response = await client.POST(token_url, headers=headers, body=body)
         if 200 <= raw_response.status <= 299:
             try:
