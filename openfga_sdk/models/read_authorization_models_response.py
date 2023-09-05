@@ -87,6 +87,7 @@ class ReadAuthorizationModelsResponse(object):
     def continuation_token(self):
         """Gets the continuation_token of this ReadAuthorizationModelsResponse.  # noqa: E501
 
+        The continuation token will be empty if there are no more models.  # noqa: E501
 
         :return: The continuation_token of this ReadAuthorizationModelsResponse.  # noqa: E501
         :rtype: str
@@ -97,6 +98,7 @@ class ReadAuthorizationModelsResponse(object):
     def continuation_token(self, continuation_token):
         """Sets the continuation_token of this ReadAuthorizationModelsResponse.
 
+        The continuation token will be empty if there are no more models.  # noqa: E501
 
         :param continuation_token: The continuation_token of this ReadAuthorizationModelsResponse.  # noqa: E501
         :type continuation_token: str

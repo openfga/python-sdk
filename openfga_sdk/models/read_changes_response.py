@@ -87,6 +87,7 @@ class ReadChangesResponse(object):
     def continuation_token(self):
         """Gets the continuation_token of this ReadChangesResponse.  # noqa: E501
 
+        The continuation token will be identical if there are no new changes.  # noqa: E501
 
         :return: The continuation_token of this ReadChangesResponse.  # noqa: E501
         :rtype: str
@@ -97,6 +98,7 @@ class ReadChangesResponse(object):
     def continuation_token(self, continuation_token):
         """Sets the continuation_token of this ReadChangesResponse.
 
+        The continuation token will be identical if there are no new changes.  # noqa: E501
 
         :param continuation_token: The continuation_token of this ReadChangesResponse.  # noqa: E501
         :type continuation_token: str
