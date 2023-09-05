@@ -1457,9 +1457,16 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         response_body = '{"allowed": true, "resolution": "1234"}'
         mock_request.return_value = mock_response(response_body, 200)
         body = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="reader",
+            object="document:budget",
+            contextual_tuples=[
+                ClientTuple(
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    relation="writer",
+                    object="document:budget",
+                ),
+            ],
         )
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1477,8 +1484,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 headers=ANY,
                 query_params=[],
                 post_params=[],
-                body={"tuple_key": {"object": "document:2021-budget",
-                                    "relation": "reader", "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b"}, "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                body={"tuple_key": {"user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b", "relation": "reader", "object": "document:budget"},
+                      "contextual_tuples": {"tuple_keys": [{"user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b", "relation": "writer", "object": "document:budget"}]},
+                      "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
                 _preload_content=ANY,
                 _request_timeout=None
             )

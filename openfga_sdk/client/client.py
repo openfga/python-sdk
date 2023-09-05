@@ -502,7 +502,9 @@ class OpenFgaClient():
             authorization_model_id=self._get_authorization_model_id(options),
         )
         if body.contextual_tuples:
-            req_body.contextual_tuples(body.contextual_tuples)
+            req_body.contextual_tuples = ContextualTupleKeys(
+                tuple_keys=convert_tuple_keys(body.contextual_tuples)
+            )
         api_response = await self._api.check(
             body=req_body,
             **kwargs
