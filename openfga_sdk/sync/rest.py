@@ -23,7 +23,7 @@ import six
 from six.moves.urllib.parse import urlencode
 import urllib3
 
-from openfga_sdk_sync.exceptions import ApiException, UnauthorizedException, ForbiddenException, NotFoundException, ServiceException, ApiValueError, ValidationException
+from openfga_sdk.exceptions import ApiException, UnauthorizedException, ForbiddenException, NotFoundException, ServiceException, ApiValueError, ValidationException
 
 
 logger = logging.getLogger(__name__)

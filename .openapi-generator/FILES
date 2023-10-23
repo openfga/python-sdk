@@ -146,6 +146,11 @@ openfga_sdk/models/write_authorization_model_request.py
 openfga_sdk/models/write_authorization_model_response.py
 openfga_sdk/models/write_request.py
 openfga_sdk/rest.py
+openfga_sdk/sync/api.py
+openfga_sdk/sync/api_client.py
+openfga_sdk/sync/client/client.py
+openfga_sdk/sync/credentials.py
+openfga_sdk/sync/rest.py
 openfga_sdk/validation.py
 requirements.txt
 setup.cfg

@@ -28,10 +28,10 @@ import tempfile
 import six
 from six.moves.urllib.parse import quote
 
-from openfga_sdk_sync.configuration import Configuration
-import openfga_sdk_sync.models
-from openfga_sdk_sync import rest
-from openfga_sdk_sync.exceptions import ApiValueError, ApiException, FgaValidationException, RateLimitExceededError
+from openfga_sdk.configuration import Configuration
+import openfga_sdk.models
+from openfga_sdk.sync import rest
+from openfga_sdk.exceptions import ApiValueError, ApiException, FgaValidationException, RateLimitExceededError
 
 
 DEFAULT_USER_AGENT = 'openfga-sdk python/0.2.1'
@@ -214,7 +214,6 @@ class ApiClient(object):
                     _request_timeout=_request_timeout)
             except RateLimitExceededError as e:
                 if x < max_retry:
-
                     time.sleep(random_time(x, min_wait_in_ms))
                     continue
                 e.body = e.body.decode('utf-8') if six.PY3 else e.body
@@ -348,7 +347,7 @@ class ApiClient(object):
             if klass in self.NATIVE_TYPES_MAPPING:
                 klass = self.NATIVE_TYPES_MAPPING[klass]
             else:
-                klass = getattr(openfga_sdk_sync.models, klass)
+                klass = getattr(openfga_sdk.models, klass)
 
         if klass in self.PRIMITIVE_TYPES:
             return self.__deserialize_primitive(data, klass)

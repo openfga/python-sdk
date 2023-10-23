@@ -17,7 +17,7 @@ import typing
 import urllib3
 from urllib.parse import urlparse
 
-from openfga_sdk_sync.exceptions import FgaValidationException, ApiValueError, AuthenticationError
+from openfga_sdk.exceptions import FgaValidationException, ApiValueError, AuthenticationError
 
 
 def none_or_empty(value):
