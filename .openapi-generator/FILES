@@ -70,6 +70,7 @@ docs/WriteRequest.md
 openfga_sdk/__init__.py
 openfga_sdk/api/__init__.py
 openfga_sdk/api/open_fga_api.py
+openfga_sdk/api/open_fga_api_sync.py
 openfga_sdk/api_client.py
 openfga_sdk/client/__init__.py
 openfga_sdk/client/client.py
@@ -146,7 +147,7 @@ openfga_sdk/models/write_authorization_model_request.py
 openfga_sdk/models/write_authorization_model_response.py
 openfga_sdk/models/write_request.py
 openfga_sdk/rest.py
-openfga_sdk/sync/api.py
+openfga_sdk/sync/__init__.py
 openfga_sdk/sync/api_client.py
 openfga_sdk/sync/client/client.py
 openfga_sdk/sync/credentials.py
@@ -158,5 +159,9 @@ setup.py
 test-requirements.txt
 test/__init__.py
 test/test_client.py
+test/test_client_sync.py
 test/test_credentials.py
+test/test_credentials_sync.py
 test/test_open_fga_api.py
+test/test_open_fga_api_sync.py
+test/test_validation.py
