@@ -8,6 +8,7 @@ test/*
 !test/test_open_fga_api_sync.py
 !test/test_validation.py
 !test/test_credentials_sync.py
+.github/workflows/python.yml
 .gitlab-ci.yml
 .travis.yml
 tox.ini
