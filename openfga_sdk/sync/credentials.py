@@ -17,6 +17,7 @@ import typing
 import urllib3
 from urllib.parse import urlparse
 
+from openfga_sdk.credentials import CredentialConfiguration
 from openfga_sdk.exceptions import FgaValidationException, ApiValueError, AuthenticationError
 
 
@@ -25,101 +26,6 @@ def none_or_empty(value):
     Return true if value is either none or empty string
     """
     return value is None or value == ''
-
-
-class CredentialConfiguration:
-    """
-    Configuration for SDK credential
-    :param client_id: Client ID which will be matched with client_secret
-    :param client_secret: Client secret which will be matched with client_id
-    :param api_token: Bearer token to be sent for authentication
-    :param api_audience: API audience used for OAuth2
-    :param api_issuer: API issuer used for OAuth2
-    """
-
-    def __init__(
-        self,
-        client_id: typing.Optional[str] = None,
-        client_secret: typing.Optional[str] = None,
-        api_audience: typing.Optional[str] = None,
-        api_issuer: typing.Optional[str] = None,
-        api_token: typing.Optional[str] = None,
-    ):
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._api_audience = api_audience
-        self._api_issuer = api_issuer
-        self._api_token = api_token
-
-    @property
-    def client_id(self):
-        """
-        Return the client id configured
-        """
-        return self._client_id
-
-    @client_id.setter
-    def client_id(self, value):
-        """
-        Update the client id
-        """
-        self._client_id = value
-
-    @property
-    def client_secret(self):
-        """
-        Return the client secret configured
-         """
-        return self._client_secret
-
-    @client_secret.setter
-    def client_secret(self, value):
-        """
-        Update the client secret
-        """
-        self._client_secret = value
-
-    @property
-    def api_audience(self):
-        """
-        Return the api audience configured
-        """
-        return self._api_audience
-
-    @api_audience.setter
-    def api_audience(self, value):
-        """
-        Update the api audience
-        """
-        self._api_audience = value
-
-    @property
-    def api_issuer(self):
-        """
-        Return the api issuer configured
-        """
-        return self._api_issuer
-
-    @api_issuer.setter
-    def api_issuer(self, value):
-        """
-        Update the api issuer
-        """
-        self._api_issuer = value
-
-    @property
-    def api_token(self):
-        """
-        Return the api token configured
-        """
-        return self._api_token
-
-    @api_token.setter
-    def api_token(self, value):
-        """
-        Update the api token
-        """
-        self._api_token = value
 
 
 class Credentials:

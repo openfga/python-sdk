@@ -149,6 +149,7 @@ openfga_sdk/models/write_request.py
 openfga_sdk/rest.py
 openfga_sdk/sync/__init__.py
 openfga_sdk/sync/api_client.py
+openfga_sdk/sync/client/__init__.py
 openfga_sdk/sync/client/client.py
 openfga_sdk/sync/credentials.py
 openfga_sdk/sync/rest.py
