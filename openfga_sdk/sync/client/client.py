@@ -40,9 +40,9 @@ from openfga_sdk.models.write_authorization_model_request import WriteAuthorizat
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.validation import is_well_formed_ulid_string
 
-import time
 import uuid
 from typing import List
+from concurrent.futures import ThreadPoolExecutor
 
 CLIENT_METHOD_HEADER = "X-OpenFGA-Client-Method"
 CLIENT_BULK_REQUEST_ID_HEADER = "X-OpenFGA-Client-Bulk-Request-Id"
@@ -543,12 +543,16 @@ class OpenFgaClient():
         max_parallel_requests = 10
         if options is not None and "max_parallel_requests" in options:
             max_parallel_requests = options["max_parallel_requests"]
-        # Break the batch into chunks
-        request_batches = _chuck_array(body, max_parallel_requests)
+
         batch_check_response = []
-        for request_batch in request_batches:
-            response = [self._single_batch_check(i, options) for i in request_batch]
-            batch_check_response.extend(response)
+
+        def single_batch_check(request):
+            return self._single_batch_check(request, options)
+
+        with ThreadPoolExecutor(max_workers=max_parallel_requests) as executor:
+            for response in executor.map(single_batch_check, body):
+                batch_check_response.append(response)
+
         return batch_check_response
 
     def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):  # noqa: E501
