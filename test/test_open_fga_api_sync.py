@@ -21,9 +21,9 @@ from datetime import datetime
 import urllib3
 
 import openfga_sdk.sync
-from openfga_sdk.sync import rest, open_fga_api, Credentials
+from openfga_sdk.sync import rest, open_fga_api
 from openfga_sdk.sync.api_client import ApiClient
-from openfga_sdk.credentials import CredentialConfiguration
+from openfga_sdk.credentials import Credentials, CredentialConfiguration
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.exceptions import FgaValidationException, ApiValueError, NotFoundException, RateLimitExceededError, ServiceException, ValidationException, FGA_REQUEST_ID
 from openfga_sdk.models.assertion import Assertion

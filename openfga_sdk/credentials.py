@@ -11,13 +11,10 @@
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import json
 import typing
-import urllib3
 from urllib.parse import urlparse
 
-from openfga_sdk.exceptions import FgaValidationException, ApiValueError, AuthenticationError
+from openfga_sdk.exceptions import ApiValueError
 
 
 def none_or_empty(value):
@@ -136,8 +133,6 @@ class Credentials:
     ):
         self._method = method
         self._configuration = configuration
-        self._access_token = None
-        self._access_expiry_time = None
 
     @property
     def method(self):
@@ -192,53 +187,3 @@ class Credentials:
             if (parsed_url.netloc == ''):
                 raise ApiValueError('api_issuer `{}` is invalid'.format(
                     self.configuration.api_issuer))
-
-    def _token_valid(self):
-        """
-        Return whether token is valid
-        """
-        if self._access_token is None or self._access_expiry_time is None:
-            return False
-        if self._access_expiry_time < datetime.now():
-            return False
-        return True
-
-    async def _obtain_token(self, client):
-        """
-        Perform OAuth2 and obtain token
-        """
-        token_url = 'https://{}/oauth/token'.format(self.configuration.api_issuer)
-        body = {
-            'client_id': self.configuration.client_id,
-            'client_secret': self.configuration.client_secret,
-            'audience': self.configuration.api_audience,
-            'grant_type': "client_credentials",
-        }
-        headers = urllib3.response.HTTPHeaderDict(
-            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.2.1'})
-        raw_response = await client.POST(token_url, headers=headers, body=body)
-        if 200 <= raw_response.status <= 299:
-            try:
-                api_response = json.loads(raw_response.data)
-            except:  # noqa: E722
-                raise AuthenticationError(http_resp=raw_response)
-            if not api_response.get('expires_in') or not api_response.get('access_token'):
-                raise AuthenticationError(http_resp=raw_response)
-            self._access_expiry_time = datetime.now() + timedelta(seconds=int(api_response.get('expires_in')))
-            self._access_token = api_response.get('access_token')
-        else:
-            raise AuthenticationError(http_resp=raw_response)
-
-    async def get_authentication_header(self, client):
-        """
-        If configured, return the header for authentication
-        """
-        if self._method == 'none':
-            return {}
-        if self._method == 'api_token':
-            return {'Authorization': 'Bearer {}'.format(self.configuration.api_token)}
-        # check to see token is valid
-        if not self._token_valid():
-            # In this case, the token is not valid, we need to get the refresh the token
-            await self._obtain_token(client)
-        return {'Authorization': 'Bearer {}'.format(self._access_token)}

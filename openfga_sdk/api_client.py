@@ -30,7 +30,7 @@ from six.moves.urllib.parse import quote
 
 from openfga_sdk.configuration import Configuration
 import openfga_sdk.models
-from openfga_sdk import rest
+from openfga_sdk import rest, oauth2
 from openfga_sdk.exceptions import ApiValueError, ApiException, FgaValidationException, RateLimitExceededError
 
 
@@ -140,7 +140,7 @@ class ApiClient(object):
             response_types_map=None, auth_settings=None,
             _return_http_data_only=None, collection_formats=None,
             _preload_content=True, _request_timeout=None, _host=None,
-            _request_auth=None, _retry_params=None):
+            _request_auth=None, _retry_params=None, _oauth2_client=None):
 
         self.configuration.is_valid()
         config = self.configuration
@@ -183,7 +183,7 @@ class ApiClient(object):
         # auth setting
         await self.update_params_for_auth(
             header_params, query_params, auth_settings,
-            request_auth=_request_auth)
+            request_auth=_request_auth, oauth2_client=_oauth2_client)
 
         # body
         if body:
@@ -369,7 +369,7 @@ class ApiClient(object):
                        async_req=None, _return_http_data_only=None,
                        collection_formats=None, _preload_content=True,
                        _request_timeout=None, _host=None, _request_auth=None,
-                       _retry_params=None):
+                       _retry_params=None, _oauth2_client=None):
         """Makes the HTTP request (synchronous) and returns deserialized data.
 
         To make an async_req request, set the async_req parameter.
@@ -417,7 +417,7 @@ class ApiClient(object):
                                          response_types_map, auth_settings,
                                          _return_http_data_only, collection_formats,
                                          _preload_content, _request_timeout, _host,
-                                         _request_auth, _retry_params))
+                                         _request_auth, _retry_params, _oauth2_client))
 
         return self.pool.apply_async(self.__call_api, (resource_path,
                                                        method, path_params,
@@ -430,7 +430,9 @@ class ApiClient(object):
                                                        collection_formats,
                                                        _preload_content,
                                                        _request_timeout,
-                                                       _host, _request_auth, _retry_params))
+                                                       _host, _request_auth,
+                                                       _retry_params,
+                                                       _oauth2_client))
 
     async def request(self, method, url, query_params=None, headers=None,
                       post_params=None, body=None, _preload_content=True,
@@ -561,7 +563,7 @@ class ApiClient(object):
             return content_types[0]
 
     async def update_params_for_auth(self, headers, queries, auth_settings,
-                                     request_auth=None):
+                                     request_auth=None, oauth2_client=None):
         """Updates header and query params based on authentication setting.
 
         :param headers: Header parameters dict to be updated.
@@ -569,11 +571,20 @@ class ApiClient(object):
         :param auth_settings: Authentication setting identifiers list.
         :param request_auth: if set, the provided settings will
                              override the token in the configuration.
+        :param oauth2_client: if set, will be used for credential exchange.
         """
-        if self.configuration.credentials is not None:
-            added_headers = await self.configuration.credentials.get_authentication_header(self.rest_client)
-            for key, value in added_headers.items():
-                headers[key] = value
+        credentials = self.configuration.credentials
+        if credentials is not None:
+            if credentials.method == 'none':
+                pass
+            if credentials.method == 'api_token':
+                headers['Authorization'] = 'Bearer {}'.format(credentials.configuration.api_token)
+            if credentials.method == 'client_credentials':
+                if oauth2_client is None:
+                    oauth2_client = oauth2.OAuth2Client(credentials)
+                oauth2_headers = await oauth2_client.get_authentication_header(self.rest_client)
+                for key, value in oauth2_headers.items():
+                    headers[key] = value
 
         if not auth_settings:
             return

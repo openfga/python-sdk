@@ -14,30 +14,9 @@
 
 from unittest import IsolatedAsyncioTestCase
 
-from mock import patch
-from datetime import datetime, timedelta
-
 import openfga_sdk
-import urllib3
 
-from openfga_sdk import rest
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
-from openfga_sdk.configuration import Configuration
-from openfga_sdk.exceptions import AuthenticationError
-
-
-# Helper function to construct mock response
-def mock_response(body, status):
-    headers = urllib3.response.HTTPHeaderDict({
-        'content-type': 'application/json'
-    })
-    obj = urllib3.HTTPResponse(
-        body,
-        headers,
-        status,
-        preload_content=False
-    )
-    return rest.RESTResponse(obj, obj.data)
 
 
 class TestCredentials(IsolatedAsyncioTestCase):
@@ -165,87 +144,3 @@ class TestCredentials(IsolatedAsyncioTestCase):
                                                                        client_secret='mysecret', api_issuer='www.testme.com'))
         with self.assertRaises(openfga_sdk.ApiValueError):
             credential.validate_credentials_config()
-
-    async def test_get_authentication_header(self):
-        """
-        Test getting authentication header when method is none
-        """
-        credential = Credentials()
-        auth_header = await credential.get_authentication_header(None)
-        self.assertEqual(auth_header, {})
-
-    async def test_get_authentication_api_token(self):
-        """
-        Test getting authentication header when method is api token
-        """
-        credential = Credentials(
-            method="api_token", configuration=CredentialConfiguration(api_token='ABCDEFG'))
-        auth_header = await credential.get_authentication_header(None)
-        self.assertEqual(auth_header, {'Authorization': 'Bearer ABCDEFG'})
-
-    async def test_get_authentication_valid_client_credentials(self):
-        """
-        Test getting authentication header when method is client credentials
-        """
-        credential = Credentials(method="client_credentials",
-                                 configuration=CredentialConfiguration(client_id='myclientid',
-                                                                       client_secret='mysecret', api_issuer='www.testme.com', api_audience='myaudience'))
-        credential._access_token = 'XYZ123'
-        credential._access_expiry_time = datetime.now() + timedelta(seconds=60)
-        auth_header = await credential.get_authentication_header(None)
-        self.assertEqual(auth_header, {'Authorization': 'Bearer XYZ123'})
-
-    @patch.object(rest.RESTClientObject, 'request')
-    async def test_get_authentication_obtain_client_credentials(self, mock_request):
-        """
-        Test getting authentication header when method is client credential and we need to obtain token
-        """
-        response_body = '''
-{
-  "expires_in": 120,
-  "access_token": "AABBCCDD"
-}
-        '''
-        mock_request.return_value = mock_response(response_body, 200)
-
-        credential = Credentials(method="client_credentials",
-                                 configuration=CredentialConfiguration(client_id='myclientid',
-                                                                       client_secret='mysecret', api_issuer='www.testme.com', api_audience='myaudience'))
-        client = rest.RESTClientObject(Configuration())
-        current_time = datetime.now()
-        auth_header = await credential.get_authentication_header(client)
-        self.assertEqual(auth_header, {'Authorization': 'Bearer AABBCCDD'})
-        self.assertEqual(credential._access_token, 'AABBCCDD')
-        self.assertGreaterEqual(credential._access_expiry_time,
-                                current_time + timedelta(seconds=int(120)))
-        expected_header = urllib3.response.HTTPHeaderDict(
-            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.2.1'})
-        mock_request.assert_called_once_with(
-            'POST',
-            'https://www.testme.com/oauth/token',
-            headers=expected_header,
-            query_params=None, post_params=None, _preload_content=True, _request_timeout=None,
-            body={"client_id": "myclientid", "client_secret": "mysecret",
-                  "audience": "myaudience", "grant_type": "client_credentials"}
-        )
-        await client.close()
-
-    @patch.object(rest.RESTClientObject, 'request')
-    async def test_get_authentication_obtain_client_credentials_failed(self, mock_request):
-        """
-        Test getting authentication header when method is client credential and we fail to obtain token
-        """
-        response_body = '''
-{
-  "reason": "Unauthorized"
-}
-        '''
-        mock_request.return_value = mock_response(response_body, 403)
-
-        credential = Credentials(method="client_credentials",
-                                 configuration=CredentialConfiguration(client_id='myclientid',
-                                                                       client_secret='mysecret', api_issuer='www.testme.com', api_audience='myaudience'))
-        client = rest.RESTClientObject(Configuration())
-        with self.assertRaises(AuthenticationError):
-            await credential.get_authentication_header(client)
-        await client.close()

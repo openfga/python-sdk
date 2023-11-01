@@ -146,12 +146,13 @@ openfga_sdk/models/write_assertions_request.py
 openfga_sdk/models/write_authorization_model_request.py
 openfga_sdk/models/write_authorization_model_response.py
 openfga_sdk/models/write_request.py
+openfga_sdk/oauth2.py
 openfga_sdk/rest.py
 openfga_sdk/sync/__init__.py
 openfga_sdk/sync/api_client.py
 openfga_sdk/sync/client/__init__.py
 openfga_sdk/sync/client/client.py
-openfga_sdk/sync/credentials.py
+openfga_sdk/sync/oauth2.py
 openfga_sdk/sync/rest.py
 openfga_sdk/validation.py
 requirements.txt
@@ -162,7 +163,8 @@ test/__init__.py
 test/test_client.py
 test/test_client_sync.py
 test/test_credentials.py
-test/test_credentials_sync.py
+test/test_oauth2.py
+test/test_oauth2_sync.py
 test/test_open_fga_api.py
 test/test_open_fga_api_sync.py
 test/test_validation.py
