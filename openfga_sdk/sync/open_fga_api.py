@@ -19,6 +19,7 @@ import re  # noqa: F401
 import six
 
 from openfga_sdk.sync.api_client import ApiClient
+from openfga_sdk.sync.oauth2 import OAuth2Client
 from openfga_sdk.exceptions import (  # noqa: F401
     FgaValidationException,
     ApiValueError
@@ -36,6 +37,12 @@ class OpenFgaApi(object):
         if api_client is None:
             api_client = ApiClient()
         self.api_client = api_client
+
+        self._oauth2_client = None
+        if api_client.configuration is not None:
+            credentials = api_client.configuration.credentials
+            if credentials is not None and credentials.method == 'client_credentials':
+                self._oauth2_client = OAuth2Client(credentials)
 
     def __enter__(self):
         return self
@@ -192,7 +199,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def create_store(self, body, **kwargs):  # noqa: E501
         """Create a store  # noqa: E501
@@ -333,7 +341,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def delete_store(self, **kwargs):  # noqa: E501
         """Delete a store  # noqa: E501
@@ -460,7 +469,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def expand(self, body, **kwargs):  # noqa: E501
         """Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship  # noqa: E501
@@ -608,7 +618,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def get_store(self, **kwargs):  # noqa: E501
         """Get a store  # noqa: E501
@@ -740,7 +751,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def list_objects(self, body, **kwargs):  # noqa: E501
         """List all objects of the given type that the user has a relation with  # noqa: E501
@@ -888,7 +900,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def list_stores(self, **kwargs):  # noqa: E501
         """List all stores  # noqa: E501
@@ -1030,7 +1043,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def read(self, body, **kwargs):  # noqa: E501
         """Get tuples from the store that matches a query, without following userset rewrite rules  # noqa: E501
@@ -1178,7 +1192,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def read_assertions(self, authorization_model_id, **kwargs):  # noqa: E501
         """Read assertions for an authorization model ID  # noqa: E501
@@ -1323,7 +1338,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def read_authorization_model(self, id, **kwargs):  # noqa: E501
         """Return a particular version of an authorization model  # noqa: E501
@@ -1467,7 +1483,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def read_authorization_models(self, **kwargs):  # noqa: E501
         """Return all the authorization models for a particular store  # noqa: E501
@@ -1613,7 +1630,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def read_changes(self, **kwargs):  # noqa: E501
         """Return a list of all the tuple changes  # noqa: E501
@@ -1766,7 +1784,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def write(self, body, **kwargs):  # noqa: E501
         """Add or delete tuples from the store  # noqa: E501
@@ -1914,7 +1933,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def write_assertions(self, authorization_model_id, body, **kwargs):  # noqa: E501
         """Upsert assertions for an authorization model ID  # noqa: E501
@@ -2070,7 +2090,8 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
 
     def write_authorization_model(self, body, **kwargs):  # noqa: E501
         """Create a new authorization model  # noqa: E501
@@ -2218,4 +2239,5 @@ class OpenFgaApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             _retry_params=local_var_params.get('_retry_params'),
             collection_formats=collection_formats,
-            _request_auth=local_var_params.get('_request_auth'))
+            _request_auth=local_var_params.get('_request_auth'),
+            _oauth2_client=self._oauth2_client)
