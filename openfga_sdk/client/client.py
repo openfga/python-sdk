@@ -511,17 +511,20 @@ class OpenFgaClient():
         )
         return api_response
 
-    async def _single_batch_check(self, body: ClientCheckRequest, options: dict[str, str] = None):  # noqa: E501
+    async def _single_batch_check(self, body: ClientCheckRequest, semaphore: asyncio.Semaphore, options: dict[str, str] = None):  # noqa: E501
         """
         Run a single batch request and return body in a SingleBatchCheckResponse
         :param body - ClientCheckRequest defining check request
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         """
+        await semaphore.acquire()
         try:
             api_response = await self.check(body, options)
             return BatchCheckResponse(allowed=api_response.allowed, request=body, response=api_response, error=None)
         except Exception as err:
             return BatchCheckResponse(allowed=False, request=body, response=None, error=err)
+        finally:
+            semaphore.release()
 
     async def batch_check(self, body: List[ClientCheckRequest], options: dict[str, str] = None):  # noqa: E501
         """
@@ -543,13 +546,11 @@ class OpenFgaClient():
         max_parallel_requests = 10
         if options is not None and "max_parallel_requests" in options:
             max_parallel_requests = options["max_parallel_requests"]
-        # Break the batch into chunks
-        request_batches = _chuck_array(body, max_parallel_requests)
-        batch_check_response = []
-        for request_batch in request_batches:
-            request = [self._single_batch_check(i, options) for i in request_batch]
-            response = await asyncio.gather(*request)
-            batch_check_response.extend(response)
+
+        sem = asyncio.Semaphore(max_parallel_requests)
+        batch_check_coros = [self._single_batch_check(request, sem, options) for request in body]
+        batch_check_response = await asyncio.gather(*batch_check_coros)
+
         return batch_check_response
 
     async def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):  # noqa: E501
