@@ -201,6 +201,29 @@ async def main():
 
 ```
 
+#### Synchronous Client
+
+To run outside of an async context, the project exports a synchronous client
+from `openfga_sdk.sync` that supports all the credential types and calls,
+without requiring async/await.
+
+```python
+import openfga_sdk
+from openfga_sdk.sync.client import OpenFgaClient
+
+
+def main():
+    configuration = openfga_sdk.ClientConfiguration(
+        api_scheme=OPENFGA_API_SCHEME, # optional, defaults to "https"
+        api_host=OPENFGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id=OPENFGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id=OPENFGA_AUTHORIZATION_MODEL_ID, # optional, can be overridden per request
+    )
+    # Enter a context with an instance of the OpenFgaClient
+    with OpenFgaClient(configuration) as fga_client:
+        api_response = fga_client.read_authorization_models()
+```
+
 
 ### Get your Store ID
 

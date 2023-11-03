@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0
+
+### [0.3.0](https://github.com/openfga/python-sdk/compare/v0.2.1...v0.3.0) (2023-11-02)
+- feat(client): introduce synchronous OpenFgaClient (https://github.com/openfga/python-sdk/commit/c92b436543e263f2c1af6af15f1c4fda1c9dad21)
+- refactor(config): extract oauth2 from credentials, removing logic from credentials configuration (https://github.com/openfga/python-sdk/commit/f91d14b25f86dd3f2e4d48229bb53cc7d9b20f1b)
+- feat(client): performance improvements to batch_check (https://github.com/openfga/python-sdk/commit/d8f2d429d2c279c0e56d5ef2a6172df8bfadd82b)
+
 ## v0.2.1
 
 ### [0.2.1](https://github.com/openfga/python-sdk/compare/v0.2.0...v0.2.1) (2023-09-05)
