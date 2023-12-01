@@ -209,7 +209,7 @@ without requiring async/await.
 
 ```python
 import openfga_sdk
-from openfga_sdk.sync.client import OpenFgaClient
+from openfga_sdk.sync import OpenFgaClient
 
 
 def main():
