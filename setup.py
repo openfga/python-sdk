@@ -23,8 +23,8 @@ VERSION = "0.3.0"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
-REQUIRES = ["urllib3 >= 1.26.11", "six >= 1.10", "python-dateutil >= 2.8.2"]
-REQUIRES.append("aiohttp >= 3.8.1")
+REQUIRES = ["urllib3 >= 1.25.11", "six >= 1.16", "python-dateutil >= 2.8.2"]
+REQUIRES.append("aiohttp >= 3.9.1")
 
 from setuptools import setup
 
