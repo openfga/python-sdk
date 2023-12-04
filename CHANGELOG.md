@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.1
+
+### [0.3.1](https://github.com/openfga/python-sdk/compare/v0.3.0...v0.3.1) (2023-12-01)
+- chore(deps): reduce min urllib3 to 1.25.11, add dependabot & bump deps
+
 ## v0.3.0
 
 ### [0.3.0](https://github.com/openfga/python-sdk/compare/v0.2.1...v0.3.0) (2023-11-02)
