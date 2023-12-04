@@ -14,7 +14,7 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -40,7 +40,7 @@ jobs:
     needs: [test]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -60,7 +60,7 @@ jobs:
           python setup.py sdist bdist_wheel
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        uses: pypa/gh-action-pypi-publish@2f6f737ca5f74c637829c0f5c3acd0e29ea5e8bf
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
@@ -71,9 +71,9 @@ jobs:
     needs: [publish]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: Roang-zero1/github-create-release-action@5cf058ddffa6fa04e5cda07c98570c757dc4a0e1
+      - uses: Roang-zero1/github-create-release-action@57eb9bdce7a964e48788b9e78b5ac766cb684803
         with:
           version_regex: ^v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+
         env:
