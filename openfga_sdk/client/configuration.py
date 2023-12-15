@@ -22,14 +22,16 @@ class ClientConfiguration(Configuration):
     """
 
     def __init__(
-            self,
-            api_scheme="https",
-            api_host=None,
-            store_id=None,
-            credentials=None,
-            retry_params=None,
-            authorization_model_id=None, ):
-        super().__init__(api_scheme, api_host, store_id, credentials, retry_params)
+        self,
+        api_scheme="https",
+        api_host=None,
+        store_id=None,
+        credentials=None,
+        retry_params=None,
+        authorization_model_id=None,
+        ssl_ca_cert=None,
+    ):
+        super().__init__(api_scheme, api_host, store_id, credentials, retry_params, ssl_ca_cert=ssl_ca_cert)
         self._authorization_model_id = authorization_model_id
 
     def is_valid(self):
