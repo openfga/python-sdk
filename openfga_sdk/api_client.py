@@ -34,7 +34,7 @@ from openfga_sdk import rest, oauth2
 from openfga_sdk.exceptions import ApiValueError, ApiException, FgaValidationException, RateLimitExceededError
 
 
-DEFAULT_USER_AGENT = 'openfga-sdk python/0.3.1'
+DEFAULT_USER_AGENT = 'openfga-sdk python/0.3.2'
 
 
 def random_time(loop_count, min_wait_in_ms):

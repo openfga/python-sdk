@@ -92,6 +92,7 @@ openfga_sdk/client/models/write_transaction_opts.py
 openfga_sdk/configuration.py
 openfga_sdk/credentials.py
 openfga_sdk/exceptions.py
+openfga_sdk/help.py
 openfga_sdk/models/__init__.py
 openfga_sdk/models/any.py
 openfga_sdk/models/assertion.py

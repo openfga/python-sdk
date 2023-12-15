@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.2
+
+### [0.3.2](https://github.com/openfga/python-sdk/compare/v0.3.1...v0.3.2) (2023-12-15)
+- feat: allow passing ssl certs to client configuration
+- feat: setup openfga_sdk.help for bug info
+
 ## v0.3.1
 
 ### [0.3.1](https://github.com/openfga/python-sdk/compare/v0.3.0...v0.3.1) (2023-12-01)

@@ -130,10 +130,10 @@ from openfga_sdk.client import OpenFgaClient
 
 async def main():
     configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = OPENFGA_API_SCHEME, # optional, defaults to "https"
-        api_host = OPENFGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = OPENFGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = OPENFGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
+        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
+        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
     )
     # Enter a context with an instance of the OpenFgaClient
     async with OpenFgaClient(configuration) as fga_client:
@@ -152,14 +152,14 @@ from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
 async def main():
     configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = OPENFGA_API_SCHEME, # optional, defaults to "https"
-        api_host = OPENFGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = OPENFGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = OPENFGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
+        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
+        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
         credentials = Credentials(
             method='api_token',
-            configuration=CredentialConfiguration(
-                api_token= OPENFGA_API_TOKEN,
+            configuration = CredentialConfiguration(
+                api_token = FGA_API_TOKEN,
             )
         )
     )
@@ -180,17 +180,17 @@ from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
 async def main():
     configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = OPENFGA_API_SCHEME, # optional, defaults to "https"
-        api_host = OPENFGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = OPENFGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = OPENFGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
+        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
+        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
         credentials = Credentials(
-            method='client_credentials',
-            configuration=CredentialConfiguration(
-                api_issuer= OPENFGA_API_TOKEN_ISSUER,
-                api_audience= OPENFGA_API_AUDIENCE,
-                client_id= OPENFGA_CLIENT_ID,
-                client_secret= OPENFGA_CLIENT_SECRET,
+            method = 'client_credentials',
+            configuration = CredentialConfiguration(
+                api_issuer = FGA_API_TOKEN_ISSUER,
+                api_audience = FGA_API_AUDIENCE,
+                client_id = FGA_CLIENT_ID,
+                client_secret = FGA_CLIENT_SECRET,
             )
         )
     )
@@ -214,10 +214,10 @@ from openfga_sdk.sync import OpenFgaClient
 
 def main():
     configuration = openfga_sdk.ClientConfiguration(
-        api_scheme=OPENFGA_API_SCHEME, # optional, defaults to "https"
-        api_host=OPENFGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id=OPENFGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id=OPENFGA_AUTHORIZATION_MODEL_ID, # optional, can be overridden per request
+        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
+        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # optional, can be overridden per request
     )
     # Enter a context with an instance of the OpenFgaClient
     with OpenFgaClient(configuration) as fga_client:
