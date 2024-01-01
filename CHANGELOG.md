@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.3
+
+### [0.3.3](https://github.com/openfga/python-sdk/compare/v0.3.2...v0.3.3) (2024-01-02)
+- fix: correct type hints for list_relations
+- fix: handle empty TupleKey in read
+- chore: add example project
+
 ## v0.3.2
 
 ### [0.3.2](https://github.com/openfga/python-sdk/compare/v0.3.1...v0.3.2) (2023-12-15)
