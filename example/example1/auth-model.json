@@ -1,0 +1,73 @@
+{
+    "schema_version": "1.1",
+    "type_definitions": [
+      {
+        "type": "user"
+      },
+      {
+        "type": "document",
+        "relations": {
+          "reader": {
+            "this": {}
+          },
+          "writer": {
+            "this": {}
+          },
+          "owner": {
+            "this": {}
+          }
+        },
+        "metadata": {
+          "relations": {
+            "reader": {
+              "directly_related_user_types": [
+                {
+                  "type": "user"
+                }
+              ]
+            },
+            "writer": {
+              "directly_related_user_types": [
+                {
+                  "type": "user"
+                }
+              ]
+            },
+            "owner": {
+              "directly_related_user_types": [
+                {
+                  "type": "user"
+                }
+              ]
+            },
+            "conditional_reader": {
+              "directly_related_user_types": [
+                {
+                  "condition": "name_starts_with_a",
+                  "type": "user"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "conditions": {
+      "ViewCountLessThan200": {
+        "name": "ViewCountLessThan200",
+        "expression": "ViewCount < 200",
+        "parameters": {
+          "ViewCount": {
+            "type_name": "TYPE_NAME_INT"
+          },
+          "Type": {
+            "type_name": "TYPE_NAME_STRING"
+          },
+          "Name": {
+            "type_name": "TYPE_NAME_STRING"
+          }
+        }
+      }
+    }
+  }
+  

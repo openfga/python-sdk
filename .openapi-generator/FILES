@@ -68,6 +68,13 @@ docs/WriteAssertionsRequest.md
 docs/WriteAuthorizationModelRequest.md
 docs/WriteAuthorizationModelResponse.md
 docs/WriteRequest.md
+example/Makefile
+example/README.md
+example/example1/auth-model.json
+example/example1/example1.py
+example/example1/requirements.txt
+example/example1/setup.cfg
+example/example1/setup.py
 openfga_sdk/__init__.py
 openfga_sdk/api/__init__.py
 openfga_sdk/api/open_fga_api.py

@@ -19,13 +19,12 @@ By submitting an issue to this repository, you agree to the terms within the [Op
 
 ### Version of SDK
 
-
 ```
 $ python -m openfga_sdk.help
 <paste here>
 ```
 
-This command is only available on openfga_sdk v0.3.2 and greater. Otherwise, please provide some basic information about your system.
+This command is only available on openfga_sdk `v0.3.2` and greater. Otherwise, please provide some basic information about your system.
 
 ### Version of OpenFGA (if known)
 

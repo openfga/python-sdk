@@ -726,6 +726,53 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, 'request')
+    def test_read_empty_body(self, mock_request):
+        """Test case for read with empty body
+
+        Get tuples from the store that matches a query, without following userset rewrite rules  # noqa: E501
+        """
+        response_body = '''
+            {
+  "tuples": [
+    {
+      "key": {
+        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        "relation": "reader",
+        "object": "document:2021-budget"
+      },
+      "timestamp": "2021-10-06T15:32:11.128Z"
+    }
+  ]
+}
+        '''
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        # Enter a context with an instance of the API client
+        with OpenFgaClient(configuration) as api_client:
+            body = TupleKey()
+            api_response = api_client.read(
+                body=body,
+                options={}
+            )
+            self.assertIsInstance(api_response, ReadResponse)
+            key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                           relation="reader", object="document:2021-budget")
+            timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
+            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)])
+            self.assertEqual(api_response, expected_data)
+            mock_request.assert_called_once_with(
+                'POST',
+                'http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read',
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={},
+                _preload_content=ANY,
+                _request_timeout=None
+            )
+
+    @patch.object(rest.RESTClientObject, 'request')
     def test_write(self, mock_request):
         """Test case for write
 
