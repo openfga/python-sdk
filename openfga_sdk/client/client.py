@@ -26,6 +26,7 @@ from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_response import ClientWriteResponse
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
+from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.write_single_response import construct_write_single_response
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
@@ -352,9 +353,14 @@ class OpenFgaClient():
                 options.pop("continuation_token")
         kwargs = options_to_kwargs(options)
 
+        if body is None or (body.object is None and body.relation is None and body.user is None):
+            tuple_key = None
+        else:
+            tuple_key = body
+
         api_response = await self._api.read(
             ReadRequest(
-                tuple_key=body,
+                tuple_key=tuple_key,
                 page_size=page_size,
                 continuation_token=continuation_token,
             ),
@@ -608,7 +614,7 @@ class OpenFgaClient():
         )
         return api_response
 
-    async def list_relations(self, body: ClientListObjectsRequest, options: dict[str, str] = None):  # noqa: E501
+    async def list_relations(self, body: ClientListRelationsRequest, options: dict[str, str] = None):  # noqa: E501
         """
         Return all the relations for which user has a relationship with the object
         :param body - list relation request
