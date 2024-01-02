@@ -15,11 +15,12 @@
 import copy
 import logging
 import sys
-import urllib3
+from urllib.parse import urlparse
 
+import urllib3
 import six
 from six.moves import http_client as httplib
-from urllib.parse import urlparse
+
 from openfga_sdk.exceptions import FgaValidationException, ApiValueError
 from openfga_sdk.validation import is_well_formed_ulid_string
 
