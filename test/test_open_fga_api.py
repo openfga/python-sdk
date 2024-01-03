@@ -50,6 +50,7 @@ from openfga_sdk.models.read_assertions_response import ReadAssertionsResponse
 from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
 from openfga_sdk.models.read_changes_response import ReadChangesResponse
 from openfga_sdk.models.read_request import ReadRequest
+from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.read_response import ReadResponse
 from openfga_sdk.models.store import Store
 from openfga_sdk.models.tuple import Tuple
@@ -411,7 +412,8 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
       },
       "timestamp": "2021-10-06T15:32:11.128Z"
     }
-  ]
+  ],
+  "continuation_token": ""
 }
         '''
         mock_request.return_value = mock_response(response_body, 200)
@@ -420,7 +422,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         async with openfga_sdk.ApiClient(configuration) as api_client:
             api_instance = open_fga_api.OpenFgaApi(api_client)
             body = ReadRequest(
-                tuple_key=TupleKey(
+                tuple_key=ReadRequestTupleKey(
                     object="document:2021-budget",
                     relation="reader",
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -435,7 +437,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)])
+            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',

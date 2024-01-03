@@ -36,6 +36,7 @@ from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
 from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
 from openfga_sdk.models.read_request import ReadRequest
+from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.tuple_key import TupleKey
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
 from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
@@ -331,7 +332,7 @@ class OpenFgaClient():
         )
         return api_response
 
-    def read(self, body: TupleKey, options: dict[str, str] = None):
+    def read(self, body: ReadRequestTupleKey, options: dict[str, str] = None):
         """
         Read changes for specified type
         :param body - the tuples we want to read

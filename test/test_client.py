@@ -639,7 +639,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
       },
       "timestamp": "2021-10-06T15:32:11.128Z"
     }
-  ]
+  ],
+  "continuation_token": ""
 }
         '''
         mock_request.return_value = mock_response(response_body, 200)
@@ -661,7 +662,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)])
+            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -692,7 +693,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
       },
       "timestamp": "2021-10-06T15:32:11.128Z"
     }
-  ]
+  ],
+  "continuation_token": ""
 }
         '''
         mock_request.return_value = mock_response(response_body, 200)
@@ -700,7 +702,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
-            body = TupleKey(
+            body = ReadRequestTupleKey(
                 object="document:2021-budget",
                 relation="reader",
                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -713,7 +715,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)])
+            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -744,7 +746,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
       },
       "timestamp": "2021-10-06T15:32:11.128Z"
     }
-  ]
+  ],
+  "continuation_token": ""
 }
         '''
         mock_request.return_value = mock_response(response_body, 200)
@@ -752,7 +755,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
-            body = TupleKey()
+            body = ReadRequestTupleKey()
             api_response = await api_client.read(
                 body=body,
                 options={}
@@ -761,7 +764,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)])
+            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',

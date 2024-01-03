@@ -87,11 +87,11 @@ class TupleKey(object):
         :param user: The user of this TupleKey.  # noqa: E501
         :type user: str
         """
-        # if self.local_vars_configuration.client_side_validation and user is None:  # noqa: E501
-        #     raise ValueError("Invalid value for `user`, must not be `None`")  # noqa: E501
-        # if (self.local_vars_configuration.client_side_validation and
-        #         user is not None and len(user) > 512):
-        #     raise ValueError("Invalid value for `user`, length must be less than or equal to `512`")  # noqa: E501
+        if self.local_vars_configuration.client_side_validation and user is None:  # noqa: E501
+            raise ValueError("Invalid value for `user`, must not be `None`")  # noqa: E501
+        if (self.local_vars_configuration.client_side_validation and
+                user is not None and len(user) > 512):
+            raise ValueError("Invalid value for `user`, length must be less than or equal to `512`")  # noqa: E501
 
         self._user = user
 
@@ -113,11 +113,11 @@ class TupleKey(object):
         :param relation: The relation of this TupleKey.  # noqa: E501
         :type relation: str
         """
-        # if self.local_vars_configuration.client_side_validation and relation is None:  # noqa: E501
-        #     raise ValueError("Invalid value for `relation`, must not be `None`")  # noqa: E501
-        # if (self.local_vars_configuration.client_side_validation and
-        #         relation is not None and len(relation) > 50):
-        #     raise ValueError("Invalid value for `relation`, length must be less than or equal to `50`")  # noqa: E501
+        if self.local_vars_configuration.client_side_validation and relation is None:  # noqa: E501
+            raise ValueError("Invalid value for `relation`, must not be `None`")  # noqa: E501
+        if (self.local_vars_configuration.client_side_validation and
+                relation is not None and len(relation) > 50):
+            raise ValueError("Invalid value for `relation`, length must be less than or equal to `50`")  # noqa: E501
 
         self._relation = relation
 

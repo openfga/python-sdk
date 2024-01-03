@@ -103,8 +103,8 @@ class ReadResponse(object):
         :param continuation_token: The continuation_token of this ReadResponse.  # noqa: E501
         :type continuation_token: str
         """
-        # if self.local_vars_configuration.client_side_validation and continuation_token is None:  # noqa: E501
-        #     raise ValueError("Invalid value for `continuation_token`, must not be `None`")  # noqa: E501
+        if self.local_vars_configuration.client_side_validation and continuation_token is None:  # noqa: E501
+            raise ValueError("Invalid value for `continuation_token`, must not be `None`")  # noqa: E501
 
         self._continuation_token = continuation_token
 
