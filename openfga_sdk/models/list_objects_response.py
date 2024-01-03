@@ -54,8 +54,7 @@ class ListObjectsResponse(object):
         self._objects = None
         self.discriminator = None
 
-        if objects is not None:
-            self.objects = objects
+        self.objects = objects
 
     @property
     def objects(self):
@@ -75,6 +74,8 @@ class ListObjectsResponse(object):
         :param objects: The objects of this ListObjectsResponse.  # noqa: E501
         :type objects: list[str]
         """
+        if self.local_vars_configuration.client_side_validation and objects is None:  # noqa: E501
+            raise ValueError("Invalid value for `objects`, must not be `None`")  # noqa: E501
 
         self._objects = objects
 

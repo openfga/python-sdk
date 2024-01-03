@@ -57,8 +57,7 @@ class ReadChangesResponse(object):
         self._continuation_token = None
         self.discriminator = None
 
-        if changes is not None:
-            self.changes = changes
+        self.changes = changes
         if continuation_token is not None:
             self.continuation_token = continuation_token
 
@@ -80,6 +79,8 @@ class ReadChangesResponse(object):
         :param changes: The changes of this ReadChangesResponse.  # noqa: E501
         :type changes: list[TupleChange]
         """
+        if self.local_vars_configuration.client_side_validation and changes is None:  # noqa: E501
+            raise ValueError("Invalid value for `changes`, must not be `None`")  # noqa: E501
 
         self._changes = changes
 

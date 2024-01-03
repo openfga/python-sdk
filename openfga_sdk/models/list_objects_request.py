@@ -42,7 +42,8 @@ class ListObjectsRequest(object):
         'type': 'str',
         'relation': 'str',
         'user': 'str',
-        'contextual_tuples': 'ContextualTupleKeys'
+        'contextual_tuples': 'ContextualTupleKeys',
+        'context': 'object'
     }
 
     attribute_map = {
@@ -50,10 +51,11 @@ class ListObjectsRequest(object):
         'type': 'type',
         'relation': 'relation',
         'user': 'user',
-        'contextual_tuples': 'contextual_tuples'
+        'contextual_tuples': 'contextual_tuples',
+        'context': 'context'
     }
 
-    def __init__(self, authorization_model_id=None, type=None, relation=None, user=None, contextual_tuples=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, authorization_model_id=None, type=None, relation=None, user=None, contextual_tuples=None, context=None, local_vars_configuration=None):  # noqa: E501
         """ListObjectsRequest - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -64,6 +66,7 @@ class ListObjectsRequest(object):
         self._relation = None
         self._user = None
         self._contextual_tuples = None
+        self._context = None
         self.discriminator = None
 
         if authorization_model_id is not None:
@@ -73,6 +76,8 @@ class ListObjectsRequest(object):
         self.user = user
         if contextual_tuples is not None:
             self.contextual_tuples = contextual_tuples
+        if context is not None:
+            self.context = context
 
     @property
     def authorization_model_id(self):
@@ -190,6 +195,29 @@ class ListObjectsRequest(object):
         """
 
         self._contextual_tuples = contextual_tuples
+
+    @property
+    def context(self):
+        """Gets the context of this ListObjectsRequest.  # noqa: E501
+
+        Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.  # noqa: E501
+
+        :return: The context of this ListObjectsRequest.  # noqa: E501
+        :rtype: object
+        """
+        return self._context
+
+    @context.setter
+    def context(self, context):
+        """Sets the context of this ListObjectsRequest.
+
+        Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.  # noqa: E501
+
+        :param context: The context of this ListObjectsRequest.  # noqa: E501
+        :type context: object
+        """
+
+        self._context = context
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

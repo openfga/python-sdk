@@ -57,10 +57,8 @@ class ReadResponse(object):
         self._continuation_token = None
         self.discriminator = None
 
-        if tuples is not None:
-            self.tuples = tuples
-        if continuation_token is not None:
-            self.continuation_token = continuation_token
+        self.tuples = tuples
+        self.continuation_token = continuation_token
 
     @property
     def tuples(self):
@@ -80,6 +78,8 @@ class ReadResponse(object):
         :param tuples: The tuples of this ReadResponse.  # noqa: E501
         :type tuples: list[Tuple]
         """
+        if self.local_vars_configuration.client_side_validation and tuples is None:  # noqa: E501
+            raise ValueError("Invalid value for `tuples`, must not be `None`")  # noqa: E501
 
         self._tuples = tuples
 
@@ -103,6 +103,8 @@ class ReadResponse(object):
         :param continuation_token: The continuation_token of this ReadResponse.  # noqa: E501
         :type continuation_token: str
         """
+        # if self.local_vars_configuration.client_side_validation and continuation_token is None:  # noqa: E501
+        #     raise ValueError("Invalid value for `continuation_token`, must not be `None`")  # noqa: E501
 
         self._continuation_token = continuation_token
 

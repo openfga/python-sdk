@@ -57,8 +57,7 @@ class ReadAuthorizationModelsResponse(object):
         self._continuation_token = None
         self.discriminator = None
 
-        if authorization_models is not None:
-            self.authorization_models = authorization_models
+        self.authorization_models = authorization_models
         if continuation_token is not None:
             self.continuation_token = continuation_token
 
@@ -80,6 +79,8 @@ class ReadAuthorizationModelsResponse(object):
         :param authorization_models: The authorization_models of this ReadAuthorizationModelsResponse.  # noqa: E501
         :type authorization_models: list[AuthorizationModel]
         """
+        if self.local_vars_configuration.client_side_validation and authorization_models is None:  # noqa: E501
+            raise ValueError("Invalid value for `authorization_models`, must not be `None`")  # noqa: E501
 
         self._authorization_models = authorization_models
 

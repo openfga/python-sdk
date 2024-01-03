@@ -38,82 +38,36 @@ class TupleKey(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'object': 'str',
+        'user': 'str',
         'relation': 'str',
-        'user': 'str'
+        'object': 'str',
+        'condition': 'RelationshipCondition'
     }
 
     attribute_map = {
-        'object': 'object',
+        'user': 'user',
         'relation': 'relation',
-        'user': 'user'
+        'object': 'object',
+        'condition': 'condition'
     }
 
-    def __init__(self, object=None, relation=None, user=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, user=None, relation=None, object=None, condition=None, local_vars_configuration=None):  # noqa: E501
         """TupleKey - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
-        self._object = None
-        self._relation = None
         self._user = None
+        self._relation = None
+        self._object = None
+        self._condition = None
         self.discriminator = None
 
-        if object is not None:
-            self.object = object
-        if relation is not None:
-            self.relation = relation
-        if user is not None:
-            self.user = user
-
-    @property
-    def object(self):
-        """Gets the object of this TupleKey.  # noqa: E501
-
-
-        :return: The object of this TupleKey.  # noqa: E501
-        :rtype: str
-        """
-        return self._object
-
-    @object.setter
-    def object(self, object):
-        """Sets the object of this TupleKey.
-
-
-        :param object: The object of this TupleKey.  # noqa: E501
-        :type object: str
-        """
-        if (self.local_vars_configuration.client_side_validation and
-                object is not None and len(object) > 256):
-            raise ValueError("Invalid value for `object`, length must be less than or equal to `256`")  # noqa: E501
-
-        self._object = object
-
-    @property
-    def relation(self):
-        """Gets the relation of this TupleKey.  # noqa: E501
-
-
-        :return: The relation of this TupleKey.  # noqa: E501
-        :rtype: str
-        """
-        return self._relation
-
-    @relation.setter
-    def relation(self, relation):
-        """Sets the relation of this TupleKey.
-
-
-        :param relation: The relation of this TupleKey.  # noqa: E501
-        :type relation: str
-        """
-        if (self.local_vars_configuration.client_side_validation and
-                relation is not None and len(relation) > 50):
-            raise ValueError("Invalid value for `relation`, length must be less than or equal to `50`")  # noqa: E501
-
-        self._relation = relation
+        self.user = user
+        self.relation = relation
+        self.object = object
+        if condition is not None:
+            self.condition = condition
 
     @property
     def user(self):
@@ -133,11 +87,86 @@ class TupleKey(object):
         :param user: The user of this TupleKey.  # noqa: E501
         :type user: str
         """
-        if (self.local_vars_configuration.client_side_validation and
-                user is not None and len(user) > 512):
-            raise ValueError("Invalid value for `user`, length must be less than or equal to `512`")  # noqa: E501
+        # if self.local_vars_configuration.client_side_validation and user is None:  # noqa: E501
+        #     raise ValueError("Invalid value for `user`, must not be `None`")  # noqa: E501
+        # if (self.local_vars_configuration.client_side_validation and
+        #         user is not None and len(user) > 512):
+        #     raise ValueError("Invalid value for `user`, length must be less than or equal to `512`")  # noqa: E501
 
         self._user = user
+
+    @property
+    def relation(self):
+        """Gets the relation of this TupleKey.  # noqa: E501
+
+
+        :return: The relation of this TupleKey.  # noqa: E501
+        :rtype: str
+        """
+        return self._relation
+
+    @relation.setter
+    def relation(self, relation):
+        """Sets the relation of this TupleKey.
+
+
+        :param relation: The relation of this TupleKey.  # noqa: E501
+        :type relation: str
+        """
+        # if self.local_vars_configuration.client_side_validation and relation is None:  # noqa: E501
+        #     raise ValueError("Invalid value for `relation`, must not be `None`")  # noqa: E501
+        # if (self.local_vars_configuration.client_side_validation and
+        #         relation is not None and len(relation) > 50):
+        #     raise ValueError("Invalid value for `relation`, length must be less than or equal to `50`")  # noqa: E501
+
+        self._relation = relation
+
+    @property
+    def object(self):
+        """Gets the object of this TupleKey.  # noqa: E501
+
+
+        :return: The object of this TupleKey.  # noqa: E501
+        :rtype: str
+        """
+        return self._object
+
+    @object.setter
+    def object(self, object):
+        """Sets the object of this TupleKey.
+
+
+        :param object: The object of this TupleKey.  # noqa: E501
+        :type object: str
+        """
+        # if self.local_vars_configuration.client_side_validation and object is None:  # noqa: E501
+        #     raise ValueError("Invalid value for `object`, must not be `None`")  # noqa: E501
+        # if (self.local_vars_configuration.client_side_validation and
+        #         object is not None and len(object) > 256):
+        #     raise ValueError("Invalid value for `object`, length must be less than or equal to `256`")  # noqa: E501
+
+        self._object = object
+
+    @property
+    def condition(self):
+        """Gets the condition of this TupleKey.  # noqa: E501
+
+
+        :return: The condition of this TupleKey.  # noqa: E501
+        :rtype: RelationshipCondition
+        """
+        return self._condition
+
+    @condition.setter
+    def condition(self, condition):
+        """Sets the condition of this TupleKey.
+
+
+        :param condition: The condition of this TupleKey.  # noqa: E501
+        :type condition: RelationshipCondition
+        """
+
+        self._condition = condition
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

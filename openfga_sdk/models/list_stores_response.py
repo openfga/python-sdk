@@ -57,10 +57,8 @@ class ListStoresResponse(object):
         self._continuation_token = None
         self.discriminator = None
 
-        if stores is not None:
-            self.stores = stores
-        if continuation_token is not None:
-            self.continuation_token = continuation_token
+        self.stores = stores
+        self.continuation_token = continuation_token
 
     @property
     def stores(self):
@@ -80,6 +78,8 @@ class ListStoresResponse(object):
         :param stores: The stores of this ListStoresResponse.  # noqa: E501
         :type stores: list[Store]
         """
+        if self.local_vars_configuration.client_side_validation and stores is None:  # noqa: E501
+            raise ValueError("Invalid value for `stores`, must not be `None`")  # noqa: E501
 
         self._stores = stores
 
@@ -103,6 +103,8 @@ class ListStoresResponse(object):
         :param continuation_token: The continuation_token of this ListStoresResponse.  # noqa: E501
         :type continuation_token: str
         """
+        if self.local_vars_configuration.client_side_validation and continuation_token is None:  # noqa: E501
+            raise ValueError("Invalid value for `continuation_token`, must not be `None`")  # noqa: E501
 
         self._continuation_token = continuation_token
 

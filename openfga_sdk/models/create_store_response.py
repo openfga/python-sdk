@@ -63,14 +63,10 @@ class CreateStoreResponse(object):
         self._updated_at = None
         self.discriminator = None
 
-        if id is not None:
-            self.id = id
-        if name is not None:
-            self.name = name
-        if created_at is not None:
-            self.created_at = created_at
-        if updated_at is not None:
-            self.updated_at = updated_at
+        self.id = id
+        self.name = name
+        self.created_at = created_at
+        self.updated_at = updated_at
 
     @property
     def id(self):
@@ -90,6 +86,8 @@ class CreateStoreResponse(object):
         :param id: The id of this CreateStoreResponse.  # noqa: E501
         :type id: str
         """
+        if self.local_vars_configuration.client_side_validation and id is None:  # noqa: E501
+            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
         self._id = id
 
@@ -111,6 +109,8 @@ class CreateStoreResponse(object):
         :param name: The name of this CreateStoreResponse.  # noqa: E501
         :type name: str
         """
+        if self.local_vars_configuration.client_side_validation and name is None:  # noqa: E501
+            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
 
@@ -132,6 +132,8 @@ class CreateStoreResponse(object):
         :param created_at: The created_at of this CreateStoreResponse.  # noqa: E501
         :type created_at: datetime
         """
+        if self.local_vars_configuration.client_side_validation and created_at is None:  # noqa: E501
+            raise ValueError("Invalid value for `created_at`, must not be `None`")  # noqa: E501
 
         self._created_at = created_at
 
@@ -153,6 +155,8 @@ class CreateStoreResponse(object):
         :param updated_at: The updated_at of this CreateStoreResponse.  # noqa: E501
         :type updated_at: datetime
         """
+        if self.local_vars_configuration.client_side_validation and updated_at is None:  # noqa: E501
+            raise ValueError("Invalid value for `updated_at`, must not be `None`")  # noqa: E501
 
         self._updated_at = updated_at
 

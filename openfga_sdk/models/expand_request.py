@@ -38,7 +38,7 @@ class ExpandRequest(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'tuple_key': 'TupleKey',
+        'tuple_key': 'ExpandRequestTupleKey',
         'authorization_model_id': 'str'
     }
 
@@ -67,7 +67,7 @@ class ExpandRequest(object):
 
 
         :return: The tuple_key of this ExpandRequest.  # noqa: E501
-        :rtype: TupleKey
+        :rtype: ExpandRequestTupleKey
         """
         return self._tuple_key
 
@@ -77,7 +77,7 @@ class ExpandRequest(object):
 
 
         :param tuple_key: The tuple_key of this ExpandRequest.  # noqa: E501
-        :type tuple_key: TupleKey
+        :type tuple_key: ExpandRequestTupleKey
         """
         if self.local_vars_configuration.client_side_validation and tuple_key is None:  # noqa: E501
             raise ValueError("Invalid value for `tuple_key`, must not be `None`")  # noqa: E501

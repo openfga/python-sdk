@@ -53,6 +53,7 @@ from openfga_sdk.models.store import Store
 from openfga_sdk.models.tuple import Tuple
 from openfga_sdk.models.tuple_change import TupleChange
 from openfga_sdk.models.tuple_key import TupleKey
+from openfga_sdk.models.tuple_key_without_condition import TupleKeyWithoutCondition
 from openfga_sdk.models.tuple_operation import TupleOperation
 from openfga_sdk.models.type_definition import TypeDefinition
 from openfga_sdk.models.users import Users
@@ -2084,7 +2085,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertEqual(api_response, ReadAssertionsResponse(
                 authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
                 assertions=[Assertion(
-                    tuple_key=TupleKey(object="document:2021-budget", relation="reader",
+                    tuple_key=TupleKeyWithoutCondition(object="document:2021-budget", relation="reader",
                                        user="user:anne"),
                     expectation=True,
                 )]

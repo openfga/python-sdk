@@ -54,8 +54,7 @@ class Usersets(object):
         self._child = None
         self.discriminator = None
 
-        if child is not None:
-            self.child = child
+        self.child = child
 
     @property
     def child(self):
@@ -75,6 +74,8 @@ class Usersets(object):
         :param child: The child of this Usersets.  # noqa: E501
         :type child: list[Userset]
         """
+        if self.local_vars_configuration.client_side_validation and child is None:  # noqa: E501
+            raise ValueError("Invalid value for `child`, must not be `None`")  # noqa: E501
 
         self._child = child
 

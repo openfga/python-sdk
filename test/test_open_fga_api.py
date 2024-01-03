@@ -33,6 +33,7 @@ from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.create_store_response import CreateStoreResponse
 from openfga_sdk.models.error_code import ErrorCode
 from openfga_sdk.models.expand_request import ExpandRequest
+from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.expand_response import ExpandResponse
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.internal_error_code import InternalErrorCode
@@ -54,7 +55,9 @@ from openfga_sdk.models.store import Store
 from openfga_sdk.models.tuple import Tuple
 from openfga_sdk.models.tuple_change import TupleChange
 from openfga_sdk.models.tuple_key import TupleKey
-from openfga_sdk.models.tuple_keys import TupleKeys
+from openfga_sdk.models.tuple_key_without_condition import TupleKeyWithoutCondition
+from openfga_sdk.models.write_request_writes import WriteRequestWrites
+from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.tuple_operation import TupleOperation
 from openfga_sdk.models.type_definition import TypeDefinition
 from openfga_sdk.models.users import Users
@@ -221,7 +224,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         async with openfga_sdk.ApiClient(configuration) as api_client:
             api_instance = open_fga_api.OpenFgaApi(api_client)
             body = ExpandRequest(
-                tuple_key=TupleKey(
+                tuple_key=ExpandRequestTupleKey(
                     object="document:budget",
                     relation="reader",
                 ),
@@ -478,7 +481,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response, ReadAssertionsResponse)
             self.assertEqual(api_response.authorization_model_id, '01G5JAVJ41T49E9TT3SKVS7X1J')
             assertion = Assertion(
-                tuple_key=TupleKey(
+                tuple_key=TupleKeyWithoutCondition(
                     object="document:2021-budget",
                     relation="reader",
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -654,7 +657,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             # example passing only required values which don't have defaults set
 
             body = WriteRequest(
-                writes=TupleKeys(
+                writes=WriteRequestWrites(
                     tuple_keys=[
                         TupleKey(
                             object="document:2021-budget",
@@ -698,7 +701,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             # example passing only required values which don't have defaults set
 
             body = WriteRequest(
-                deletes=TupleKeys(
+                deletes=WriteRequestDeletes(
                     tuple_keys=[
                         TupleKey(
                             object="document:2021-budget",

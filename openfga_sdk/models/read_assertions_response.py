@@ -57,8 +57,7 @@ class ReadAssertionsResponse(object):
         self._assertions = None
         self.discriminator = None
 
-        if authorization_model_id is not None:
-            self.authorization_model_id = authorization_model_id
+        self.authorization_model_id = authorization_model_id
         if assertions is not None:
             self.assertions = assertions
 
@@ -80,6 +79,8 @@ class ReadAssertionsResponse(object):
         :param authorization_model_id: The authorization_model_id of this ReadAssertionsResponse.  # noqa: E501
         :type authorization_model_id: str
         """
+        if self.local_vars_configuration.client_side_validation and authorization_model_id is None:  # noqa: E501
+            raise ValueError("Invalid value for `authorization_model_id`, must not be `None`")  # noqa: E501
 
         self._authorization_model_id = authorization_model_id
 

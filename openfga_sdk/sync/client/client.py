@@ -32,6 +32,7 @@ from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.expand_request import ExpandRequest
+from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
 from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
 from openfga_sdk.models.read_request import ReadRequest
@@ -575,7 +576,7 @@ class OpenFgaClient():
         kwargs = options_to_kwargs(options)
 
         req_body = ExpandRequest(
-            tuple_key=TupleKey(
+            tuple_key=ExpandRequestTupleKey(
                 relation=body.relation,
                 object=body.object,
             ),
