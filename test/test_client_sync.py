@@ -662,7 +662,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -715,7 +716,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -764,7 +766,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -1849,8 +1852,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
             )
             self.assertIsInstance(api_response, ExpandResponse)
-            curUsers = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
-            leaf = Leaf(users=curUsers)
+            cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
+            leaf = Leaf(users=cur_users)
             node = Node(name="document:budget#reader", leaf=leaf)
             userTree = UsersetTree(node)
             expected_response = ExpandResponse(userTree)
@@ -2090,7 +2093,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
                 assertions=[Assertion(
                     tuple_key=TupleKeyWithoutCondition(object="document:2021-budget", relation="reader",
-                                       user="user:anne"),
+                                                       user="user:anne"),
                     expectation=True,
                 )]
             ))

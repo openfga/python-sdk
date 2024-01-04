@@ -154,7 +154,7 @@ class OpenFgaClient():
 
     def set_authorization_model_id(self, value):
         """
-        Update the authorizaiton model id in the configuration
+        Update the authorization model id in the configuration
         """
         self._client_configuration.authorization_model_id = value
 
@@ -188,7 +188,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        # convert options to kargs
+        # convert options to kwargs
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListStores")
         kwargs = options_to_kwargs(options)
         api_response = await self._api.list_stores(
@@ -297,7 +297,7 @@ class OpenFgaClient():
 
     async def read_latest_authorization_model(self, options: dict[str, int | str] = None):
         """
-        Convenient method of reading the latest authorizaiton model
+        Convenient method of reading the latest authorization model
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request

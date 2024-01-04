@@ -235,8 +235,8 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 body=body,
             )
             self.assertIsInstance(api_response, ExpandResponse)
-            curUsers = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
-            leaf = Leaf(users=curUsers)
+            cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
+            leaf = Leaf(users=cur_users)
             node = Node(name="document:budget#reader", leaf=leaf)
             userTree = UsersetTree(node)
             expected_response = ExpandResponse(userTree)
@@ -437,7 +437,8 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -1178,12 +1179,12 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response, CheckResponse)
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
-            expectedHeader = urllib3.response.HTTPHeaderDict(
+            expected_headers = urllib3.response.HTTPHeaderDict(
                 {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.3', 'Authorization': 'Bearer TOKEN1'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
-                headers=expectedHeader,
+                headers=expected_headers,
                 query_params=[],
                 post_params=[],
                 body={"tuple_key": {"object": "document:2021-budget", "relation": "reader",
@@ -1221,12 +1222,12 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response, CheckResponse)
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
-            expectedHeader = urllib3.response.HTTPHeaderDict(
+            expected_headers = urllib3.response.HTTPHeaderDict(
                 {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.3', 'Custom Header': 'custom value'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
-                headers=expectedHeader,
+                headers=expected_headers,
                 query_params=[],
                 post_params=[],
                 body={"tuple_key": {"object": "document:2021-budget", "relation": "reader",

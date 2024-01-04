@@ -239,8 +239,8 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
             leaf = Leaf(users=cur_users)
             node = Node(name="document:budget#reader", leaf=leaf)
-            user_tree = UsersetTree(node)
-            expected_response = ExpandResponse(user_tree)
+            userTree = UsersetTree(node)
+            expected_response = ExpandResponse(userTree)
             self.assertEqual(api_response, expected_response)
             mock_request.assert_called_once_with(
                 'POST',
@@ -438,7 +438,8 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -1153,7 +1154,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
     async def test_check_api_token(self, mock_request):
         """Test case for API token
 
-        Check whether API token is sent when configuration specifies credential method as api_token
+        Check whether API token is send when configuration specifies credential method as api_token
         """
 
         # First, mock the response

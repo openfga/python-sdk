@@ -139,11 +139,11 @@ class TupleKey(object):
         :param object: The object of this TupleKey.  # noqa: E501
         :type object: str
         """
-        # if self.local_vars_configuration.client_side_validation and object is None:  # noqa: E501
-        #     raise ValueError("Invalid value for `object`, must not be `None`")  # noqa: E501
-        # if (self.local_vars_configuration.client_side_validation and
-        #         object is not None and len(object) > 256):
-        #     raise ValueError("Invalid value for `object`, length must be less than or equal to `256`")  # noqa: E501
+        if self.local_vars_configuration.client_side_validation and object is None:  # noqa: E501
+            raise ValueError("Invalid value for `object`, must not be `None`")  # noqa: E501
+        if (self.local_vars_configuration.client_side_validation and
+                object is not None and len(object) > 256):
+            raise ValueError("Invalid value for `object`, length must be less than or equal to `256`")  # noqa: E501
 
         self._object = object
 

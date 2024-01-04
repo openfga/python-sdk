@@ -75,7 +75,7 @@ def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str)
 
 def options_to_kwargs(options: dict[str, int | str] = None):
     """
-    Return kargs with continuation_token and page_size
+    Return kwargs with continuation_token and page_size
     """
     kwargs = {}
     if options is not None:
@@ -128,7 +128,7 @@ class OpenFgaClient():
     def _get_authorization_model_id(self, options: object) -> str | None:
         """
         Return the authorization model ID if specified in the options.
-        Otherwise return the authorization model ID stored in the client's configuration
+        Otherwise, return the authorization model ID stored in the client's configuration
         """
         authorization_model_id = self._client_configuration.authorization_model_id
         if options is not None and "authorization_model_id" in options:
@@ -154,13 +154,13 @@ class OpenFgaClient():
 
     def set_authorization_model_id(self, value):
         """
-        Update the authorizaiton model id in the configuration
+        Update the authorization model id in the configuration
         """
         self._client_configuration.authorization_model_id = value
 
     def get_authorization_model_id(self):
         """
-        Return the authorizaiton model id
+        Return the authorization model id
         """
         return self._client_configuration.authorization_model_id
 
@@ -188,7 +188,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        # convert options to kargs
+        # convert options to kwargs
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListStores")
         kwargs = options_to_kwargs(options)
         api_response = self._api.list_stores(
@@ -297,7 +297,7 @@ class OpenFgaClient():
 
     def read_latest_authorization_model(self, options: dict[str, int | str] = None):
         """
-        Convenient method of reading the latest authorizaiton model
+        Convenient method of reading the latest authorization model
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
