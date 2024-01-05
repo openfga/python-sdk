@@ -78,7 +78,7 @@ class OpenFgaApi(object):
         :rtype: CheckResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.check_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.check_with_http_info(body, **kwargs))  # noqa: E501
 
     async def check_with_http_info(self, body, **kwargs):  # noqa: E501
         """Check whether a user is authorized to access an object  # noqa: E501
@@ -183,7 +183,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/check'.replace('{store_id}', store_id), 'POST',
             path_params,
             query_params,
@@ -227,7 +227,7 @@ class OpenFgaApi(object):
         :rtype: CreateStoreResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.create_store_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.create_store_with_http_info(body, **kwargs))  # noqa: E501
 
     async def create_store_with_http_info(self, body, **kwargs):  # noqa: E501
         """Create a store  # noqa: E501
@@ -325,7 +325,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores', 'POST',
             path_params,
             query_params,
@@ -367,7 +367,7 @@ class OpenFgaApi(object):
         :rtype: None
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.delete_store_with_http_info(**kwargs))  # noqa: E501
+        return await (self.delete_store_with_http_info(**kwargs))  # noqa: E501
 
     async def delete_store_with_http_info(self, **kwargs):  # noqa: E501
         """Delete a store  # noqa: E501
@@ -453,7 +453,7 @@ class OpenFgaApi(object):
 
         response_types_map = {}
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}'.replace('{store_id}', store_id), 'DELETE',
             path_params,
             query_params,
@@ -497,7 +497,7 @@ class OpenFgaApi(object):
         :rtype: ExpandResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.expand_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.expand_with_http_info(body, **kwargs))  # noqa: E501
 
     async def expand_with_http_info(self, body, **kwargs):  # noqa: E501
         """Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship  # noqa: E501
@@ -602,7 +602,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/expand'.replace('{store_id}', store_id), 'POST',
             path_params,
             query_params,
@@ -644,7 +644,7 @@ class OpenFgaApi(object):
         :rtype: GetStoreResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.get_store_with_http_info(**kwargs))  # noqa: E501
+        return await (self.get_store_with_http_info(**kwargs))  # noqa: E501
 
     async def get_store_with_http_info(self, **kwargs):  # noqa: E501
         """Get a store  # noqa: E501
@@ -735,7 +735,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}'.replace('{store_id}', store_id), 'GET',
             path_params,
             query_params,
@@ -779,7 +779,7 @@ class OpenFgaApi(object):
         :rtype: ListObjectsResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.list_objects_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.list_objects_with_http_info(body, **kwargs))  # noqa: E501
 
     async def list_objects_with_http_info(self, body, **kwargs):  # noqa: E501
         """List all objects of the given type that the user has a relation with  # noqa: E501
@@ -884,7 +884,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/list-objects'.replace('{store_id}', store_id), 'POST',
             path_params,
             query_params,
@@ -930,7 +930,7 @@ class OpenFgaApi(object):
         :rtype: ListStoresResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.list_stores_with_http_info(**kwargs))  # noqa: E501
+        return await (self.list_stores_with_http_info(**kwargs))  # noqa: E501
 
     async def list_stores_with_http_info(self, **kwargs):  # noqa: E501
         """List all stores  # noqa: E501
@@ -1027,7 +1027,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores', 'GET',
             path_params,
             query_params,
@@ -1071,7 +1071,7 @@ class OpenFgaApi(object):
         :rtype: ReadResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.read_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.read_with_http_info(body, **kwargs))  # noqa: E501
 
     async def read_with_http_info(self, body, **kwargs):  # noqa: E501
         """Get tuples from the store that matches a query, without following userset rewrite rules  # noqa: E501
@@ -1176,7 +1176,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/read'.replace('{store_id}', store_id), 'POST',
             path_params,
             query_params,
@@ -1220,7 +1220,7 @@ class OpenFgaApi(object):
         :rtype: ReadAssertionsResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.read_assertions_with_http_info(authorization_model_id, **kwargs))  # noqa: E501
+        return await (self.read_assertions_with_http_info(authorization_model_id, **kwargs))  # noqa: E501
 
     async def read_assertions_with_http_info(self, authorization_model_id, **kwargs):  # noqa: E501
         """Read assertions for an authorization model ID  # noqa: E501
@@ -1321,7 +1321,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/assertions/{authorization_model_id}'.replace(
                 '{store_id}', store_id), 'GET',
             path_params,
@@ -1366,7 +1366,7 @@ class OpenFgaApi(object):
         :rtype: ReadAuthorizationModelResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.read_authorization_model_with_http_info(id, **kwargs))  # noqa: E501
+        return await (self.read_authorization_model_with_http_info(id, **kwargs))  # noqa: E501
 
     async def read_authorization_model_with_http_info(self, id, **kwargs):  # noqa: E501
         """Return a particular version of an authorization model  # noqa: E501
@@ -1467,7 +1467,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/authorization-models/{id}'.replace('{store_id}', store_id), 'GET',
             path_params,
             query_params,
@@ -1513,7 +1513,7 @@ class OpenFgaApi(object):
         :rtype: ReadAuthorizationModelsResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.read_authorization_models_with_http_info(**kwargs))  # noqa: E501
+        return await (self.read_authorization_models_with_http_info(**kwargs))  # noqa: E501
 
     async def read_authorization_models_with_http_info(self, **kwargs):  # noqa: E501
         """Return all the authorization models for a particular store  # noqa: E501
@@ -1614,7 +1614,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/authorization-models'.replace('{store_id}', store_id), 'GET',
             path_params,
             query_params,
@@ -1662,7 +1662,7 @@ class OpenFgaApi(object):
         :rtype: ReadChangesResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.read_changes_with_http_info(**kwargs))  # noqa: E501
+        return await (self.read_changes_with_http_info(**kwargs))  # noqa: E501
 
     async def read_changes_with_http_info(self, **kwargs):  # noqa: E501
         """Return a list of all the tuple changes  # noqa: E501
@@ -1768,7 +1768,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/changes'.replace('{store_id}', store_id), 'GET',
             path_params,
             query_params,
@@ -1812,7 +1812,7 @@ class OpenFgaApi(object):
         :rtype: object
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.write_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.write_with_http_info(body, **kwargs))  # noqa: E501
 
     async def write_with_http_info(self, body, **kwargs):  # noqa: E501
         """Add or delete tuples from the store  # noqa: E501
@@ -1917,7 +1917,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/write'.replace('{store_id}', store_id), 'POST',
             path_params,
             query_params,
@@ -1963,7 +1963,7 @@ class OpenFgaApi(object):
         :rtype: None
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.write_assertions_with_http_info(authorization_model_id, body, **kwargs))  # noqa: E501
+        return await (self.write_assertions_with_http_info(authorization_model_id, body, **kwargs))  # noqa: E501
 
     async def write_assertions_with_http_info(self, authorization_model_id, body, **kwargs):  # noqa: E501
         """Upsert assertions for an authorization model ID  # noqa: E501
@@ -2073,7 +2073,7 @@ class OpenFgaApi(object):
 
         response_types_map = {}
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/assertions/{authorization_model_id}'.replace(
                 '{store_id}', store_id), 'PUT',
             path_params,
@@ -2118,7 +2118,7 @@ class OpenFgaApi(object):
         :rtype: WriteAuthorizationModelResponse
         """
         kwargs['_return_http_data_only'] = True
-        return await(self.write_authorization_model_with_http_info(body, **kwargs))  # noqa: E501
+        return await (self.write_authorization_model_with_http_info(body, **kwargs))  # noqa: E501
 
     async def write_authorization_model_with_http_info(self, body, **kwargs):  # noqa: E501
         """Create a new authorization model  # noqa: E501
@@ -2223,7 +2223,7 @@ class OpenFgaApi(object):
             500: "InternalErrorMessageResponse",
         }
 
-        return await(self.api_client.call_api(
+        return await (self.api_client.call_api(
             '/stores/{store_id}/authorization-models'.replace('{store_id}', store_id), 'POST',
             path_params,
             query_params,

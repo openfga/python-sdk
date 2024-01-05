@@ -334,7 +334,7 @@ class ApiClient(object):
         if data is None:
             return None
 
-        if type(klass) == str:
+        if type(klass) is str:
             if klass.startswith('list['):
                 sub_kls = re.match(r'list\[(.*)\]', klass).group(1)
                 return [self.__deserialize(sub_data, sub_kls)
@@ -411,13 +411,13 @@ class ApiClient(object):
             then the method will return the response directly.
         """
         if not async_req:
-            return await(self.__call_api(resource_path, method,
-                                         path_params, query_params, header_params,
-                                         body, post_params,
-                                         response_types_map, auth_settings,
-                                         _return_http_data_only, collection_formats,
-                                         _preload_content, _request_timeout, _host,
-                                         _request_auth, _retry_params, _oauth2_client))
+            return await (self.__call_api(resource_path, method,
+                                          path_params, query_params, header_params,
+                                          body, post_params,
+                                          response_types_map, auth_settings,
+                                          _return_http_data_only, collection_formats,
+                                          _preload_content, _request_timeout, _host,
+                                          _request_auth, _retry_params, _oauth2_client))
 
         return self.pool.apply_async(self.__call_api, (resource_path,
                                                        method, path_params,
@@ -439,54 +439,54 @@ class ApiClient(object):
                       _request_timeout=None):
         """Makes the HTTP request using RESTClient."""
         if method == "GET":
-            return await(self.rest_client.GET(url,
-                                              query_params=query_params,
-                                              _preload_content=_preload_content,
-                                              _request_timeout=_request_timeout,
-                                              headers=headers))
-        elif method == "HEAD":
-            return await(self.rest_client.HEAD(url,
+            return await (self.rest_client.GET(url,
                                                query_params=query_params,
                                                _preload_content=_preload_content,
                                                _request_timeout=_request_timeout,
                                                headers=headers))
+        elif method == "HEAD":
+            return await (self.rest_client.HEAD(url,
+                                                query_params=query_params,
+                                                _preload_content=_preload_content,
+                                                _request_timeout=_request_timeout,
+                                                headers=headers))
         elif method == "OPTIONS":
-            return await(self.rest_client.OPTIONS(url,
-                                                  query_params=query_params,
-                                                  headers=headers,
-                                                  _preload_content=_preload_content,
-                                                  _request_timeout=_request_timeout))
+            return await (self.rest_client.OPTIONS(url,
+                                                   query_params=query_params,
+                                                   headers=headers,
+                                                   _preload_content=_preload_content,
+                                                   _request_timeout=_request_timeout))
         elif method == "POST":
-            return await(self.rest_client.POST(url,
-                                               query_params=query_params,
-                                               headers=headers,
-                                               post_params=post_params,
-                                               _preload_content=_preload_content,
-                                               _request_timeout=_request_timeout,
-                                               body=body))
-        elif method == "PUT":
-            return await(self.rest_client.PUT(url,
-                                              query_params=query_params,
-                                              headers=headers,
-                                              post_params=post_params,
-                                              _preload_content=_preload_content,
-                                              _request_timeout=_request_timeout,
-                                              body=body))
-        elif method == "PATCH":
-            return await(self.rest_client.PATCH(url,
+            return await (self.rest_client.POST(url,
                                                 query_params=query_params,
                                                 headers=headers,
                                                 post_params=post_params,
                                                 _preload_content=_preload_content,
                                                 _request_timeout=_request_timeout,
                                                 body=body))
-        elif method == "DELETE":
-            return await(self.rest_client.DELETE(url,
+        elif method == "PUT":
+            return await (self.rest_client.PUT(url,
+                                               query_params=query_params,
+                                               headers=headers,
+                                               post_params=post_params,
+                                               _preload_content=_preload_content,
+                                               _request_timeout=_request_timeout,
+                                               body=body))
+        elif method == "PATCH":
+            return await (self.rest_client.PATCH(url,
                                                  query_params=query_params,
                                                  headers=headers,
+                                                 post_params=post_params,
                                                  _preload_content=_preload_content,
                                                  _request_timeout=_request_timeout,
                                                  body=body))
+        elif method == "DELETE":
+            return await (self.rest_client.DELETE(url,
+                                                  query_params=query_params,
+                                                  headers=headers,
+                                                  _preload_content=_preload_content,
+                                                  _request_timeout=_request_timeout,
+                                                  body=body))
         else:
             raise ApiValueError(
                 "http method must be `GET`, `HEAD`, `OPTIONS`,"

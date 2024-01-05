@@ -723,7 +723,7 @@ body = ClientListRelationsRequest(
 )
 var response = await fga_client.list_relations(body, options);
 
-// response.relations = ["can_view", "can_edit"]
+# response.relations = ["can_view", "can_edit"]
 ```
 
 #### Assertions
