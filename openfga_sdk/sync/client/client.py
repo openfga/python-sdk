@@ -507,6 +507,7 @@ class OpenFgaClient():
                 relation=body.relation,
                 object=body.object,
             ),
+            context=body.context,
             authorization_model_id=self._get_authorization_model_id(options),
         )
         if body.contextual_tuples:
@@ -607,6 +608,7 @@ class OpenFgaClient():
             user=body.user,
             relation=body.relation,
             type=body.type,
+            context=body.context,
         )
         if body.contextual_tuples:
             req_body.contextual_tuples = ContextualTupleKeys(

@@ -13,14 +13,14 @@
 
 from openfga_sdk.client.models.tuple import ClientTuple
 
-from typing import List
+from typing import List, Any
 
 
-def construct_check_request(user: str, relation: str, object: str, contextual_tuples: List[ClientTuple] = None):
+def construct_check_request(user: str, relation: str, object: str, context: Any = None, contextual_tuples: List[ClientTuple] = None):
     """
     helper function to construct the check request body
     """
-    return ClientCheckRequest(user, relation, object, contextual_tuples)
+    return ClientCheckRequest(user, relation, object, context, contextual_tuples)
 
 
 class ClientCheckRequest():
@@ -28,10 +28,11 @@ class ClientCheckRequest():
     ClientCheckRequest encapsulates the parameters for check request
     """
 
-    def __init__(self, user: str, relation: str, object: str, contextual_tuples: List[ClientTuple] = None):
+    def __init__(self, user: str, relation: str, object: str, context: Any = None, contextual_tuples: List[ClientTuple] = None):
         self._user = user
         self._relation = relation
         self._object = object
+        self._context = context
         self._contextual_tuples = None
         if contextual_tuples:
             self._contextual_tuples = contextual_tuples
@@ -56,6 +57,13 @@ class ClientCheckRequest():
         Return object
         """
         return self._object
+
+    @property
+    def context(self):
+        """
+        Return context
+        """
+        return self._context
 
     @property
     def contextual_tuples(self):
@@ -84,6 +92,13 @@ class ClientCheckRequest():
         Set object
         """
         self._object = value
+
+    @context.setter
+    def context(self, value):
+        """
+        Set context
+        """
+        self._context = value
 
     @contextual_tuples.setter
     def contextual_tuples(self, value):
