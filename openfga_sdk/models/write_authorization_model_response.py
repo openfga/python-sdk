@@ -54,8 +54,7 @@ class WriteAuthorizationModelResponse(object):
         self._authorization_model_id = None
         self.discriminator = None
 
-        if authorization_model_id is not None:
-            self.authorization_model_id = authorization_model_id
+        self.authorization_model_id = authorization_model_id
 
     @property
     def authorization_model_id(self):
@@ -75,6 +74,8 @@ class WriteAuthorizationModelResponse(object):
         :param authorization_model_id: The authorization_model_id of this WriteAuthorizationModelResponse.  # noqa: E501
         :type authorization_model_id: str
         """
+        if self.local_vars_configuration.client_side_validation and authorization_model_id is None:  # noqa: E501
+            raise ValueError("Invalid value for `authorization_model_id`, must not be `None`")  # noqa: E501
 
         self._authorization_model_id = authorization_model_id
 

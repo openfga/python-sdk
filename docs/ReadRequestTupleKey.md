@@ -1,10 +1,12 @@
-# TupleKeys
+# ReadRequestTupleKey
 
 
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**tuple_keys** | [**list[TupleKey]**](TupleKey.md) |  | 
+**user** | **str** |  | [optional] 
+**relation** | **str** |  | [optional] 
+**object** | **str** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

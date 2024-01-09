@@ -40,16 +40,18 @@ class AuthorizationModel(object):
     openapi_types = {
         'id': 'str',
         'schema_version': 'str',
-        'type_definitions': 'list[TypeDefinition]'
+        'type_definitions': 'list[TypeDefinition]',
+        'conditions': 'dict[str, Condition]'
     }
 
     attribute_map = {
         'id': 'id',
         'schema_version': 'schema_version',
-        'type_definitions': 'type_definitions'
+        'type_definitions': 'type_definitions',
+        'conditions': 'conditions'
     }
 
-    def __init__(self, id=None, schema_version=None, type_definitions=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, id=None, schema_version=None, type_definitions=None, conditions=None, local_vars_configuration=None):  # noqa: E501
         """AuthorizationModel - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -58,13 +60,14 @@ class AuthorizationModel(object):
         self._id = None
         self._schema_version = None
         self._type_definitions = None
+        self._conditions = None
         self.discriminator = None
 
-        if id is not None:
-            self.id = id
+        self.id = id
         self.schema_version = schema_version
-        if type_definitions is not None:
-            self.type_definitions = type_definitions
+        self.type_definitions = type_definitions
+        if conditions is not None:
+            self.conditions = conditions
 
     @property
     def id(self):
@@ -84,6 +87,8 @@ class AuthorizationModel(object):
         :param id: The id of this AuthorizationModel.  # noqa: E501
         :type id: str
         """
+        if self.local_vars_configuration.client_side_validation and id is None:  # noqa: E501
+            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
         self._id = id
 
@@ -128,8 +133,31 @@ class AuthorizationModel(object):
         :param type_definitions: The type_definitions of this AuthorizationModel.  # noqa: E501
         :type type_definitions: list[TypeDefinition]
         """
+        if self.local_vars_configuration.client_side_validation and type_definitions is None:  # noqa: E501
+            raise ValueError("Invalid value for `type_definitions`, must not be `None`")  # noqa: E501
 
         self._type_definitions = type_definitions
+
+    @property
+    def conditions(self):
+        """Gets the conditions of this AuthorizationModel.  # noqa: E501
+
+
+        :return: The conditions of this AuthorizationModel.  # noqa: E501
+        :rtype: dict[str, Condition]
+        """
+        return self._conditions
+
+    @conditions.setter
+    def conditions(self, conditions):
+        """Sets the conditions of this AuthorizationModel.
+
+
+        :param conditions: The conditions of this AuthorizationModel.  # noqa: E501
+        :type conditions: dict[str, Condition]
+        """
+
+        self._conditions = conditions
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

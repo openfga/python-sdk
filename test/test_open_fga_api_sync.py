@@ -34,6 +34,7 @@ from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.create_store_response import CreateStoreResponse
 from openfga_sdk.models.error_code import ErrorCode
 from openfga_sdk.models.expand_request import ExpandRequest
+from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.expand_response import ExpandResponse
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.internal_error_code import InternalErrorCode
@@ -50,12 +51,15 @@ from openfga_sdk.models.read_assertions_response import ReadAssertionsResponse
 from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
 from openfga_sdk.models.read_changes_response import ReadChangesResponse
 from openfga_sdk.models.read_request import ReadRequest
+from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.read_response import ReadResponse
 from openfga_sdk.models.store import Store
 from openfga_sdk.models.tuple import Tuple
 from openfga_sdk.models.tuple_change import TupleChange
 from openfga_sdk.models.tuple_key import TupleKey
-from openfga_sdk.models.tuple_keys import TupleKeys
+from openfga_sdk.models.tuple_key_without_condition import TupleKeyWithoutCondition
+from openfga_sdk.models.write_request_writes import WriteRequestWrites
+from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.tuple_operation import TupleOperation
 from openfga_sdk.models.type_definition import TypeDefinition
 from openfga_sdk.models.users import Users
@@ -222,7 +226,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         with ApiClient(configuration) as api_client:
             api_instance = open_fga_api.OpenFgaApi(api_client)
             body = ExpandRequest(
-                tuple_key=TupleKey(
+                tuple_key=ExpandRequestTupleKey(
                     object="document:budget",
                     relation="reader",
                 ),
@@ -232,8 +236,8 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 body=body,
             )
             self.assertIsInstance(api_response, ExpandResponse)
-            curUsers = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
-            leaf = Leaf(users=curUsers)
+            cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
+            leaf = Leaf(users=cur_users)
             node = Node(name="document:budget#reader", leaf=leaf)
             userTree = UsersetTree(node)
             expected_response = ExpandResponse(userTree)
@@ -409,7 +413,8 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
       },
       "timestamp": "2021-10-06T15:32:11.128Z"
     }
-  ]
+  ],
+  "continuation_token": ""
 }
         '''
         mock_request.return_value = mock_response(response_body, 200)
@@ -418,7 +423,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         with ApiClient(configuration) as api_client:
             api_instance = open_fga_api.OpenFgaApi(api_client)
             body = ReadRequest(
-                tuple_key=TupleKey(
+                tuple_key=ReadRequestTupleKey(
                     object="document:2021-budget",
                     relation="reader",
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -433,7 +438,8 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             key = TupleKey(user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                            relation="reader", object="document:2021-budget")
             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(tuples=[Tuple(key=key, timestamp=timestamp)])
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token='')
             self.assertEqual(api_response, expected_data)
             mock_request.assert_called_once_with(
                 'POST',
@@ -479,7 +485,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response, ReadAssertionsResponse)
             self.assertEqual(api_response.authorization_model_id, '01G5JAVJ41T49E9TT3SKVS7X1J')
             assertion = Assertion(
-                tuple_key=TupleKey(
+                tuple_key=TupleKeyWithoutCondition(
                     object="document:2021-budget",
                     relation="reader",
                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -655,7 +661,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             # example passing only required values which don't have defaults set
 
             body = WriteRequest(
-                writes=TupleKeys(
+                writes=WriteRequestWrites(
                     tuple_keys=[
                         TupleKey(
                             object="document:2021-budget",
@@ -699,7 +705,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             # example passing only required values which don't have defaults set
 
             body = WriteRequest(
-                deletes=TupleKeys(
+                deletes=WriteRequestDeletes(
                     tuple_keys=[
                         TupleKey(
                             object="document:2021-budget",
@@ -1174,12 +1180,12 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response, CheckResponse)
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
-            expectedHeader = urllib3.response.HTTPHeaderDict(
+            expected_headers = urllib3.response.HTTPHeaderDict(
                 {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.3', 'Authorization': 'Bearer TOKEN1'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
-                headers=expectedHeader,
+                headers=expected_headers,
                 query_params=[],
                 post_params=[],
                 body={"tuple_key": {"object": "document:2021-budget", "relation": "reader",
@@ -1217,12 +1223,12 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response, CheckResponse)
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
-            expectedHeader = urllib3.response.HTTPHeaderDict(
+            expected_headers = urllib3.response.HTTPHeaderDict(
                 {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.3', 'Custom Header': 'custom value'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
-                headers=expectedHeader,
+                headers=expected_headers,
                 query_params=[],
                 post_params=[],
                 body={"tuple_key": {"object": "document:2021-budget", "relation": "reader",

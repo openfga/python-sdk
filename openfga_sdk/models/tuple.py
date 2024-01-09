@@ -57,10 +57,8 @@ class Tuple(object):
         self._timestamp = None
         self.discriminator = None
 
-        if key is not None:
-            self.key = key
-        if timestamp is not None:
-            self.timestamp = timestamp
+        self.key = key
+        self.timestamp = timestamp
 
     @property
     def key(self):
@@ -80,6 +78,8 @@ class Tuple(object):
         :param key: The key of this Tuple.  # noqa: E501
         :type key: TupleKey
         """
+        if self.local_vars_configuration.client_side_validation and key is None:  # noqa: E501
+            raise ValueError("Invalid value for `key`, must not be `None`")  # noqa: E501
 
         self._key = key
 
@@ -101,6 +101,8 @@ class Tuple(object):
         :param timestamp: The timestamp of this Tuple.  # noqa: E501
         :type timestamp: datetime
         """
+        if self.local_vars_configuration.client_side_validation and timestamp is None:  # noqa: E501
+            raise ValueError("Invalid value for `timestamp`, must not be `None`")  # noqa: E501
 
         self._timestamp = timestamp
 

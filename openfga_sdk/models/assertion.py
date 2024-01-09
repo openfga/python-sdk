@@ -38,7 +38,7 @@ class Assertion(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'tuple_key': 'TupleKey',
+        'tuple_key': 'AssertionTupleKey',
         'expectation': 'bool'
     }
 
@@ -66,7 +66,7 @@ class Assertion(object):
 
 
         :return: The tuple_key of this Assertion.  # noqa: E501
-        :rtype: TupleKey
+        :rtype: AssertionTupleKey
         """
         return self._tuple_key
 
@@ -76,7 +76,7 @@ class Assertion(object):
 
 
         :param tuple_key: The tuple_key of this Assertion.  # noqa: E501
-        :type tuple_key: TupleKey
+        :type tuple_key: AssertionTupleKey
         """
         if self.local_vars_configuration.client_side_validation and tuple_key is None:  # noqa: E501
             raise ValueError("Invalid value for `tuple_key`, must not be `None`")  # noqa: E501

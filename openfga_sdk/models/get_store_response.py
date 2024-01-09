@@ -41,17 +41,19 @@ class GetStoreResponse(object):
         'id': 'str',
         'name': 'str',
         'created_at': 'datetime',
-        'updated_at': 'datetime'
+        'updated_at': 'datetime',
+        'deleted_at': 'datetime'
     }
 
     attribute_map = {
         'id': 'id',
         'name': 'name',
         'created_at': 'created_at',
-        'updated_at': 'updated_at'
+        'updated_at': 'updated_at',
+        'deleted_at': 'deleted_at'
     }
 
-    def __init__(self, id=None, name=None, created_at=None, updated_at=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, id=None, name=None, created_at=None, updated_at=None, deleted_at=None, local_vars_configuration=None):  # noqa: E501
         """GetStoreResponse - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -61,16 +63,15 @@ class GetStoreResponse(object):
         self._name = None
         self._created_at = None
         self._updated_at = None
+        self._deleted_at = None
         self.discriminator = None
 
-        if id is not None:
-            self.id = id
-        if name is not None:
-            self.name = name
-        if created_at is not None:
-            self.created_at = created_at
-        if updated_at is not None:
-            self.updated_at = updated_at
+        self.id = id
+        self.name = name
+        self.created_at = created_at
+        self.updated_at = updated_at
+        if deleted_at is not None:
+            self.deleted_at = deleted_at
 
     @property
     def id(self):
@@ -90,6 +91,8 @@ class GetStoreResponse(object):
         :param id: The id of this GetStoreResponse.  # noqa: E501
         :type id: str
         """
+        if self.local_vars_configuration.client_side_validation and id is None:  # noqa: E501
+            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
         self._id = id
 
@@ -111,6 +114,8 @@ class GetStoreResponse(object):
         :param name: The name of this GetStoreResponse.  # noqa: E501
         :type name: str
         """
+        if self.local_vars_configuration.client_side_validation and name is None:  # noqa: E501
+            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
 
@@ -132,6 +137,8 @@ class GetStoreResponse(object):
         :param created_at: The created_at of this GetStoreResponse.  # noqa: E501
         :type created_at: datetime
         """
+        if self.local_vars_configuration.client_side_validation and created_at is None:  # noqa: E501
+            raise ValueError("Invalid value for `created_at`, must not be `None`")  # noqa: E501
 
         self._created_at = created_at
 
@@ -153,8 +160,31 @@ class GetStoreResponse(object):
         :param updated_at: The updated_at of this GetStoreResponse.  # noqa: E501
         :type updated_at: datetime
         """
+        if self.local_vars_configuration.client_side_validation and updated_at is None:  # noqa: E501
+            raise ValueError("Invalid value for `updated_at`, must not be `None`")  # noqa: E501
 
         self._updated_at = updated_at
+
+    @property
+    def deleted_at(self):
+        """Gets the deleted_at of this GetStoreResponse.  # noqa: E501
+
+
+        :return: The deleted_at of this GetStoreResponse.  # noqa: E501
+        :rtype: datetime
+        """
+        return self._deleted_at
+
+    @deleted_at.setter
+    def deleted_at(self, deleted_at):
+        """Sets the deleted_at of this GetStoreResponse.
+
+
+        :param deleted_at: The deleted_at of this GetStoreResponse.  # noqa: E501
+        :type deleted_at: datetime
+        """
+
+        self._deleted_at = deleted_at
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

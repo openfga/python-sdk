@@ -40,16 +40,18 @@ class RelationReference(object):
     openapi_types = {
         'type': 'str',
         'relation': 'str',
-        'wildcard': 'object'
+        'wildcard': 'object',
+        'condition': 'str'
     }
 
     attribute_map = {
         'type': 'type',
         'relation': 'relation',
-        'wildcard': 'wildcard'
+        'wildcard': 'wildcard',
+        'condition': 'condition'
     }
 
-    def __init__(self, type=None, relation=None, wildcard=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, type=None, relation=None, wildcard=None, condition=None, local_vars_configuration=None):  # noqa: E501
         """RelationReference - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -58,6 +60,7 @@ class RelationReference(object):
         self._type = None
         self._relation = None
         self._wildcard = None
+        self._condition = None
         self.discriminator = None
 
         self.type = type
@@ -65,6 +68,8 @@ class RelationReference(object):
             self.relation = relation
         if wildcard is not None:
             self.wildcard = wildcard
+        if condition is not None:
+            self.condition = condition
 
     @property
     def type(self):
@@ -130,6 +135,29 @@ class RelationReference(object):
         """
 
         self._wildcard = wildcard
+
+    @property
+    def condition(self):
+        """Gets the condition of this RelationReference.  # noqa: E501
+
+        The name of a condition that is enforced over the allowed relation.  # noqa: E501
+
+        :return: The condition of this RelationReference.  # noqa: E501
+        :rtype: str
+        """
+        return self._condition
+
+    @condition.setter
+    def condition(self, condition):
+        """Sets the condition of this RelationReference.
+
+        The name of a condition that is enforced over the allowed relation.  # noqa: E501
+
+        :param condition: The condition of this RelationReference.  # noqa: E501
+        :type condition: str
+        """
+
+        self._condition = condition
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

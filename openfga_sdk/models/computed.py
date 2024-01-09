@@ -54,8 +54,7 @@ class Computed(object):
         self._userset = None
         self.discriminator = None
 
-        if userset is not None:
-            self.userset = userset
+        self.userset = userset
 
     @property
     def userset(self):
@@ -75,6 +74,8 @@ class Computed(object):
         :param userset: The userset of this Computed.  # noqa: E501
         :type userset: str
         """
+        if self.local_vars_configuration.client_side_validation and userset is None:  # noqa: E501
+            raise ValueError("Invalid value for `userset`, must not be `None`")  # noqa: E501
 
         self._userset = userset
 

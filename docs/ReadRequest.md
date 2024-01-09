@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**tuple_key** | [**TupleKey**](TupleKey.md) |  | [optional] 
+**tuple_key** | [**ReadRequestTupleKey**](ReadRequestTupleKey.md) |  | [optional] 
 **page_size** | **int** |  | [optional] 
 **continuation_token** | **str** |  | [optional] 
 

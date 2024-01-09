@@ -12,7 +12,8 @@
 """
 
 from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
-from openfga_sdk.models.tuple_keys import TupleKeys
+from openfga_sdk.models.write_request_writes import WriteRequestWrites
+from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 
 from typing import List
 
@@ -62,7 +63,7 @@ class ClientWriteRequest():
         keys = convert_tuple_keys(self.writes)
         if keys is None:
             return None
-        return TupleKeys(tuple_keys=keys)
+        return WriteRequestWrites(tuple_keys=keys)
 
     @property
     def deletes_tuple_keys(self):
@@ -72,4 +73,4 @@ class ClientWriteRequest():
         keys = convert_tuple_keys(self.deletes)
         if keys is None:
             return None
-        return TupleKeys(tuple_keys=keys)
+        return WriteRequestDeletes(tuple_keys=keys)

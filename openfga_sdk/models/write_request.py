@@ -38,8 +38,8 @@ class WriteRequest(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'writes': 'TupleKeys',
-        'deletes': 'TupleKeys',
+        'writes': 'WriteRequestWrites',
+        'deletes': 'WriteRequestDeletes',
         'authorization_model_id': 'str'
     }
 
@@ -73,7 +73,7 @@ class WriteRequest(object):
 
 
         :return: The writes of this WriteRequest.  # noqa: E501
-        :rtype: TupleKeys
+        :rtype: WriteRequestWrites
         """
         return self._writes
 
@@ -83,7 +83,7 @@ class WriteRequest(object):
 
 
         :param writes: The writes of this WriteRequest.  # noqa: E501
-        :type writes: TupleKeys
+        :type writes: WriteRequestWrites
         """
 
         self._writes = writes
@@ -94,7 +94,7 @@ class WriteRequest(object):
 
 
         :return: The deletes of this WriteRequest.  # noqa: E501
-        :rtype: TupleKeys
+        :rtype: WriteRequestDeletes
         """
         return self._deletes
 
@@ -104,7 +104,7 @@ class WriteRequest(object):
 
 
         :param deletes: The deletes of this WriteRequest.  # noqa: E501
-        :type deletes: TupleKeys
+        :type deletes: WriteRequestDeletes
         """
 
         self._deletes = deletes

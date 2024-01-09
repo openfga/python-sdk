@@ -57,10 +57,8 @@ class TupleToUserset(object):
         self._computed_userset = None
         self.discriminator = None
 
-        if tupleset is not None:
-            self.tupleset = tupleset
-        if computed_userset is not None:
-            self.computed_userset = computed_userset
+        self.tupleset = tupleset
+        self.computed_userset = computed_userset
 
     @property
     def tupleset(self):
@@ -80,6 +78,8 @@ class TupleToUserset(object):
         :param tupleset: The tupleset of this TupleToUserset.  # noqa: E501
         :type tupleset: ObjectRelation
         """
+        if self.local_vars_configuration.client_side_validation and tupleset is None:  # noqa: E501
+            raise ValueError("Invalid value for `tupleset`, must not be `None`")  # noqa: E501
 
         self._tupleset = tupleset
 
@@ -101,6 +101,8 @@ class TupleToUserset(object):
         :param computed_userset: The computed_userset of this TupleToUserset.  # noqa: E501
         :type computed_userset: ObjectRelation
         """
+        if self.local_vars_configuration.client_side_validation and computed_userset is None:  # noqa: E501
+            raise ValueError("Invalid value for `computed_userset`, must not be `None`")  # noqa: E501
 
         self._computed_userset = computed_userset
 

@@ -38,20 +38,22 @@ class CheckRequest(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'tuple_key': 'TupleKey',
+        'tuple_key': 'CheckRequestTupleKey',
         'contextual_tuples': 'ContextualTupleKeys',
         'authorization_model_id': 'str',
-        'trace': 'bool'
+        'trace': 'bool',
+        'context': 'object'
     }
 
     attribute_map = {
         'tuple_key': 'tuple_key',
         'contextual_tuples': 'contextual_tuples',
         'authorization_model_id': 'authorization_model_id',
-        'trace': 'trace'
+        'trace': 'trace',
+        'context': 'context'
     }
 
-    def __init__(self, tuple_key=None, contextual_tuples=None, authorization_model_id=None, trace=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, tuple_key=None, contextual_tuples=None, authorization_model_id=None, trace=None, context=None, local_vars_configuration=None):  # noqa: E501
         """CheckRequest - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -61,6 +63,7 @@ class CheckRequest(object):
         self._contextual_tuples = None
         self._authorization_model_id = None
         self._trace = None
+        self._context = None
         self.discriminator = None
 
         self.tuple_key = tuple_key
@@ -70,6 +73,8 @@ class CheckRequest(object):
             self.authorization_model_id = authorization_model_id
         if trace is not None:
             self.trace = trace
+        if context is not None:
+            self.context = context
 
     @property
     def tuple_key(self):
@@ -77,7 +82,7 @@ class CheckRequest(object):
 
 
         :return: The tuple_key of this CheckRequest.  # noqa: E501
-        :rtype: TupleKey
+        :rtype: CheckRequestTupleKey
         """
         return self._tuple_key
 
@@ -87,7 +92,7 @@ class CheckRequest(object):
 
 
         :param tuple_key: The tuple_key of this CheckRequest.  # noqa: E501
-        :type tuple_key: TupleKey
+        :type tuple_key: CheckRequestTupleKey
         """
         if self.local_vars_configuration.client_side_validation and tuple_key is None:  # noqa: E501
             raise ValueError("Invalid value for `tuple_key`, must not be `None`")  # noqa: E501
@@ -158,6 +163,29 @@ class CheckRequest(object):
         """
 
         self._trace = trace
+
+    @property
+    def context(self):
+        """Gets the context of this CheckRequest.  # noqa: E501
+
+        Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.  # noqa: E501
+
+        :return: The context of this CheckRequest.  # noqa: E501
+        :rtype: object
+        """
+        return self._context
+
+    @context.setter
+    def context(self, context):
+        """Sets the context of this CheckRequest.
+
+        Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.  # noqa: E501
+
+        :param context: The context of this CheckRequest.  # noqa: E501
+        :type context: object
+        """
+
+        self._context = context
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

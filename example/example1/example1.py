@@ -1,10 +1,10 @@
 import asyncio
-import json
 
-import openfga_sdk
-from openfga_sdk.client.models import ClientAssertion, ClientCheckRequest, ClientReadChangesRequest, ClientTuple, ClientWriteRequest
-from openfga_sdk.models import CreateStoreRequest, Metadata, ObjectRelation, RelationMetadata, TupleKey, TypeDefinition, Userset, Usersets, WriteAuthorizationModelRequest
-from openfga_sdk import ClientConfiguration, OpenFgaClient
+from openfga_sdk.client.models import ClientAssertion, ClientCheckRequest, ClientReadChangesRequest, ClientTuple, \
+    ClientWriteRequest, ClientListRelationsRequest, ClientListObjectsRequest, WriteTransactionOpts
+from openfga_sdk import ClientConfiguration, OpenFgaClient, RelationReference, RelationshipCondition, \
+    ConditionParamTypeRef, Condition, ReadRequestTupleKey, CreateStoreRequest, Metadata, ObjectRelation, \
+    RelationMetadata, TypeDefinition, Userset, Usersets, WriteAuthorizationModelRequest
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 import os
 
@@ -76,9 +76,65 @@ async def main():
 
         # WriteAuthorizationModel
         print('Writing an Authorization Model')
-        with open(os.path.join(os.path.dirname(__file__), 'auth-model.json')) as f:
-            auth_model_request = json.load(f)
-        response = await fga_client.write_authorization_model(auth_model_request)
+        response = await fga_client.write_authorization_model(WriteAuthorizationModelRequest(
+            schema_version="1.1",
+            type_definitions=[
+                TypeDefinition(
+                    type="user"
+                ),
+                TypeDefinition(
+                    type="document",
+                    relations=dict(
+                        writer=Userset(
+                            this=dict(),
+                        ),
+                        viewer=Userset(
+                            union=Usersets(
+                                child=[
+                                    Userset(this=dict()),
+                                    Userset(computed_userset=ObjectRelation(
+                                        object="",
+                                        relation="writer",
+                                    )),
+                                ],
+                            ),
+                        ),
+                    ),
+                    metadata=Metadata(
+                        relations=dict(
+                            writer=RelationMetadata(
+                                directly_related_user_types=[
+                                    RelationReference(type="user"),
+                                    RelationReference(type="user", condition="ViewCountLessThan200"),
+                                ]
+                            ),
+                            viewer=RelationMetadata(
+                                directly_related_user_types=[
+                                    RelationReference(type="user"),
+                                ]
+                            )
+                        )
+                    )
+                )
+            ],
+            conditions=dict(
+                ViewCountLessThan200=Condition(
+                    name="ViewCountLessThan200",
+                    expression="ViewCount < 200",
+                    parameters=dict(
+                        ViewCount=ConditionParamTypeRef(
+                            type_name="TYPE_NAME_INT"
+                        ),
+                        Type=ConditionParamTypeRef(
+                            type_name="TYPE_NAME_STRING"
+                        ),
+                        Name=ConditionParamTypeRef(
+                            type_name="TYPE_NAME_STRING"
+                        ),
+                    )
+                )
+            )
+        ))
         print(f"Authorization Model ID: {response.authorization_model_id}")
 
         # ReadAuthorizationModels (after write)
@@ -101,13 +157,13 @@ async def main():
                     user='user:anne',
                     relation='writer',
                     object='document:roadmap',
-                    # condition=RelationshipCondition(
-                    #   name='ViewCountLessThan200',
-                    #   context=dict(
-                    #       Name='Roadmap',
-                    #       Type='Document',
-                    #   ),
-                    # ),
+                    condition=RelationshipCondition(
+                      name='ViewCountLessThan200',
+                      context=dict(
+                          Name='Roadmap',
+                          Type='Document',
+                      ),
+                    ),
                 ),
             ],
         )
@@ -118,31 +174,113 @@ async def main():
         await fga_client.write(body, options)
         print('Done Writing Tuples')
 
+        # Write
+        print('Writing Tuples - non txn')
+        body = ClientWriteRequest(
+            writes=[
+                ClientTuple(
+                    user='user:beth',
+                    relation='writer',
+                    object='document:1',
+                    condition=RelationshipCondition(
+                      name='ViewCountLessThan200',
+                      context=dict(
+                          Name='Roadmap',
+                          Type='Document',
+                      ),
+                    ),
+                ),
+                ClientTuple(
+                    user='user:beth',
+                    relation='viewer',
+                    object='document:2'
+                ),
+            ],
+        )
+        options = {
+            # You can rely on the model id set in the configuration or override it for this specific request
+            "authorization_model_id": auth_model_id,
+            "transaction": WriteTransactionOpts(
+                max_per_chunk=1
+            )
+        }
+        await fga_client.write(body, options)
+        print('Done Writing Tuples')
+
         # Set the model ID
         fga_client.set_authorization_model_id(auth_model_id)
 
         # Read
         print('Reading Tuples')
-        response = await fga_client.read(TupleKey(user='user:anne', object='document:'))
+        response = await fga_client.read(ReadRequestTupleKey(user='user:anne', object='document:'))
         print(f"Read Tuples: {response.tuples}")
 
         # ReadChanges
         print('Reading Tuple Changes')
-        body = ClientReadChangesRequest('document')
+        body = ClientReadChangesRequest(type='document')
         response = await fga_client.read_changes(body)
         print(f"Read Changes Tuples: {response.changes}")
 
         # Check
-        print('Checking for access')
+        print('Checking for access w/o context')
+        try:
+            response = await fga_client.check(ClientCheckRequest(
+                user='user:anne',
+                relation='viewer',
+                object='document:roadmap'
+            ))
+            print(f"Allowed: {response.allowed}")
+        except Exception as err:
+            print(f"Failed due to: {err}")
+
+        # Checking for access with context
+        print('Checking for access with context')
+
         response = await fga_client.check(ClientCheckRequest(
             user='user:anne',
-            relation='reader',
+            relation='viewer',
             object='document:roadmap',
+            context=dict(
+                ViewCount=100
+            )
         ))
         print(f"Allowed: {response.allowed}")
 
-        # Checking for access with context
-        # TODO
+        # List objects with context
+        print('Listing objects  for access with context')
+
+        response = await fga_client.list_objects(ClientListObjectsRequest(
+            user='user:anne',
+            relation='viewer',
+            type='document',
+            context=dict(
+                ViewCount=100
+            )
+        ))
+        print(f"Objects: {response.objects}")
+
+        # List relations w/o context
+        print('Listing relations for access w/o context')
+
+        response = await fga_client.list_relations(ClientListRelationsRequest(
+            user='user:anne',
+            relations=['viewer', 'writer'],
+            object='document:roadmap'
+        ))
+        print(f"Relations: {response}")
+
+        # List relations with context
+        print('Listing relations for access with context')
+
+        response = await fga_client.list_relations(ClientListRelationsRequest(
+            user='user:anne',
+            relations=['viewer', 'writer'],
+            object='document:roadmap',
+            context=dict(
+                ViewCount=100
+            )
+        ))
+        print(f"Relations: {response}")
 
         # WriteAssertions
         await fga_client.write_assertions([
@@ -154,7 +292,7 @@ async def main():
             ),
             ClientAssertion(
                 user='user:anne',
-                relation='reader',
+                relation='viewer',
                 object='document:roadmap',
                 expectation=False,
             ),

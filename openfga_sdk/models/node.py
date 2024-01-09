@@ -66,8 +66,7 @@ class Node(object):
         self._intersection = None
         self.discriminator = None
 
-        if name is not None:
-            self.name = name
+        self.name = name
         if leaf is not None:
             self.leaf = leaf
         if difference is not None:
@@ -95,6 +94,8 @@ class Node(object):
         :param name: The name of this Node.  # noqa: E501
         :type name: str
         """
+        if self.local_vars_configuration.client_side_validation and name is None:  # noqa: E501
+            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
 

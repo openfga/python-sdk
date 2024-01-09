@@ -32,9 +32,11 @@ from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.expand_request import ExpandRequest
+from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
 from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
 from openfga_sdk.models.read_request import ReadRequest
+from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.tuple_key import TupleKey
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
 from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
@@ -73,7 +75,7 @@ def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str)
 
 def options_to_kwargs(options: dict[str, int | str] = None):
     """
-    Return kargs with continuation_token and page_size
+    Return kwargs with continuation_token and page_size
     """
     kwargs = {}
     if options is not None:
@@ -126,7 +128,7 @@ class OpenFgaClient():
     def _get_authorization_model_id(self, options: object) -> str | None:
         """
         Return the authorization model ID if specified in the options.
-        Otherwise return the authorization model ID stored in the client's configuration
+        Otherwise, return the authorization model ID stored in the client's configuration
         """
         authorization_model_id = self._client_configuration.authorization_model_id
         if options is not None and "authorization_model_id" in options:
@@ -152,13 +154,13 @@ class OpenFgaClient():
 
     def set_authorization_model_id(self, value):
         """
-        Update the authorizaiton model id in the configuration
+        Update the authorization model id in the configuration
         """
         self._client_configuration.authorization_model_id = value
 
     def get_authorization_model_id(self):
         """
-        Return the authorizaiton model id
+        Return the authorization model id
         """
         return self._client_configuration.authorization_model_id
 
@@ -186,7 +188,7 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        # convert options to kargs
+        # convert options to kwargs
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListStores")
         kwargs = options_to_kwargs(options)
         api_response = self._api.list_stores(
@@ -295,7 +297,7 @@ class OpenFgaClient():
 
     def read_latest_authorization_model(self, options: dict[str, int | str] = None):
         """
-        Convenient method of reading the latest authorizaiton model
+        Convenient method of reading the latest authorization model
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
@@ -330,7 +332,7 @@ class OpenFgaClient():
         )
         return api_response
 
-    def read(self, body: TupleKey, options: dict[str, str] = None):
+    def read(self, body: ReadRequestTupleKey, options: dict[str, str] = None):
         """
         Read changes for specified type
         :param body - the tuples we want to read
@@ -505,6 +507,7 @@ class OpenFgaClient():
                 relation=body.relation,
                 object=body.object,
             ),
+            context=body.context,
             authorization_model_id=self._get_authorization_model_id(options),
         )
         if body.contextual_tuples:
@@ -575,7 +578,7 @@ class OpenFgaClient():
         kwargs = options_to_kwargs(options)
 
         req_body = ExpandRequest(
-            tuple_key=TupleKey(
+            tuple_key=ExpandRequestTupleKey(
                 relation=body.relation,
                 object=body.object,
             ),
@@ -605,6 +608,7 @@ class OpenFgaClient():
             user=body.user,
             relation=body.relation,
             type=body.type,
+            context=body.context,
         )
         if body.contextual_tuples:
             req_body.contextual_tuples = ContextualTupleKeys(

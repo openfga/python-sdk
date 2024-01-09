@@ -38,7 +38,7 @@ class ReadRequest(object):
                             and the value is json key in definition.
     """
     openapi_types = {
-        'tuple_key': 'TupleKey',
+        'tuple_key': 'ReadRequestTupleKey',
         'page_size': 'int',
         'continuation_token': 'str'
     }
@@ -73,7 +73,7 @@ class ReadRequest(object):
 
 
         :return: The tuple_key of this ReadRequest.  # noqa: E501
-        :rtype: TupleKey
+        :rtype: ReadRequestTupleKey
         """
         return self._tuple_key
 
@@ -83,7 +83,7 @@ class ReadRequest(object):
 
 
         :param tuple_key: The tuple_key of this ReadRequest.  # noqa: E501
-        :type tuple_key: TupleKey
+        :type tuple_key: ReadRequestTupleKey
         """
 
         self._tuple_key = tuple_key

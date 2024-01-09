@@ -57,10 +57,8 @@ class UsersetTreeTupleToUserset(object):
         self._computed = None
         self.discriminator = None
 
-        if tupleset is not None:
-            self.tupleset = tupleset
-        if computed is not None:
-            self.computed = computed
+        self.tupleset = tupleset
+        self.computed = computed
 
     @property
     def tupleset(self):
@@ -80,6 +78,8 @@ class UsersetTreeTupleToUserset(object):
         :param tupleset: The tupleset of this UsersetTreeTupleToUserset.  # noqa: E501
         :type tupleset: str
         """
+        if self.local_vars_configuration.client_side_validation and tupleset is None:  # noqa: E501
+            raise ValueError("Invalid value for `tupleset`, must not be `None`")  # noqa: E501
 
         self._tupleset = tupleset
 
@@ -101,6 +101,8 @@ class UsersetTreeTupleToUserset(object):
         :param computed: The computed of this UsersetTreeTupleToUserset.  # noqa: E501
         :type computed: list[Computed]
         """
+        if self.local_vars_configuration.client_side_validation and computed is None:  # noqa: E501
+            raise ValueError("Invalid value for `computed`, must not be `None`")  # noqa: E501
 
         self._computed = computed
 

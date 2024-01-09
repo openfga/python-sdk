@@ -54,8 +54,7 @@ class Nodes(object):
         self._nodes = None
         self.discriminator = None
 
-        if nodes is not None:
-            self.nodes = nodes
+        self.nodes = nodes
 
     @property
     def nodes(self):
@@ -75,6 +74,8 @@ class Nodes(object):
         :param nodes: The nodes of this Nodes.  # noqa: E501
         :type nodes: list[Node]
         """
+        if self.local_vars_configuration.client_side_validation and nodes is None:  # noqa: E501
+            raise ValueError("Invalid value for `nodes`, must not be `None`")  # noqa: E501
 
         self._nodes = nodes
 

@@ -39,15 +39,17 @@ class WriteAuthorizationModelRequest(object):
     """
     openapi_types = {
         'type_definitions': 'list[TypeDefinition]',
-        'schema_version': 'str'
+        'schema_version': 'str',
+        'conditions': 'dict[str, Condition]'
     }
 
     attribute_map = {
         'type_definitions': 'type_definitions',
-        'schema_version': 'schema_version'
+        'schema_version': 'schema_version',
+        'conditions': 'conditions'
     }
 
-    def __init__(self, type_definitions=None, schema_version=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, type_definitions=None, schema_version=None, conditions=None, local_vars_configuration=None):  # noqa: E501
         """WriteAuthorizationModelRequest - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -55,11 +57,13 @@ class WriteAuthorizationModelRequest(object):
 
         self._type_definitions = None
         self._schema_version = None
+        self._conditions = None
         self.discriminator = None
 
         self.type_definitions = type_definitions
-        if schema_version is not None:
-            self.schema_version = schema_version
+        self.schema_version = schema_version
+        if conditions is not None:
+            self.conditions = conditions
 
     @property
     def type_definitions(self):
@@ -102,8 +106,31 @@ class WriteAuthorizationModelRequest(object):
         :param schema_version: The schema_version of this WriteAuthorizationModelRequest.  # noqa: E501
         :type schema_version: str
         """
+        if self.local_vars_configuration.client_side_validation and schema_version is None:  # noqa: E501
+            raise ValueError("Invalid value for `schema_version`, must not be `None`")  # noqa: E501
 
         self._schema_version = schema_version
+
+    @property
+    def conditions(self):
+        """Gets the conditions of this WriteAuthorizationModelRequest.  # noqa: E501
+
+
+        :return: The conditions of this WriteAuthorizationModelRequest.  # noqa: E501
+        :rtype: dict[str, Condition]
+        """
+        return self._conditions
+
+    @conditions.setter
+    def conditions(self, conditions):
+        """Sets the conditions of this WriteAuthorizationModelRequest.
+
+
+        :param conditions: The conditions of this WriteAuthorizationModelRequest.  # noqa: E501
+        :type conditions: dict[str, Condition]
+        """
+
+        self._conditions = conditions
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

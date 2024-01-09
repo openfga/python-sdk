@@ -54,8 +54,7 @@ class Users(object):
         self._users = None
         self.discriminator = None
 
-        if users is not None:
-            self.users = users
+        self.users = users
 
     @property
     def users(self):
@@ -75,6 +74,8 @@ class Users(object):
         :param users: The users of this Users.  # noqa: E501
         :type users: list[str]
         """
+        if self.local_vars_configuration.client_side_validation and users is None:  # noqa: E501
+            raise ValueError("Invalid value for `users`, must not be `None`")  # noqa: E501
 
         self._users = users
 

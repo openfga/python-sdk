@@ -14,18 +14,24 @@
 """
 
 # import models into model package
+from openfga_sdk.models.aborted_message_response import AbortedMessageResponse
 from openfga_sdk.models.any import Any
 from openfga_sdk.models.assertion import Assertion
+from openfga_sdk.models.assertion_tuple_key import AssertionTupleKey
 from openfga_sdk.models.authorization_model import AuthorizationModel
 from openfga_sdk.models.check_request import CheckRequest
+from openfga_sdk.models.check_request_tuple_key import CheckRequestTupleKey
 from openfga_sdk.models.check_response import CheckResponse
 from openfga_sdk.models.computed import Computed
+from openfga_sdk.models.condition import Condition
+from openfga_sdk.models.condition_param_type_ref import ConditionParamTypeRef
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.create_store_response import CreateStoreResponse
 from openfga_sdk.models.difference import Difference
 from openfga_sdk.models.error_code import ErrorCode
 from openfga_sdk.models.expand_request import ExpandRequest
+from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.expand_response import ExpandResponse
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.internal_error_code import InternalErrorCode
@@ -38,6 +44,7 @@ from openfga_sdk.models.metadata import Metadata
 from openfga_sdk.models.node import Node
 from openfga_sdk.models.nodes import Nodes
 from openfga_sdk.models.not_found_error_code import NotFoundErrorCode
+from openfga_sdk.models.null_value import NullValue
 from openfga_sdk.models.object_relation import ObjectRelation
 from openfga_sdk.models.path_unknown_error_message_response import PathUnknownErrorMessageResponse
 from openfga_sdk.models.read_assertions_response import ReadAssertionsResponse
@@ -45,18 +52,21 @@ from openfga_sdk.models.read_authorization_model_response import ReadAuthorizati
 from openfga_sdk.models.read_authorization_models_response import ReadAuthorizationModelsResponse
 from openfga_sdk.models.read_changes_response import ReadChangesResponse
 from openfga_sdk.models.read_request import ReadRequest
+from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.read_response import ReadResponse
 from openfga_sdk.models.relation_metadata import RelationMetadata
 from openfga_sdk.models.relation_reference import RelationReference
+from openfga_sdk.models.relationship_condition import RelationshipCondition
 from openfga_sdk.models.status import Status
 from openfga_sdk.models.store import Store
 from openfga_sdk.models.tuple import Tuple
 from openfga_sdk.models.tuple_change import TupleChange
 from openfga_sdk.models.tuple_key import TupleKey
-from openfga_sdk.models.tuple_keys import TupleKeys
+from openfga_sdk.models.tuple_key_without_condition import TupleKeyWithoutCondition
 from openfga_sdk.models.tuple_operation import TupleOperation
 from openfga_sdk.models.tuple_to_userset import TupleToUserset
 from openfga_sdk.models.type_definition import TypeDefinition
+from openfga_sdk.models.type_name import TypeName
 from openfga_sdk.models.users import Users
 from openfga_sdk.models.userset import Userset
 from openfga_sdk.models.userset_tree import UsersetTree
@@ -68,3 +78,5 @@ from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
 from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
 from openfga_sdk.models.write_authorization_model_response import WriteAuthorizationModelResponse
 from openfga_sdk.models.write_request import WriteRequest
+from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
+from openfga_sdk.models.write_request_writes import WriteRequestWrites

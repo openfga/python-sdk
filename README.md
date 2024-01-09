@@ -320,10 +320,10 @@ Create a new authorization model.
 
 ```python
 body = WriteAuthorizationModelRequest(
-    schema_version = "1.1",
+    schema_version="1.1",
     type_definitions=[
         TypeDefinition(
-            type="user",
+            type="user"
         ),
         TypeDefinition(
             type="document",
@@ -342,9 +342,41 @@ body = WriteAuthorizationModelRequest(
                         ],
                     ),
                 ),
+            ),
+            metadata=Metadata(
+                relations=dict(
+                    writer=RelationMetadata(
+                        directly_related_user_types=[
+                            RelationReference(type="user"),
+                            RelationReference(type="user", condition="ViewCountLessThan200"),
+                        ]
+                    ),
+                    viewer=RelationMetadata(
+                        directly_related_user_types=[
+                            RelationReference(type="user"),
+                        ]
+                    )
+                )
             )
-        ),
+        )
     ],
+    conditions=dict(
+        ViewCountLessThan200=Condition(
+            name="ViewCountLessThan200",
+            expression="ViewCount < 200",
+            parameters=dict(
+                ViewCount=ConditionParamTypeRef(
+                    type_name="TYPE_NAME_INT"
+                ),
+                Type=ConditionParamTypeRef(
+                    type_name="TYPE_NAME_STRING"
+                ),
+                Name=ConditionParamTypeRef(
+                    type_name="TYPE_NAME_STRING"
+                ),
+            )
+        )
+    )
 )
 
 response = await fga_client.write_authorization_model(body)
@@ -364,7 +396,10 @@ options = {
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
 
-response = await fga_client.read_authorization_model(id)
+response = await fga_client.read_authorization_model({
+    # You can rely on the model id set in the configuration or override it for this specific request
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
+})
 # response.authorization_model =  AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...])
 ```
 
@@ -394,7 +429,7 @@ options = {
     "page_size": "25",
     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
-body = ClientReadChangesRequest("document")
+body = ClientReadChangesRequest(type='document')
 
 response = await fga_client.read_changes(body, options)
 # response.continuation_token = ...
@@ -409,7 +444,7 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 
 ```python
 # Find if a relationship tuple stating that a certain user is a viewer of certain document
-body = TupleKey(
+body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:roadmap",
@@ -421,7 +456,7 @@ response = await fga_client.read(body)
 
 ```python
 # Find all relationship tuples where a certain user has a relationship as any relation to a certain document
-body = TupleKey(
+body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     object="document:roadmap",
 )
@@ -433,7 +468,7 @@ response = await fga_client.read(body)
 
 ```python
 # Find all relationship tuples where a certain user is a viewer of any document
-body = TupleKey(
+body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:",
@@ -445,7 +480,7 @@ response = await fga_client.read(body)
 
 ```python
 # Find all relationship tuples where any user has a relationship as any relation with a particular document
-body = TupleKey(
+body = ReadRequestTupleKey(
     object="document:roadmap",
 )
 
@@ -455,7 +490,7 @@ response = await fga_client.read(body)
 
 ```python
 # Read all stored relationship tuples
-body = TupleKey()
+body = ReadRequestTupleKey()
 
 response = await api_instance.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
@@ -482,6 +517,13 @@ body = ClientWriteRequest(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
             object="document:roadmap",
+            condition=RelationshipCondition(
+              name='ViewCountLessThan200',
+              context=dict(
+                  Name='Roadmap',
+                  Type='Document',
+              ),
+            ),
         ),
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -523,6 +565,13 @@ body = ClientWriteRequest(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
             object="document:roadmap",
+            condition=RelationshipCondition(
+              name='ViewCountLessThan200',
+              context=dict(
+                  Name='Roadmap',
+                  Type='Document',
+              ),
+            ),
         ),
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -559,6 +608,9 @@ body = ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="writer",
     object="document:roadmap",
+    context=dict(
+        ViewCount=100
+    ),
 )
 
 response = await fga_client.check(body, options)
@@ -586,7 +638,10 @@ body = [ClientCheckRequest(
             relation="editor",
             object="document:roadmap",
         ),
-    ]
+    ],
+    context=dict(
+        ViewCount=100
+    ),
 ), ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="admin",
@@ -619,7 +674,10 @@ response = await fga_client.batch_check(body, options)
 #       user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #       relation: "editor",
 #       object: "document:roadmap"
-#     }]
+#     }],
+#     context=dict(
+#       ViewCount=100
+#     ),
 #   }
 # }, {
 #   allowed: false,
@@ -693,7 +751,10 @@ body = ClientListObjectsRequest(
             relation="writer",
             object="document:budget",
         ),
-    ]
+    ],
+    context=dict(
+        ViewCount=100
+    )
 )
 
 response = await fga_client.list_objects(body)
@@ -719,7 +780,10 @@ body = ClientListRelationsRequest(
             relation="writer",
             object="document:budget",
         ),
-    ]
+    ],
+    context=dict(
+        ViewCount=100
+    )
 )
 var response = await fga_client.list_relations(body, options);
 
@@ -788,18 +852,24 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AbortedMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/AbortedMessageResponse.md)
  - [Any](https://github.com/openfga/python-sdk/blob/main/docs/Any.md)
  - [Assertion](https://github.com/openfga/python-sdk/blob/main/docs/Assertion.md)
+ - [AssertionTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/AssertionTupleKey.md)
  - [AuthorizationModel](https://github.com/openfga/python-sdk/blob/main/docs/AuthorizationModel.md)
  - [CheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequest.md)
+ - [CheckRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequestTupleKey.md)
  - [CheckResponse](https://github.com/openfga/python-sdk/blob/main/docs/CheckResponse.md)
  - [Computed](https://github.com/openfga/python-sdk/blob/main/docs/Computed.md)
+ - [Condition](https://github.com/openfga/python-sdk/blob/main/docs/Condition.md)
+ - [ConditionParamTypeRef](https://github.com/openfga/python-sdk/blob/main/docs/ConditionParamTypeRef.md)
  - [ContextualTupleKeys](https://github.com/openfga/python-sdk/blob/main/docs/ContextualTupleKeys.md)
  - [CreateStoreRequest](https://github.com/openfga/python-sdk/blob/main/docs/CreateStoreRequest.md)
  - [CreateStoreResponse](https://github.com/openfga/python-sdk/blob/main/docs/CreateStoreResponse.md)
  - [Difference](https://github.com/openfga/python-sdk/blob/main/docs/Difference.md)
  - [ErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/ErrorCode.md)
  - [ExpandRequest](https://github.com/openfga/python-sdk/blob/main/docs/ExpandRequest.md)
+ - [ExpandRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/ExpandRequestTupleKey.md)
  - [ExpandResponse](https://github.com/openfga/python-sdk/blob/main/docs/ExpandResponse.md)
  - [GetStoreResponse](https://github.com/openfga/python-sdk/blob/main/docs/GetStoreResponse.md)
  - [InternalErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/InternalErrorCode.md)
@@ -812,6 +882,7 @@ Class | Method | HTTP request | Description
  - [Node](https://github.com/openfga/python-sdk/blob/main/docs/Node.md)
  - [Nodes](https://github.com/openfga/python-sdk/blob/main/docs/Nodes.md)
  - [NotFoundErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/NotFoundErrorCode.md)
+ - [NullValue](https://github.com/openfga/python-sdk/blob/main/docs/NullValue.md)
  - [ObjectRelation](https://github.com/openfga/python-sdk/blob/main/docs/ObjectRelation.md)
  - [PathUnknownErrorMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/PathUnknownErrorMessageResponse.md)
  - [ReadAssertionsResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadAssertionsResponse.md)
@@ -819,18 +890,21 @@ Class | Method | HTTP request | Description
  - [ReadAuthorizationModelsResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadAuthorizationModelsResponse.md)
  - [ReadChangesResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadChangesResponse.md)
  - [ReadRequest](https://github.com/openfga/python-sdk/blob/main/docs/ReadRequest.md)
+ - [ReadRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/ReadRequestTupleKey.md)
  - [ReadResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadResponse.md)
  - [RelationMetadata](https://github.com/openfga/python-sdk/blob/main/docs/RelationMetadata.md)
  - [RelationReference](https://github.com/openfga/python-sdk/blob/main/docs/RelationReference.md)
+ - [RelationshipCondition](https://github.com/openfga/python-sdk/blob/main/docs/RelationshipCondition.md)
  - [Status](https://github.com/openfga/python-sdk/blob/main/docs/Status.md)
  - [Store](https://github.com/openfga/python-sdk/blob/main/docs/Store.md)
  - [Tuple](https://github.com/openfga/python-sdk/blob/main/docs/Tuple.md)
  - [TupleChange](https://github.com/openfga/python-sdk/blob/main/docs/TupleChange.md)
  - [TupleKey](https://github.com/openfga/python-sdk/blob/main/docs/TupleKey.md)
- - [TupleKeys](https://github.com/openfga/python-sdk/blob/main/docs/TupleKeys.md)
+ - [TupleKeyWithoutCondition](https://github.com/openfga/python-sdk/blob/main/docs/TupleKeyWithoutCondition.md)
  - [TupleOperation](https://github.com/openfga/python-sdk/blob/main/docs/TupleOperation.md)
  - [TupleToUserset](https://github.com/openfga/python-sdk/blob/main/docs/TupleToUserset.md)
  - [TypeDefinition](https://github.com/openfga/python-sdk/blob/main/docs/TypeDefinition.md)
+ - [TypeName](https://github.com/openfga/python-sdk/blob/main/docs/TypeName.md)
  - [Users](https://github.com/openfga/python-sdk/blob/main/docs/Users.md)
  - [Userset](https://github.com/openfga/python-sdk/blob/main/docs/Userset.md)
  - [UsersetTree](https://github.com/openfga/python-sdk/blob/main/docs/UsersetTree.md)
@@ -842,6 +916,8 @@ Class | Method | HTTP request | Description
  - [WriteAuthorizationModelRequest](https://github.com/openfga/python-sdk/blob/main/docs/WriteAuthorizationModelRequest.md)
  - [WriteAuthorizationModelResponse](https://github.com/openfga/python-sdk/blob/main/docs/WriteAuthorizationModelResponse.md)
  - [WriteRequest](https://github.com/openfga/python-sdk/blob/main/docs/WriteRequest.md)
+ - [WriteRequestDeletes](https://github.com/openfga/python-sdk/blob/main/docs/WriteRequestDeletes.md)
+ - [WriteRequestWrites](https://github.com/openfga/python-sdk/blob/main/docs/WriteRequestWrites.md)
 
 
 
