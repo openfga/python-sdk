@@ -3,8 +3,11 @@ all: run
 project_name=example1
 openfga_version=latest
 
-run:
-	python example1/example1.py
+setup:
+	cd "${project_name}/" && pip3 install -r requirements.txt && cd -
+
+run: setup
+	python3 "${project_name}/${project_name}.py"
 
 run-openfga:
 	docker pull docker.io/openfga/openfga:${openfga_version} && \
