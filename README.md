@@ -320,10 +320,10 @@ Create a new authorization model.
 
 ```python
 body = WriteAuthorizationModelRequest(
-    schema_version = "1.1",
+    schema_version="1.1",
     type_definitions=[
         TypeDefinition(
-            type="user",
+            type="user"
         ),
         TypeDefinition(
             type="document",
@@ -342,9 +342,41 @@ body = WriteAuthorizationModelRequest(
                         ],
                     ),
                 ),
+            ),
+            metadata=Metadata(
+                relations=dict(
+                    writer=RelationMetadata(
+                        directly_related_user_types=[
+                            RelationReference(type="user"),
+                            RelationReference(type="user", condition="ViewCountLessThan200"),
+                        ]
+                    ),
+                    viewer=RelationMetadata(
+                        directly_related_user_types=[
+                            RelationReference(type="user"),
+                        ]
+                    )
+                )
             )
-        ),
+        )
     ],
+    conditions=dict(
+        ViewCountLessThan200=Condition(
+            name="ViewCountLessThan200",
+            expression="ViewCount < 200",
+            parameters=dict(
+                ViewCount=ConditionParamTypeRef(
+                    type_name="TYPE_NAME_INT"
+                ),
+                Type=ConditionParamTypeRef(
+                    type_name="TYPE_NAME_STRING"
+                ),
+                Name=ConditionParamTypeRef(
+                    type_name="TYPE_NAME_STRING"
+                ),
+            )
+        )
+    )
 )
 
 response = await fga_client.write_authorization_model(body)
@@ -364,7 +396,10 @@ options = {
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
 
-response = await fga_client.read_authorization_model(id)
+response = await fga_client.read_authorization_model({
+    # You can rely on the model id set in the configuration or override it for this specific request
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
+})
 # response.authorization_model =  AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...])
 ```
 
@@ -394,7 +429,7 @@ options = {
     "page_size": "25",
     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
-body = ClientReadChangesRequest("document")
+body = ClientReadChangesRequest(type='document')
 
 response = await fga_client.read_changes(body, options)
 # response.continuation_token = ...
@@ -409,7 +444,7 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 
 ```python
 # Find if a relationship tuple stating that a certain user is a viewer of certain document
-body = TupleKey(
+body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:roadmap",
@@ -421,7 +456,7 @@ response = await fga_client.read(body)
 
 ```python
 # Find all relationship tuples where a certain user has a relationship as any relation to a certain document
-body = TupleKey(
+body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     object="document:roadmap",
 )
@@ -433,7 +468,7 @@ response = await fga_client.read(body)
 
 ```python
 # Find all relationship tuples where a certain user is a viewer of any document
-body = TupleKey(
+body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:",
@@ -445,7 +480,7 @@ response = await fga_client.read(body)
 
 ```python
 # Find all relationship tuples where any user has a relationship as any relation with a particular document
-body = TupleKey(
+body = ReadRequestTupleKey(
     object="document:roadmap",
 )
 
@@ -455,7 +490,7 @@ response = await fga_client.read(body)
 
 ```python
 # Read all stored relationship tuples
-body = TupleKey()
+body = ReadRequestTupleKey()
 
 response = await api_instance.read(body)
 # response = ReadResponse({"tuples": [Tuple({"key": TupleKey({"user":"...","relation":"...","object":"..."}), "timestamp": datetime.fromisoformat("...") })]})
@@ -482,6 +517,13 @@ body = ClientWriteRequest(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
             object="document:roadmap",
+            condition=RelationshipCondition(
+              name='ViewCountLessThan200',
+              context=dict(
+                  Name='Roadmap',
+                  Type='Document',
+              ),
+            ),
         ),
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -523,6 +565,13 @@ body = ClientWriteRequest(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
             object="document:roadmap",
+            condition=RelationshipCondition(
+              name='ViewCountLessThan200',
+              context=dict(
+                  Name='Roadmap',
+                  Type='Document',
+              ),
+            ),
         ),
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -559,6 +608,9 @@ body = ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="writer",
     object="document:roadmap",
+    context=dict(
+        ViewCount=100
+    ),
 )
 
 response = await fga_client.check(body, options)
@@ -586,7 +638,10 @@ body = [ClientCheckRequest(
             relation="editor",
             object="document:roadmap",
         ),
-    ]
+    ],
+    context=dict(
+        ViewCount=100
+    ),
 ), ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="admin",
@@ -619,7 +674,10 @@ response = await fga_client.batch_check(body, options)
 #       user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #       relation: "editor",
 #       object: "document:roadmap"
-#     }]
+#     }],
+#     context=dict(
+#       ViewCount=100
+#     ),
 #   }
 # }, {
 #   allowed: false,
@@ -693,7 +751,10 @@ body = ClientListObjectsRequest(
             relation="writer",
             object="document:budget",
         ),
-    ]
+    ],
+    context=dict(
+        ViewCount=100
+    )
 )
 
 response = await fga_client.list_objects(body)
@@ -719,7 +780,10 @@ body = ClientListRelationsRequest(
             relation="writer",
             object="document:budget",
         ),
-    ]
+    ],
+    context=dict(
+        ViewCount=100
+    )
 )
 var response = await fga_client.list_relations(body, options);
 
