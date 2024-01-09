@@ -396,10 +396,7 @@ options = {
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
 
-response = await fga_client.read_authorization_model({
-    # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
-})
+response = await fga_client.read_authorization_model(options)
 # response.authorization_model =  AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...])
 ```
 
@@ -429,7 +426,7 @@ options = {
     "page_size": "25",
     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
-body = ClientReadChangesRequest(type='document')
+body = ClientReadChangesRequest(type="document")
 
 response = await fga_client.read_changes(body, options)
 # response.continuation_token = ...
@@ -565,6 +562,11 @@ body = ClientWriteRequest(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
             object="document:roadmap",
+        ),
+        ClientTuple(
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="viewer",
+            object="document:budget",
             condition=RelationshipCondition(
               name='ViewCountLessThan200',
               context=dict(
@@ -572,11 +574,6 @@ body = ClientWriteRequest(
                   Type='Document',
               ),
             ),
-        ),
-        ClientTuple(
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="viewer",
-            object="document:budget",
         ),
     ],
     deletes=[
@@ -641,7 +638,7 @@ body = [ClientCheckRequest(
     ],
     context=dict(
         ViewCount=100
-    ),
+    )
 ), ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="admin",
@@ -675,9 +672,9 @@ response = await fga_client.batch_check(body, options)
 #       relation: "editor",
 #       object: "document:roadmap"
 #     }],
-#     context=dict(
-#       ViewCount=100
-#     ),
+#    context=dict(
+#        ViewCount=100
+#    )
 #   }
 # }, {
 #   allowed: false,
@@ -798,7 +795,7 @@ Read assertions for a particular authorization model.
 
 [API Documentation](https://openfga.dev/api/service#/Assertions/Read%20Assertions)
 
-```csharp
+```python
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -812,7 +809,7 @@ Update the assertions for a particular authorization model.
 
 [API Documentation](https://openfga.dev/api/service#/Assertions/Write%20Assertions)
 
-```csharp
+```python
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"

@@ -82,7 +82,6 @@ docs/WriteRequestDeletes.md
 docs/WriteRequestWrites.md
 example/Makefile
 example/README.md
-example/example1/auth-model.json
 example/example1/example1.py
 example/example1/requirements.txt
 example/example1/setup.cfg

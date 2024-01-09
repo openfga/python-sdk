@@ -1180,7 +1180,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
             expected_headers = urllib3.response.HTTPHeaderDict(
-                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.3', 'Authorization': 'Bearer TOKEN1'})
+                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.4', 'Authorization': 'Bearer TOKEN1'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
@@ -1223,7 +1223,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
             expected_headers = urllib3.response.HTTPHeaderDict(
-                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.3', 'Custom Header': 'custom value'})
+                {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk python/0.3.4', 'Custom Header': 'custom value'})
             mock_request.assert_called_once_with(
                 'POST',
                 'http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check',
