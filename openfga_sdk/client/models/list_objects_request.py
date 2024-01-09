@@ -13,7 +13,7 @@
 
 from openfga_sdk.client.models.tuple import ClientTuple
 
-from typing import List, Any
+from typing import List
 
 
 class ClientListObjectsRequest():
@@ -21,12 +21,12 @@ class ClientListObjectsRequest():
     ClientListObjectsRequest encapsulates the parameters required for list objects
     """
 
-    def __init__(self, user: str, relation: str, type: str, context: Any = None, contextual_tuples: List[ClientTuple] = None):
+    def __init__(self, user: str, relation: str, type: str, contextual_tuples: List[ClientTuple] = None, context: object = None):
         self._user = user
         self._relation = relation
         self._type = type
-        self._context = context
         self._contextual_tuples = contextual_tuples
+        self._context = context
 
     @property
     def user(self):
@@ -50,18 +50,18 @@ class ClientListObjectsRequest():
         return self._type
 
     @property
-    def context(self):
-        """
-        Return context
-        """
-        return self._context
-
-    @property
     def contextual_tuples(self):
         """
         Return contextual_tuples
         """
         return self._contextual_tuples
+
+    @property
+    def context(self):
+        """
+        Return context
+        """
+        return self._context
 
     @user.setter
     def user(self, value):
@@ -84,16 +84,16 @@ class ClientListObjectsRequest():
         """
         self._type = value
 
-    @context.setter
-    def context(self, value):
-        """
-        Set context
-        """
-        self._context = value
-
     @contextual_tuples.setter
     def contextual_tuples(self, value):
         """
         Set contextual tuples
         """
         self._contextual_tuples = value
+
+    @context.setter
+    def context(self, value):
+        """
+        Set context
+        """
+        self._context = value

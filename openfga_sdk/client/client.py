@@ -632,7 +632,7 @@ class OpenFgaClient():
         options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
 
         request_body = [construct_check_request(
-            user=body.user, relation=i, object=body.object, contextual_tuples=body.contextual_tuples) for i in body.relations]
+            user=body.user, relation=i, object=body.object, contextual_tuples=body.contextual_tuples, context=body.context) for i in body.relations]
         result = await self.batch_check(request_body, options)
         # need to filter with the allowed response
         result_iterator = filter(_check_allowed, result)
