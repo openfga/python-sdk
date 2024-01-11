@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.4.0
+
+### [0.4.0](https://github.com/openfga/python-sdk/compare/v0.3.4...v0.4.0) (2024-01-11)
+
+- feat: support for [conditions](https://openfga.dev/blog/conditional-tuples-announcement)
+- chore!: use latest API interfaces for type info
+- chore: add [example project](./example)
+- chore: dependency updates
+
+BREAKING CHANGES:
+Note: This release comes with substantial breaking changes, especially to the interfaces due to the protobuf changes in the last release.
+
+While the http interfaces did not break (you can still use `v0.3.3` SDK with a `v1.3.8+` server),
+the grpc interface did and this caused a few changes in the interfaces of the SDK.
+
+If you are using `OpenFgaClient`, the changes required should be smaller, if you are using `OpenFgaApi` a bit more changes will be needed.
+
+You will have to modify some parts of your code, but we hope this will be to the better as a lot of the parameters are now correctly marked as required,
+and so the Pointer-to-String conversion is no longer needed.
+
+Some of the changes to expect:
+- The following request interfaces changed:
+    - `CheckRequest`: the `TupleKey` field is now of interface `CheckRequestTupleKey`, you can also now pass in `Context`
+    - `ExpandRequest`: the `TupleKey` field is now of interface `ExpandRequestTupleKey`
+    - `ReadRequest`: the `TupleKey` field is now of interface `ReadRequestTupleKey`
+    - `WriteRequest`: now takes `WriteRequestWrites` and `WriteRequestDeletes`, the latter of which accepts `TupleKeyWithoutCondition`
+    - And more
+- The following interfaces had fields that were optional are are now required:
+    - `CreateStoreResponse`
+    - `GetStoreResponse`
+    - `ListStoresResponse`
+    - `ListObjectsResponse`
+    - `ReadChangesResponse`
+    - `ReadResponse`
+    - `AuthorizationModel`
+    - And more
+
+Take a look at the changes in models in https://github.com/openfga/python-sdk/commit/9ed1f70d64db71451de2eb26e330bbd511625c5c and https://github.com/openfga/python-sdk/pull/59/files for more.
+
+## v0.3.4
+
+### [0.3.4](https://github.com/openfga/python-sdk/compare/v0.3.3...v0.3.4) (2024-01-09)
+
+Note: `v0.3.4` has been re-released as `v0.4.0` due to breaking changes
+
 ## v0.3.3
 
 ### [0.3.3](https://github.com/openfga/python-sdk/compare/v0.3.2...v0.3.3) (2024-01-02)

@@ -54,7 +54,7 @@ class OAuth2Client:
             'grant_type': "client_credentials",
         }
         headers = urllib3.response.HTTPHeaderDict(
-            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.3.4'})
+            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.4.0'})
         raw_response = client.POST(token_url, headers=headers, body=body)
         if 200 <= raw_response.status <= 299:
             try:
