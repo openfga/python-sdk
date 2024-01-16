@@ -124,42 +124,40 @@ The documentation below refers to the `OpenFgaClient`, to read the documentation
 #### No Credentials
 
 ```python
-import openfga_sdk
-from openfga_sdk.client import OpenFgaClient
+from openfga_sdk import ClientConfiguration, OpenFgaClient
 
 
 async def main():
-    configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
-        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
+    configuration = ClientConfiguration(
+        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
+        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # Optional, can be overridden per request
     )
     # Enter a context with an instance of the OpenFgaClient
     async with OpenFgaClient(configuration) as fga_client:
         api_response = await fga_client.read_authorization_models()
         await fga_client.close()
-
+        return api_response
 ```
 
 #### API Token
 
 ```python
-import openfga_sdk
-from openfga_sdk.client import OpenFgaClient
-from openfga_sdk.credentials import Credentials, CredentialConfiguration
+from openfga_sdk import ClientConfiguration, OpenFgaClient
+from openfga_sdk.credentials import CredentialConfiguration, Credentials
 
 
 async def main():
-    configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
-        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
-        credentials = Credentials(
+    configuration = ClientConfiguration(
+        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
+        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # Optional, can be overridden per request
+        credentials=Credentials(
             method='api_token',
-            configuration = CredentialConfiguration(
-                api_token = FGA_API_TOKEN,
+            configuration=CredentialConfiguration(
+                api_token=FGA_API_TOKEN,
             )
         )
     )
@@ -167,30 +165,29 @@ async def main():
     async with OpenFgaClient(configuration) as fga_client:
         api_response = await fga_client.read_authorization_models()
         await fga_client.close()
-
+        return api_response
 ```
 
 #### Client Credentials
 
 ```python
-import openfga_sdk
-from openfga_sdk.client import OpenFgaClient
+from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
 
 async def main():
-    configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
-        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # Optional, can be overridden per request
-        credentials = Credentials(
-            method = 'client_credentials',
-            configuration = CredentialConfiguration(
-                api_issuer = FGA_API_TOKEN_ISSUER,
-                api_audience = FGA_API_AUDIENCE,
-                client_id = FGA_CLIENT_ID,
-                client_secret = FGA_CLIENT_SECRET,
+    configuration = ClientConfiguration(
+        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
+        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # Optional, can be overridden per request
+        credentials=Credentials(
+            method='client_credentials',
+            configuration=CredentialConfiguration(
+                api_issuer=FGA_API_TOKEN_ISSUER,
+                api_audience=FGA_API_AUDIENCE,
+                client_id=FGA_CLIENT_ID,
+                client_secret=FGA_CLIENT_SECRET,
             )
         )
     )
@@ -198,6 +195,7 @@ async def main():
     async with OpenFgaClient(configuration) as fga_client:
         api_response = await fga_client.read_authorization_models()
         await fga_client.close()
+        return api_response
 
 ```
 
@@ -208,20 +206,22 @@ from `openfga_sdk.sync` that supports all the credential types and calls,
 without requiring async/await.
 
 ```python
-import openfga_sdk
+from openfga_sdk import ClientConfiguration
 from openfga_sdk.sync import OpenFgaClient
 
 
 def main():
-    configuration = openfga_sdk.ClientConfiguration(
-        api_scheme = FGA_API_SCHEME, # optional, defaults to "https"
-        api_host = FGA_API_HOST, # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
-        store_id = FGA_STORE_ID, # optional, not needed when calling `CreateStore` or `ListStores`
-        authorization_model_id = FGA_AUTHORIZATION_MODEL_ID, # optional, can be overridden per request
+    configuration = ClientConfiguration(
+        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
+        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
+        authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # optional, can be overridden per request
     )
     # Enter a context with an instance of the OpenFgaClient
     with OpenFgaClient(configuration) as fga_client:
         api_response = fga_client.read_authorization_models()
+        return api_response
+
 ```
 
 
@@ -242,6 +242,11 @@ Get a paginated list of stores.
 [API Documentation](https://openfga.dev/api/service/docs/api#/Stores/ListStores)
 
 ```python
+# from openfga_sdk.sync import OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {"page_size": 25, "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}
 response = await fga_client.list_stores(options)
 # response = ListStoresResponse(...)
@@ -256,6 +261,11 @@ Create and initialize a store.
 [API Documentation](https://openfga.dev/api/service/docs/api#/Stores/CreateStore)
 
 ```python
+# from openfga_sdk import CreateStoreRequest, OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 body = CreateStoreRequest(
     name = "FGA Demo Store",
 )
@@ -273,6 +283,11 @@ Get information about the current store.
 > Requires a client initialized with a storeId
 
 ```python
+# from openfga_sdk import OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 response = await fga_client.get_store()
 # response = Store({"id": "01FQH7V8BEG3GPQW93KTRFR8JB", "name": "FGA Demo Store", "created_at": "2022-01-01T00:00:00.000Z", "updated_at": "2022-01-01T00:00:00.000Z"})
 ```
@@ -287,6 +302,11 @@ Delete a store.
 > Requires a client initialized with a storeId
 
 ```python
+# from openfga_sdk import OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 response = await fga_client.delete_store()
 ```
 
@@ -300,6 +320,11 @@ Read all authorization models in the store.
 [API Documentation](https://openfga.dev/api/service#/Authorization%20Models/ReadAuthorizationModels)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {"page_size": 25, "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="}
 response = await fga_client.read_authorization_models(options)
 # response.authorization_models = [AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...], AuthorizationModel(id='01GXSBM5PVYHCJNRNKXMB4QZTW', schema_version = '1.1', type_definitions=type_definitions[...])]
@@ -319,6 +344,14 @@ Create a new authorization model.
 > You can use the [OpenFGA Syntax Transformer](https://github.com/openfga/syntax-transformer) to convert between the friendly DSL and the JSON authorization model.
 
 ```python
+# from openfga_sdk import (
+#     Condition, ConditionParamTypeRef, Metadata, ObjectRelation, OpenFgaClient, RelationMetadata,
+#     RelationReference, TypeDefinition, Userset, Usersets, WriteAuthorizationModelRequest
+# )
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 body = WriteAuthorizationModelRequest(
     schema_version="1.1",
     type_definitions=[
@@ -391,6 +424,11 @@ Read a particular authorization model.
 [API Documentation](https://openfga.dev/api/service#/Authorization%20Models/ReadAuthorizationModel)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -407,6 +445,18 @@ Reads the latest authorization model (note: this ignores the model id in configu
 [API Documentation](https://openfga.dev/api/service#/Authorization%20Models/ReadAuthorizationModel)
 
 ```python
+# from openfga_sdk import ClientConfiguration, OpenFgaClient
+
+# Create the cofiguration object
+# configuration = ClientConfiguration(
+#     ...
+#     authorization_model_id = FGA_AUTHORIZATION_MODEL_ID,
+#     ...
+# )
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 response = await fga_client.read_latest_authorization_model()
 # response.authorization_model =  AuthorizationModel(id='01GXSA8YR785C4FYS3C0RTG7B1', schema_version = '1.1', type_definitions=type_definitions[...])
 ```
@@ -421,6 +471,12 @@ Reads the list of historical relationship tuple writes and deletes.
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Tuples/ReadChanges)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientReadChangesRequest
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "page_size": "25",
@@ -440,6 +496,11 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Tuples/Read)
 
 ```python
+# from openfga_sdk import OpenFgaClient, ReadRequestTupleKey
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 # Find if a relationship tuple stating that a certain user is a viewer of certain document
 body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -452,6 +513,11 @@ response = await fga_client.read(body)
 ```
 
 ```python
+# from openfga_sdk import OpenFgaClient, ReadRequestTupleKey
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 # Find all relationship tuples where a certain user has a relationship as any relation to a certain document
 body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -464,6 +530,11 @@ response = await fga_client.read(body)
 ```
 
 ```python
+# from openfga_sdk import OpenFgaClient, ReadRequestTupleKey
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 # Find all relationship tuples where a certain user is a viewer of any document
 body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -476,6 +547,11 @@ response = await fga_client.read(body)
 ```
 
 ```python
+# from openfga_sdk import OpenFgaClient, ReadRequestTupleKey
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 # Find all relationship tuples where any user has a relationship as any relation with a particular document
 body = ReadRequestTupleKey(
     object="document:roadmap",
@@ -486,6 +562,11 @@ response = await fga_client.read(body)
 ```
 
 ```python
+# from openfga_sdk import OpenFgaClient, ReadRequestTupleKey
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 # Read all stored relationship tuples
 body = ReadRequestTupleKey()
 
@@ -504,6 +585,12 @@ Create and/or delete relationship tuples to update the system state.
 By default, write runs in a transaction mode where any invalid operation (deleting a non-existing tuple, creating an existing tuple, one of the tuples was invalid) or a server error will fail the entire operation.
 
 ```python
+# from openfga_sdk import OpenFgaClient, RelationshipCondition
+# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -547,6 +634,12 @@ Convenience `write_tuples` and `delete_tuples` methods are also available.
 The SDK will split the writes into separate requests and send them sequentially to avoid violating rate limits.
 
 ```python
+# from openfga_sdk import OpenFgaClient, RelationshipCondition
+# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest, WriteTransactionOpts
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
@@ -597,6 +690,12 @@ Check if a user has a particular relation with an object.
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/Check)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client import ClientCheckRequest
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -621,6 +720,13 @@ Run a set of [checks](#check). Batch Check will return `allowed: false` if it en
 If 429s or 5xxs are encountered, the underlying check will retry up to 15 times before giving up.
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client import ClientCheckRequest
+# from openfga_sdk.client.models import ClientTuple
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -629,7 +735,7 @@ body = [ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:roadmap",
-    contextual_tuples=[ # optional
+    contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="editor",
@@ -643,7 +749,7 @@ body = [ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="admin",
     object="document:roadmap",
-    contextual_tuples=[ # optional
+    contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="editor",
@@ -713,6 +819,12 @@ Expands the relationships in userset tree format.
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/Expand)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientExpandRequest
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -734,6 +846,12 @@ List the objects of a particular type a user has access to.
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/ListObjects)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientListObjectsRequest, ClientTuple
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
@@ -742,7 +860,7 @@ body = ClientListObjectsRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     type="document",
-    contextual_tuples=[ # optional
+    contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="writer",
@@ -763,15 +881,21 @@ response = await fga_client.list_objects(body)
 List the relations a user has on an object.
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientListRelationsRequest
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
 body = ClientListRelationsRequest(
-    user = "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    object = "document:roadmap",
-    relations = ["can_view", "can_edit", "can_delete", "can_rename"],
-    contextual_tuples=[ # optional
+    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    object="document:roadmap",
+    relations=["can_view", "can_edit", "can_delete", "can_rename"],
+    contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="writer",
@@ -782,7 +906,8 @@ body = ClientListRelationsRequest(
         ViewCount=100
     )
 )
-var response = await fga_client.list_relations(body, options);
+
+response = await fga_client.list_relations(body, options)
 
 # response.relations = ["can_view", "can_edit"]
 ```
@@ -796,11 +921,17 @@ Read assertions for a particular authorization model.
 [API Documentation](https://openfga.dev/api/service#/Assertions/Read%20Assertions)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
-response = await fga_client.read_assertions(options);
+
+response = await fga_client.read_assertions(options)
 ```
 
 ##### Write Assertions
@@ -810,17 +941,26 @@ Update the assertions for a particular authorization model.
 [API Documentation](https://openfga.dev/api/service#/Assertions/Write%20Assertions)
 
 ```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientAssertion
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
+
 body = [ClientAssertion(
-    user = "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    relation = "viewer",
-    object = "document:roadmap",
-    expectation = true,
-)];
-response = await fga_client.write_assertions(body, options);
+    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+    relation="viewer",
+    object="document:roadmap",
+    expectation=True,
+)]
+
+response = await fga_client.write_assertions(body, options)
+
 ```
 
 
