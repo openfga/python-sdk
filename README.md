@@ -129,8 +129,7 @@ from openfga_sdk import ClientConfiguration, OpenFgaClient
 
 async def main():
     configuration = ClientConfiguration(
-        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
-        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        api_url=FGA_API_URL,  # required
         store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
         authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # Optional, can be overridden per request
     )
@@ -150,8 +149,7 @@ from openfga_sdk.credentials import CredentialConfiguration, Credentials
 
 async def main():
     configuration = ClientConfiguration(
-        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
-        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        api_url=FGA_API_URL,  # required
         store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
         authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # Optional, can be overridden per request
         credentials=Credentials(
@@ -177,8 +175,7 @@ from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
 async def main():
     configuration = ClientConfiguration(
-        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
-        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        api_url=FGA_API_URL,  # required
         store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
         authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # Optional, can be overridden per request
         credentials=Credentials(
@@ -196,7 +193,6 @@ async def main():
         api_response = await fga_client.read_authorization_models()
         await fga_client.close()
         return api_response
-
 ```
 
 #### Synchronous Client
@@ -206,14 +202,12 @@ from `openfga_sdk.sync` that supports all the credential types and calls,
 without requiring async/await.
 
 ```python
-from openfga_sdk import ClientConfiguration
-from openfga_sdk.sync import OpenFgaClient
+from openfga_sdk.sync import ClientConfiguration, OpenFgaClient
 
 
 def main():
     configuration = ClientConfiguration(
-        api_scheme=FGA_API_SCHEME,  # optional, defaults to "https"
-        api_host=FGA_API_HOST,  # required, define without the scheme (e.g. api.fga.example instead of https://api.fga.example)
+        api_url=FGA_API_URL,  # required
         store_id=FGA_STORE_ID,  # optional, not needed when calling `CreateStore` or `ListStores`
         authorization_model_id=FGA_AUTHORIZATION_MODEL_ID,  # optional, can be overridden per request
     )
@@ -221,7 +215,6 @@ def main():
     with OpenFgaClient(configuration) as fga_client:
         api_response = fga_client.read_authorization_models()
         return api_response
-
 ```
 
 
@@ -960,7 +953,6 @@ body = [ClientAssertion(
 )]
 
 response = await fga_client.write_assertions(body, options)
-
 ```
 
 

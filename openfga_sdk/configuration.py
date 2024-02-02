@@ -84,7 +84,12 @@ class Configuration(object):
     Do not edit the class manually.
 
     :param api_scheme: Whether connection is 'https' or 'http'. Default as 'https'
+        .. deprecated:: 0.4.1
+            Use `api_url` instead.
     :param api_host: Base url
+        .. deprecated:: 0.4.1
+            Use `api_url` instead.
+    :param api_url: str - the URL of the FGA server
     :param store_id: ID of store for API
     :param credentials: Configuration for obtaining authentication credential
     :param retry_params: Retry parameters upon HTTP too many request
@@ -136,7 +141,7 @@ class Configuration(object):
 
     _default = None
 
-    def __init__(self, api_scheme="https", api_host=None,
+    def __init__(self, api_scheme="https", api_host=None, api_url=None,
                  store_id=None,
                  credentials=None,
                  retry_params=None,
@@ -150,6 +155,7 @@ class Configuration(object):
                  ):
         """Constructor
         """
+        self._url = api_url
         self._scheme = api_scheme
         self._base_path = api_host
         self._store_id = store_id
@@ -499,28 +505,35 @@ class Configuration(object):
         Verify the configuration is valid.
         Note that we are only doing basic validation to ensure input is sane.
         """
-        if self.api_host is None or self.api_host == '':
-            raise FgaValidationException('api_host is required but not configured.')
-        if self.api_scheme is None or self.api_scheme == '':
-            raise FgaValidationException('api_scheme is required but not configured.')
-        combined_url = self.api_scheme + '://' + self.api_host
+        combined_url = self.api_url
+        if self.api_url is None:
+            if self.api_host is None or self.api_host == '':
+                raise FgaValidationException('api_host is required but not configured.')
+            if self.api_scheme is None or self.api_scheme == '':
+                raise FgaValidationException('api_scheme is required but not configured.')
+            combined_url = self.api_scheme + '://' + self.api_host
         parsed_url = None
         try:
             parsed_url = urlparse(combined_url)
         except ValueError:
-            raise ApiValueError('Either api_scheme `{}` or api_host `{}` is invalid'.format(
-                self.api_scheme, self.api_host))
-        if (parsed_url.scheme != 'http' and parsed_url.scheme != 'https'):
-            raise ApiValueError(
-                'api_scheme `{}` must be either `http` or `https`'.format(self.api_scheme))
-        if (parsed_url.netloc == ''):
-            raise ApiValueError('api_host `{}` is invalid'.format(self.api_host))
-        if (parsed_url.path != ''):
-            raise ApiValueError(
-                'api_host `{}` is not expected to have path specified'.format(self.api_scheme))
-        if (parsed_url.query != ''):
-            raise ApiValueError(
-                'api_host `{}` is not expected to have query specified'.format(self.api_scheme))
+            if self.api_url is None:
+                raise ApiValueError('Either api_scheme `{}` or api_host `{}` is invalid'.format(
+                    self.api_scheme, self.api_host))
+            else:
+                raise ApiValueError('api_url `{}` is invalid'.format(
+                    self.api_url))
+        if self.api_url is None:
+            if (parsed_url.scheme != 'http' and parsed_url.scheme != 'https'):
+                raise ApiValueError(
+                    'api_scheme `{}` must be either `http` or `https`'.format(self.api_scheme))
+            if (parsed_url.netloc == ''):
+                raise ApiValueError('api_host `{}` is invalid'.format(self.api_host))
+            if (parsed_url.path != ''):
+                raise ApiValueError(
+                    'api_host `{}` is not expected to have path specified'.format(self.api_scheme))
+            if (parsed_url.query != ''):
+                raise ApiValueError(
+                    'api_host `{}` is not expected to have query specified'.format(self.api_scheme))
 
         if self.store_id is not None and self.store_id != "" and is_well_formed_ulid_string(self.store_id) is False:
             raise FgaValidationException(
@@ -548,6 +561,16 @@ class Configuration(object):
     def api_host(self, value):
         """Update configured host"""
         self._base_path = value
+
+    @property
+    def api_url(self):
+        """Return api_url"""
+        return self._url
+
+    @api_url.setter
+    def api_url(self, value):
+        """Update configured api_url"""
+        self._url = value
 
     @property
     def store_id(self):

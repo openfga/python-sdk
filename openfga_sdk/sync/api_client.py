@@ -190,7 +190,10 @@ class ApiClient(object):
 
         # request url
         if _host is None:
-            url = self.configuration.api_scheme + '://' + self.configuration.api_host + resource_path
+            if self.configuration.api_url is not None:
+                url = self.configuration.api_url + resource_path
+            else:
+                url = self.configuration.api_scheme + '://' + self.configuration.api_host + resource_path
         else:
             # use server/host defined in path or operation instead
             url = self.configuration.api_scheme + '://' + _host + resource_path
