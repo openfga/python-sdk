@@ -89,7 +89,6 @@ class Configuration(object):
     :param api_host: Base url
         .. deprecated:: 0.4.1
             Use `api_url` instead.
-    :param api_url: str - the URL of the FGA server
     :param store_id: ID of store for API
     :param credentials: Configuration for obtaining authentication credential
     :param retry_params: Retry parameters upon HTTP too many request
@@ -137,11 +136,12 @@ class Configuration(object):
       The validation of enums is performed for variables with defined enum values before.
     :param ssl_ca_cert: str - the path to a file of concatenated CA certificates
       in PEM format
+    :param api_url: str - the URL of the FGA server
     """
 
     _default = None
 
-    def __init__(self, api_scheme="https", api_host=None, api_url=None,
+    def __init__(self, api_scheme="https", api_host=None,
                  store_id=None,
                  credentials=None,
                  retry_params=None,
@@ -152,6 +152,7 @@ class Configuration(object):
                  server_index=None, server_variables=None,
                  server_operation_index=None, server_operation_variables=None,
                  ssl_ca_cert=None,
+                 api_url=None,  # TODO: restructure when removing api_scheme/api_host
                  ):
         """Constructor
         """
