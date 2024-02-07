@@ -30,8 +30,10 @@ class ClientConfiguration(Configuration):
         retry_params=None,
         authorization_model_id=None,
         ssl_ca_cert=None,
+        api_url=None,  # TODO: restructure when removing api_scheme/api_host
     ):
-        super().__init__(api_scheme, api_host, store_id, credentials, retry_params, ssl_ca_cert=ssl_ca_cert)
+        super().__init__(api_scheme, api_host, store_id, credentials,
+                         retry_params, ssl_ca_cert=ssl_ca_cert, api_url=api_url)
         self._authorization_model_id = authorization_model_id
 
     def is_valid(self):

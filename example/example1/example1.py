@@ -22,15 +22,14 @@ async def main():
             )
         )
 
-    if os.getenv('FGA_API_HOST') is not None:
+    if os.getenv('FGA_API_URL') is not None:
         configuration = ClientConfiguration(
-            api_host=os.getenv('FGA_API_HOST'),
+            api_url=os.getenv('FGA_API_URL'),
             credentials=credentials
         )
     else:
         configuration = ClientConfiguration(
-            api_scheme='http',
-            api_host='localhost:8080',
+            api_url='http://localhost:8080',
             credentials=credentials
         )
 

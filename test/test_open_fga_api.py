@@ -100,8 +100,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.configuration = openfga_sdk.Configuration(
-            api_scheme='http',
-            api_host="api.fga.example",
+            api_url='http://api.fga.example',
         )
 
     def tearDown(self):
@@ -922,6 +921,28 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             store_id="abcd"
         )
         self.assertRaises(FgaValidationException, configuration.is_valid)
+
+    def test_url(self):
+        """
+        Ensure that api_url is set and validated
+        """
+        configuration = openfga_sdk.Configuration(
+            api_url='http://localhost:8080'
+        )
+        self.assertEqual(configuration.api_url, 'http://localhost:8080')
+        configuration.is_valid()
+
+    def test_url_with_scheme_and_host(self):
+        """
+        Ensure that api_url takes precedence over api_host and scheme
+        """
+        configuration = openfga_sdk.Configuration(
+            api_url='http://localhost:8080',
+            api_host='localhost:8080',
+            api_scheme='foo'
+        )
+        self.assertEqual(configuration.api_url, 'http://localhost:8080')
+        configuration.is_valid()  # Should not throw and complain about scheme being invalid
 
     async def test_bad_configuration_read_authorization_model(self):
         """
