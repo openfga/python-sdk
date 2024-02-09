@@ -1341,6 +1341,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     )
                 ],
+                writes=[],
             )
             transaction = WriteTransactionOpts(
                 disabled=True, max_per_chunk=1, max_parallel_requests=10)
