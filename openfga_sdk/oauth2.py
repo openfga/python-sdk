@@ -47,15 +47,15 @@ class OAuth2Client:
         """
         configuration = self._credentials.configuration
         token_url = 'https://{}/oauth/token'.format(configuration.api_issuer)
-        body = {
+        post_params = {
             'client_id': configuration.client_id,
             'client_secret': configuration.client_secret,
             'audience': configuration.api_audience,
             'grant_type': "client_credentials",
         }
         headers = urllib3.response.HTTPHeaderDict(
-            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.4.0'})
-        raw_response = await client.POST(token_url, headers=headers, body=body)
+            {'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'openfga-sdk (python) 0.4.0'})
+        raw_response = await client.POST(token_url, headers=headers, post_params=post_params)
         if 200 <= raw_response.status <= 299:
             try:
                 api_response = json.loads(raw_response.data)

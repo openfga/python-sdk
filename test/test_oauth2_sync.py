@@ -83,14 +83,14 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         self.assertGreaterEqual(client._access_expiry_time,
                                 current_time + timedelta(seconds=int(120)))
         expected_header = urllib3.response.HTTPHeaderDict(
-            {'Accept': 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'openfga-sdk (python) 0.4.0'})
+            {'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'openfga-sdk (python) 0.4.0'})
         mock_request.assert_called_once_with(
             'POST',
             'https://www.testme.com/oauth/token',
             headers=expected_header,
-            query_params=None, post_params=None, _preload_content=True, _request_timeout=None,
-            body={"client_id": "myclientid", "client_secret": "mysecret",
-                  "audience": "myaudience", "grant_type": "client_credentials"}
+            query_params=None, body=None, _preload_content=True, _request_timeout=None,
+            post_params={"client_id": "myclientid", "client_secret": "mysecret",
+                         "audience": "myaudience", "grant_type": "client_credentials"}
         )
         rest_client.close()
 
