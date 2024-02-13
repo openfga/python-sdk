@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.1
+
+### [0.4.1](https://github.com/openfga/python-sdk/compare/v0.4.0...v0.4.1) (2024-02-13)
+
+- feat: support `api_url` configuration option and deprecate `api_scheme` and `api_host`
+- fix: use correct content type for token request
+
 ## v0.4.0
 
 ### [0.4.0](https://github.com/openfga/python-sdk/compare/v0.3.4...v0.4.0) (2024-01-11)
