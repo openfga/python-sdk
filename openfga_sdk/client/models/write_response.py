@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -13,15 +12,17 @@
 
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
 
-from typing import List
 
-
-class ClientWriteResponse():
+class ClientWriteResponse:
     """
     ClientWriteResponse returns the set of responses and their statuses
     """
 
-    def __init__(self, writes: List[ClientWriteSingleResponse], deletes: List[ClientWriteSingleResponse]):
+    def __init__(
+        self,
+        writes: list[ClientWriteSingleResponse],
+        deletes: list[ClientWriteSingleResponse],
+    ):
         self._writes = writes
         self._deletes = deletes
 

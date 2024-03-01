@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -13,22 +12,33 @@
 
 from openfga_sdk.client.models.tuple import ClientTuple
 
-from typing import List
 
-
-def construct_check_request(user: str, relation: str, object: str, contextual_tuples: List[ClientTuple] = None, context: object = None):
+def construct_check_request(
+    user: str,
+    relation: str,
+    object: str,
+    contextual_tuples: list[ClientTuple] = None,
+    context: object = None,
+):
     """
     helper function to construct the check request body
     """
     return ClientCheckRequest(user, relation, object, contextual_tuples, context)
 
 
-class ClientCheckRequest():
+class ClientCheckRequest:
     """
     ClientCheckRequest encapsulates the parameters for check request
     """
 
-    def __init__(self, user: str, relation: str, object: str, contextual_tuples: List[ClientTuple] = None, context: object = None):
+    def __init__(
+        self,
+        user: str,
+        relation: str,
+        object: str,
+        contextual_tuples: list[ClientTuple] = None,
+        context: object = None,
+    ):
         self._user = user
         self._relation = relation
         self._object = object

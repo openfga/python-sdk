@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -14,14 +13,16 @@
 from openfga_sdk.client.models.tuple import ClientTuple
 
 
-def construct_write_single_response(tuple_key: ClientTuple, success: bool, error: Exception = None):
+def construct_write_single_response(
+    tuple_key: ClientTuple, success: bool, error: Exception = None
+):
     """
     Helper function to return a single write response
     """
     return ClientWriteSingleResponse(tuple_key, success, error)
 
 
-class ClientWriteSingleResponse():
+class ClientWriteSingleResponse:
     """
     ClientWriteSingleResponse encapsulates the response of a single write
     """
@@ -32,7 +33,11 @@ class ClientWriteSingleResponse():
         self._error = error
 
     def __eq__(self, other):
-        return self.tuple_key == other.tuple_key and self.success == other.success and self.error == other.error
+        return (
+            self.tuple_key == other.tuple_key
+            and self.success == other.success
+            and self.error == other.error
+        )
 
     @property
     def tuple_key(self):

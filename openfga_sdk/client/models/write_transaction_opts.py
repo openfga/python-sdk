@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -17,7 +16,12 @@ class WriteTransactionOpts:
     OpenFGA client write transaction info
     """
 
-    def __init__(self, disabled: bool = False, max_per_chunk: int = 1, max_parallel_requests: int = 10):
+    def __init__(
+        self,
+        disabled: bool = False,
+        max_per_chunk: int = 1,
+        max_parallel_requests: int = 10,
+    ):
         self._disabled = disabled
         self._max_per_chunk = max_per_chunk
         self._max_parallel_requests = max_parallel_requests

@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -12,7 +11,7 @@
 """
 
 
-class ClientReadChangesRequest():
+class ClientReadChangesRequest:
     """
     ClientReadChangesRequest encapsulates the parameters required to read changes
     """

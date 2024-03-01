@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -12,7 +11,7 @@
 """
 
 
-class ClientAssertion():
+class ClientAssertion:
     """
     ClientAssertion flattens the input necessary for an Assertion
     """

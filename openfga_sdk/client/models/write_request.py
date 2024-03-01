@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -12,18 +11,18 @@
 """
 
 from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
-from openfga_sdk.models.write_request_writes import WriteRequestWrites
 from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
+from openfga_sdk.models.write_request_writes import WriteRequestWrites
 
-from typing import List
 
-
-class ClientWriteRequest():
+class ClientWriteRequest:
     """
     ClientWriteRequest encapsulates the parameters required to write
     """
 
-    def __init__(self, writes: List[ClientTuple] = None, deletes: List[ClientTuple] = None):
+    def __init__(
+        self, writes: list[ClientTuple] = None, deletes: list[ClientTuple] = None
+    ):
         self._writes = writes
         self._deletes = deletes
 
