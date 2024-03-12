@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -13,23 +12,27 @@
 
 import asyncio
 import uuid
-from typing import List
 
-from openfga_sdk.api_client import ApiClient
 from openfga_sdk.api.open_fga_api import OpenFgaApi
+from openfga_sdk.api_client import ApiClient
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
-from openfga_sdk.client.models.check_request import ClientCheckRequest, construct_check_request
 from openfga_sdk.client.models.batch_check_response import BatchCheckResponse
-from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
-from openfga_sdk.client.models.write_request import ClientWriteRequest
-from openfga_sdk.client.models.write_response import ClientWriteResponse
+from openfga_sdk.client.models.check_request import (
+    ClientCheckRequest,
+    construct_check_request,
+)
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
-from openfga_sdk.client.models.write_single_response import construct_write_single_response
-from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
+from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
+from openfga_sdk.client.models.write_request import ClientWriteRequest
+from openfga_sdk.client.models.write_response import ClientWriteResponse
+from openfga_sdk.client.models.write_single_response import (
+    construct_write_single_response,
+)
+from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
 from openfga_sdk.exceptions import FgaValidationException
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.check_request import CheckRequest
@@ -38,12 +41,16 @@ from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.expand_request import ExpandRequest
 from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
-from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
+from openfga_sdk.models.read_authorization_model_response import (
+    ReadAuthorizationModelResponse,
+)
 from openfga_sdk.models.read_request import ReadRequest
 from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.tuple_key import TupleKey
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
-from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
+from openfga_sdk.models.write_authorization_model_request import (
+    WriteAuthorizationModelRequest,
+)
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.validation import is_well_formed_ulid_string
 
@@ -55,7 +62,10 @@ def _chuck_array(array, max_size):
     """
     Helper function to chuck array into arrays of max_size
     """
-    return [array[i * max_size:(i + 1) * max_size] for i in range((len(array) + max_size - 1) // max_size)]
+    return [
+        array[i * max_size : (i + 1) * max_size]
+        for i in range((len(array) + max_size - 1) // max_size)
+    ]
 
 
 def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str):
@@ -106,7 +116,7 @@ def _check_allowed(response: BatchCheckResponse):
     return response.allowed
 
 
-class OpenFgaClient():
+class OpenFgaClient:
     """
     OpenFgaClient is the entry point for invoking calls against the OpenFGA API.
     """
@@ -137,7 +147,9 @@ class OpenFgaClient():
             return None
         if is_well_formed_ulid_string(authorization_model_id) is False:
             raise FgaValidationException(
-                "authorization_model_id ('%s') is not in a valid ulid format" % authorization_model_id)
+                "authorization_model_id ('%s') is not in a valid ulid format"
+                % authorization_model_id
+            )
         return authorization_model_id
 
     def set_store_id(self, value):
@@ -196,7 +208,9 @@ class OpenFgaClient():
         )
         return api_response
 
-    async def create_store(self, body: CreateStoreRequest, options: dict[str, int | str] = None):
+    async def create_store(
+        self, body: CreateStoreRequest, options: dict[str, int | str] = None
+    ):
         """
         Create the stores in the system
         :param header(options) - Custom headers to send alongside the request
@@ -206,10 +220,7 @@ class OpenFgaClient():
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "CreateStore")
         kwargs = options_to_kwargs(options)
-        api_response = await self._api.create_store(
-            body,
-            **kwargs
-        )
+        api_response = await self._api.create_store(body, **kwargs)
         return api_response
 
     async def get_store(self, options: dict[str, int | str] = None):
@@ -254,14 +265,18 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadAuthorizationModels")
+        options = set_heading_if_not_set(
+            options, CLIENT_METHOD_HEADER, "ReadAuthorizationModels"
+        )
         kwargs = options_to_kwargs(options)
         api_response = await self._api.read_authorization_models(
             **kwargs,
         )
         return api_response
 
-    async def write_authorization_model(self, body: WriteAuthorizationModelRequest, options: dict[str, int | str] = None):
+    async def write_authorization_model(
+        self, body: WriteAuthorizationModelRequest, options: dict[str, int | str] = None
+    ):
         """
         Write authorization model.
         :param body - WriteAuthorizationModelRequest
@@ -270,7 +285,9 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "WriteAuthorizationModel")
+        options = set_heading_if_not_set(
+            options, CLIENT_METHOD_HEADER, "WriteAuthorizationModel"
+        )
         kwargs = options_to_kwargs(options)
         api_response = await self._api.write_authorization_model(
             body,
@@ -286,7 +303,9 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadAuthorizationModel")
+        options = set_heading_if_not_set(
+            options, CLIENT_METHOD_HEADER, "ReadAuthorizationModel"
+        )
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
         api_response = await self._api.read_authorization_model(
@@ -295,7 +314,9 @@ class OpenFgaClient():
         )
         return api_response
 
-    async def read_latest_authorization_model(self, options: dict[str, int | str] = None):
+    async def read_latest_authorization_model(
+        self, options: dict[str, int | str] = None
+    ):
         """
         Convenient method of reading the latest authorization model
         :param header(options) - Custom headers to send alongside the request
@@ -304,7 +325,8 @@ class OpenFgaClient():
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         options = set_heading_if_not_set(
-            options, CLIENT_METHOD_HEADER, "ReadLatestAuthoriationModel")
+            options, CLIENT_METHOD_HEADER, "ReadLatestAuthoriationModel"
+        )
         options["page_size"] = 1
         api_response = await self.read_authorization_models(options)
         return ReadAuthorizationModelResponse(api_response.authorization_models[0])
@@ -313,7 +335,9 @@ class OpenFgaClient():
     # Relationship Tuples
     #######################
 
-    async def read_changes(self, body: ClientReadChangesRequest, options: dict[str, str] = None):
+    async def read_changes(
+        self, body: ClientReadChangesRequest, options: dict[str, str] = None
+    ):
         """
         Read changes for specified type
         :param body - the type we want to look for change
@@ -355,7 +379,9 @@ class OpenFgaClient():
                 options.pop("continuation_token")
         kwargs = options_to_kwargs(options)
 
-        if body is None or (body.object is None and body.relation is None and body.user is None):
+        if body is None or (
+            body.object is None and body.relation is None and body.user is None
+        ):
             tuple_key = None
         else:
             tuple_key = body
@@ -370,7 +396,9 @@ class OpenFgaClient():
         )
         return api_response
 
-    async def _write_single_batch(self, batch: List[ClientTuple], is_write: bool, options: dict[str, str] = None):
+    async def _write_single_batch(
+        self, batch: list[ClientTuple], is_write: bool, options: dict[str, str] = None
+    ):
         try:
             write_batch = None
             delete_batch = None
@@ -378,12 +406,20 @@ class OpenFgaClient():
                 write_batch = batch
             else:
                 delete_batch = batch
-            await self._write_with_transaction(ClientWriteRequest(writes=write_batch, deletes=delete_batch), options)
+            await self._write_with_transaction(
+                ClientWriteRequest(writes=write_batch, deletes=delete_batch), options
+            )
             return [construct_write_single_response(i, True, None) for i in batch]
         except Exception as err:
             return [construct_write_single_response(i, False, err) for i in batch]
 
-    async def _write_batches(self, tuple_keys: List[ClientTuple], transaction: WriteTransactionOpts, is_write: bool, options: dict[str, str] = None):
+    async def _write_batches(
+        self,
+        tuple_keys: list[ClientTuple],
+        transaction: WriteTransactionOpts,
+        is_write: bool,
+        options: dict[str, str] = None,
+    ):
         """
         Internal function for write/delete batches
         """
@@ -392,15 +428,22 @@ class OpenFgaClient():
         write_batches = _chuck_array(chunks, transaction.max_parallel_requests)
         batch_write_responses = []
         for write_batch in write_batches:
-            request = [self._write_single_batch(i, is_write, options) for i in write_batch]
+            request = [
+                self._write_single_batch(i, is_write, options) for i in write_batch
+            ]
             response = await asyncio.gather(*request)
             flatten_list = [
-                item for batch_single_response in response for item in batch_single_response]
+                item
+                for batch_single_response in response
+                for item in batch_single_response
+            ]
             batch_write_responses.extend(flatten_list)
 
         return batch_write_responses
 
-    async def _write_with_transaction(self, body: ClientWriteRequest, options: dict[str, str] = None):
+    async def _write_with_transaction(
+        self, body: ClientWriteRequest, options: dict[str, str] = None
+    ):
         """
         Write or deletes tuples
         """
@@ -423,11 +466,14 @@ class OpenFgaClient():
         # any error will result in exception being thrown and not reached below code
         writes_response = None
         if body.writes:
-            writes_response = [construct_write_single_response(i, True, None) for i in body.writes]
+            writes_response = [
+                construct_write_single_response(i, True, None) for i in body.writes
+            ]
         deletes_response = None
         if body.deletes:
-            deletes_response = [construct_write_single_response(
-                i, True, None) for i in body.deletes]
+            deletes_response = [
+                construct_write_single_response(i, True, None) for i in body.deletes
+            ]
         return ClientWriteResponse(writes=writes_response, deletes=deletes_response)
 
     async def write(self, body: ClientWriteRequest, options: dict[str, str] = None):
@@ -445,20 +491,28 @@ class OpenFgaClient():
             results = await self._write_with_transaction(body, options)
             return results
 
-        options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+        options = set_heading_if_not_set(
+            options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
+        )
         # TODO: this should be run in parallel
         await self._check_valid_api_connection(options)
 
         # otherwise, it is not a transaction and it is a batch write requests
         writes_response = None
         if body.writes:
-            writes_response = await self._write_batches(body.writes, transaction, True, options)
+            writes_response = await self._write_batches(
+                body.writes, transaction, True, options
+            )
         deletes_response = None
         if body.deletes:
-            deletes_response = await self._write_batches(body.deletes, transaction, False, options)
+            deletes_response = await self._write_batches(
+                body.deletes, transaction, False, options
+            )
         return ClientWriteResponse(writes=writes_response, deletes=deletes_response)
 
-    async def write_tuples(self, body: List[ClientTuple], options: dict[str, str] = None):
+    async def write_tuples(
+        self, body: list[ClientTuple], options: dict[str, str] = None
+    ):
         """
         Convenient method for writing tuples
         :param body - the list of tuples we want to write
@@ -471,7 +525,9 @@ class OpenFgaClient():
         result = await self.write(ClientWriteRequest(body, None), options)
         return result
 
-    async def delete_tuples(self, body: List[ClientTuple], options: dict[str, str] = None):
+    async def delete_tuples(
+        self, body: list[ClientTuple], options: dict[str, str] = None
+    ):
         """
         Convenient method for deleteing tuples
         :param body - the list of tuples we want to delete
@@ -487,7 +543,7 @@ class OpenFgaClient():
     #######################
     # Relationship Queries
     #######################
-    async def check(self, body: ClientCheckRequest, options: dict[str, str] = None):  # noqa: E501
+    async def check(self, body: ClientCheckRequest, options: dict[str, str] = None):
         """
         Check whether a user is authorized to access an object
         :param body - ClientCheckRequest defining check request
@@ -514,13 +570,15 @@ class OpenFgaClient():
             req_body.contextual_tuples = ContextualTupleKeys(
                 tuple_keys=convert_tuple_keys(body.contextual_tuples)
             )
-        api_response = await self._api.check(
-            body=req_body,
-            **kwargs
-        )
+        api_response = await self._api.check(body=req_body, **kwargs)
         return api_response
 
-    async def _single_batch_check(self, body: ClientCheckRequest, semaphore: asyncio.Semaphore, options: dict[str, str] = None):  # noqa: E501
+    async def _single_batch_check(
+        self,
+        body: ClientCheckRequest,
+        semaphore: asyncio.Semaphore,
+        options: dict[str, str] = None,
+    ):
         """
         Run a single batch request and return body in a SingleBatchCheckResponse
         :param body - ClientCheckRequest defining check request
@@ -529,13 +587,22 @@ class OpenFgaClient():
         await semaphore.acquire()
         try:
             api_response = await self.check(body, options)
-            return BatchCheckResponse(allowed=api_response.allowed, request=body, response=api_response, error=None)
+            return BatchCheckResponse(
+                allowed=api_response.allowed,
+                request=body,
+                response=api_response,
+                error=None,
+            )
         except Exception as err:
-            return BatchCheckResponse(allowed=False, request=body, response=None, error=err)
+            return BatchCheckResponse(
+                allowed=False, request=body, response=None, error=err
+            )
         finally:
             semaphore.release()
 
-    async def batch_check(self, body: List[ClientCheckRequest], options: dict[str, str] = None):  # noqa: E501
+    async def batch_check(
+        self, body: list[ClientCheckRequest], options: dict[str, str] = None
+    ):
         """
         Run a set of checks
         :param body - list of ClientCheckRequest defining check request
@@ -547,7 +614,9 @@ class OpenFgaClient():
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
-        options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+        options = set_heading_if_not_set(
+            options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
+        )
 
         # TODO: this should be run in parallel
         await self._check_valid_api_connection(options)
@@ -557,12 +626,14 @@ class OpenFgaClient():
             max_parallel_requests = options["max_parallel_requests"]
 
         sem = asyncio.Semaphore(max_parallel_requests)
-        batch_check_coros = [self._single_batch_check(request, sem, options) for request in body]
+        batch_check_coros = [
+            self._single_batch_check(request, sem, options) for request in body
+        ]
         batch_check_response = await asyncio.gather(*batch_check_coros)
 
         return batch_check_response
 
-    async def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):  # noqa: E501
+    async def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):
         """
         Run expand request
         :param body - list of ClientExpandRequest defining expand request
@@ -582,13 +653,12 @@ class OpenFgaClient():
             ),
             authorization_model_id=self._get_authorization_model_id(options),
         )
-        api_response = await self._api.expand(
-            body=req_body,
-            **kwargs
-        )
+        api_response = await self._api.expand(body=req_body, **kwargs)
         return api_response
 
-    async def list_objects(self, body: ClientListObjectsRequest, options: dict[str, str] = None):  # noqa: E501
+    async def list_objects(
+        self, body: ClientListObjectsRequest, options: dict[str, str] = None
+    ):
         """
         Run list object request
         :param body - list object parameters
@@ -612,13 +682,12 @@ class OpenFgaClient():
             req_body.contextual_tuples = ContextualTupleKeys(
                 tuple_keys=convert_tuple_keys(body.contextual_tuples)
             )
-        api_response = await self._api.list_objects(
-            body=req_body,
-            **kwargs
-        )
+        api_response = await self._api.list_objects(body=req_body, **kwargs)
         return api_response
 
-    async def list_relations(self, body: ClientListRelationsRequest, options: dict[str, str] = None):  # noqa: E501
+    async def list_relations(
+        self, body: ClientListRelationsRequest, options: dict[str, str] = None
+    ):
         """
         Return all the relations for which user has a relationship with the object
         :param body - list relation request
@@ -629,10 +698,20 @@ class OpenFgaClient():
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListRelations")
-        options = set_heading_if_not_set(options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4()))
+        options = set_heading_if_not_set(
+            options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
+        )
 
-        request_body = [construct_check_request(user=body.user, relation=i, object=body.object,
-                                                contextual_tuples=body.contextual_tuples, context=body.context) for i in body.relations]
+        request_body = [
+            construct_check_request(
+                user=body.user,
+                relation=i,
+                object=body.object,
+                contextual_tuples=body.contextual_tuples,
+                context=body.context,
+            )
+            for i in body.relations
+        ]
         result = await self.batch_check(request_body, options)
         # need to filter with the allowed response
         result_iterator = filter(_check_allowed, result)
@@ -642,8 +721,7 @@ class OpenFgaClient():
     #######################
     # Assertions
     #######################
-
-    async def read_assertions(self, options: dict[str, str] = None):  # noqa: E501
+    async def read_assertions(self, options: dict[str, str] = None):
         """
         Return the assertions
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
@@ -652,14 +730,18 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ReadAssertions")
+        options = set_heading_if_not_set(
+            options, CLIENT_METHOD_HEADER, "ReadAssertions"
+        )
 
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
         api_response = await self._api.read_assertions(authorization_model_id, **kwargs)
         return api_response
 
-    async def write_assertions(self, body: List[ClientAssertion], options: dict[str, str] = None):  # noqa: E501
+    async def write_assertions(
+        self, body: list[ClientAssertion], options: dict[str, str] = None
+    ):
         """
         Upsert the assertions
         :param body - Write assertion request
@@ -669,18 +751,26 @@ class OpenFgaClient():
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
-        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "WriteAssertions")
+        options = set_heading_if_not_set(
+            options, CLIENT_METHOD_HEADER, "WriteAssertions"
+        )
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
 
         def map_to_assertion(client_assertion: ClientAssertion):
-            return Assertion(TupleKey(
-                user=client_assertion.user,
-                relation=client_assertion.relation,
-                object=client_assertion.object,
-            ), client_assertion.expectation)
+            return Assertion(
+                TupleKey(
+                    user=client_assertion.user,
+                    relation=client_assertion.relation,
+                    object=client_assertion.object,
+                ),
+                client_assertion.expectation,
+            )
 
         api_request_body = WriteAssertionsRequest(
-            [map_to_assertion(client_assertion) for client_assertion in body])
-        api_response = await self._api.write_assertions(authorization_model_id, api_request_body, **kwargs)
+            [map_to_assertion(client_assertion) for client_assertion in body]
+        )
+        api_response = await self._api.write_assertions(
+            authorization_model_id, api_request_body, **kwargs
+        )
         return api_response

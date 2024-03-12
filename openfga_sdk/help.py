@@ -1,7 +1,6 @@
 import json
 import platform
 import sys
-from typing import Dict
 from collections import OrderedDict
 
 from . import __version__ as openfga_sdk_version
@@ -12,13 +11,6 @@ try:
     urllib3_version = urllib3.__version__
 except ModuleNotFoundError:
     urllib3_version = ""
-
-try:
-    import six
-
-    six_version = six.__version__
-except ModuleNotFoundError:
-    six_version = ""
 
 try:
     import dateutil
@@ -35,7 +27,7 @@ except ModuleNotFoundError:
     aiohttp_version = ""
 
 
-def info() -> Dict[str, Dict[str, str]]:
+def info() -> dict[str, dict[str, str]]:
     """
     Generate information for a bug report.
     Based on the requests package help utility module.
@@ -76,7 +68,6 @@ def info() -> Dict[str, Dict[str, str]]:
             "openfga_sdk": {"version": openfga_sdk_version},
             "dependencies": {
                 "urllib3": {"version": urllib3_version},
-                "six": {"version": six_version},
                 "python-dateutil": {"version": dateutil_version},
                 "aiohttp": {"version": aiohttp_version},
             },

@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -14,22 +13,30 @@
 from openfga_sdk.models.relationship_condition import RelationshipCondition
 from openfga_sdk.models.tuple_key import TupleKey
 
-from typing import List
 
-
-class ClientTuple():
+class ClientTuple:
     """
     ClientTuple encapsulates the client tuple
     """
 
-    def __init__(self, user: str, relation: str, object: str, condition: RelationshipCondition = None):
+    def __init__(
+        self,
+        user: str,
+        relation: str,
+        object: str,
+        condition: RelationshipCondition = None,
+    ):
         self._user = user
         self._relation = relation
         self._object = object
         self._condition = condition
 
     def __eq__(self, other):
-        return self.user == other.user and self.relation == other.relation and self.object == other.object
+        return (
+            self.user == other.user
+            and self.relation == other.relation
+            and self.object == other.object
+        )
 
     @property
     def user(self):
@@ -96,11 +103,11 @@ class ClientTuple():
             object=self.object,
             relation=self.relation,
             user=self.user,
-            condition=self.condition
+            condition=self.condition,
         )
 
 
-def convert_tuple_keys(lists: List[ClientTuple]):
+def convert_tuple_keys(lists: list[ClientTuple]):
     """
     Return the items as tuple_keys
     """

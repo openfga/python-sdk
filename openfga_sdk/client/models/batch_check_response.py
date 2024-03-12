@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -15,12 +14,18 @@ from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.models.check_response import CheckResponse
 
 
-class BatchCheckResponse():
+class BatchCheckResponse:
     """
     BatchCheckResponse encapsulates the response for a single batch check
     """
 
-    def __init__(self, allowed: bool, request: ClientCheckRequest, response: CheckResponse, error: Exception = None):
+    def __init__(
+        self,
+        allowed: bool,
+        request: ClientCheckRequest,
+        response: CheckResponse,
+        error: Exception = None,
+    ):
         self._allowed = allowed
         self._request = request
         self._response = response
@@ -58,4 +63,4 @@ class BatchCheckResponse():
         """
         Return the class string
         """
-        return "allowed %s request %s error %s" % (self._allowed, self._request, self._error)
+        return f"allowed {self._allowed} request {self._request} error {self._error}"

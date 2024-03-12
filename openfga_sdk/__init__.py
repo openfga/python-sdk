@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# flake8: noqa
-
 """
    Python SDK for OpenFGA
 
@@ -16,22 +12,19 @@
 
 __version__ = "0.4.1"
 
+from openfga_sdk.api.open_fga_api import OpenFgaApi
+from openfga_sdk.api_client import ApiClient
 from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.configuration import ClientConfiguration
-
-# import apis into sdk package
-from openfga_sdk.api.open_fga_api import OpenFgaApi
-
-# import ApiClient
-from openfga_sdk.api_client import ApiClient
 from openfga_sdk.configuration import Configuration
-from openfga_sdk.exceptions import OpenApiException
-from openfga_sdk.exceptions import FgaValidationException
-from openfga_sdk.exceptions import ApiValueError
-from openfga_sdk.exceptions import ApiKeyError
-from openfga_sdk.exceptions import ApiAttributeError
-from openfga_sdk.exceptions import ApiException
-# import models into sdk package
+from openfga_sdk.exceptions import (
+    ApiAttributeError,
+    ApiException,
+    ApiKeyError,
+    ApiValueError,
+    FgaValidationException,
+    OpenApiException,
+)
 from openfga_sdk.models.aborted_message_response import AbortedMessageResponse
 from openfga_sdk.models.any import Any
 from openfga_sdk.models.assertion import Assertion
@@ -53,7 +46,9 @@ from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.expand_response import ExpandResponse
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.internal_error_code import InternalErrorCode
-from openfga_sdk.models.internal_error_message_response import InternalErrorMessageResponse
+from openfga_sdk.models.internal_error_message_response import (
+    InternalErrorMessageResponse,
+)
 from openfga_sdk.models.leaf import Leaf
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
 from openfga_sdk.models.list_objects_response import ListObjectsResponse
@@ -64,10 +59,16 @@ from openfga_sdk.models.nodes import Nodes
 from openfga_sdk.models.not_found_error_code import NotFoundErrorCode
 from openfga_sdk.models.null_value import NullValue
 from openfga_sdk.models.object_relation import ObjectRelation
-from openfga_sdk.models.path_unknown_error_message_response import PathUnknownErrorMessageResponse
+from openfga_sdk.models.path_unknown_error_message_response import (
+    PathUnknownErrorMessageResponse,
+)
 from openfga_sdk.models.read_assertions_response import ReadAssertionsResponse
-from openfga_sdk.models.read_authorization_model_response import ReadAuthorizationModelResponse
-from openfga_sdk.models.read_authorization_models_response import ReadAuthorizationModelsResponse
+from openfga_sdk.models.read_authorization_model_response import (
+    ReadAuthorizationModelResponse,
+)
+from openfga_sdk.models.read_authorization_models_response import (
+    ReadAuthorizationModelsResponse,
+)
 from openfga_sdk.models.read_changes_response import ReadChangesResponse
 from openfga_sdk.models.read_request import ReadRequest
 from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
@@ -91,10 +92,16 @@ from openfga_sdk.models.userset_tree import UsersetTree
 from openfga_sdk.models.userset_tree_difference import UsersetTreeDifference
 from openfga_sdk.models.userset_tree_tuple_to_userset import UsersetTreeTupleToUserset
 from openfga_sdk.models.usersets import Usersets
-from openfga_sdk.models.validation_error_message_response import ValidationErrorMessageResponse
+from openfga_sdk.models.validation_error_message_response import (
+    ValidationErrorMessageResponse,
+)
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
-from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
-from openfga_sdk.models.write_authorization_model_response import WriteAuthorizationModelResponse
+from openfga_sdk.models.write_authorization_model_request import (
+    WriteAuthorizationModelRequest,
+)
+from openfga_sdk.models.write_authorization_model_response import (
+    WriteAuthorizationModelResponse,
+)
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.write_request_writes import WriteRequestWrites

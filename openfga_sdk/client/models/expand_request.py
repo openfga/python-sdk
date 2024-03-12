@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -12,7 +11,7 @@
 """
 
 
-class ClientExpandRequest():
+class ClientExpandRequest:
     """
     ClientExpandRequest encapsulates the parameters required to expand request
     """

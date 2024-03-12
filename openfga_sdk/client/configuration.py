@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -32,16 +31,29 @@ class ClientConfiguration(Configuration):
         ssl_ca_cert=None,
         api_url=None,  # TODO: restructure when removing api_scheme/api_host
     ):
-        super().__init__(api_scheme, api_host, store_id, credentials,
-                         retry_params, ssl_ca_cert=ssl_ca_cert, api_url=api_url)
+        super().__init__(
+            api_scheme,
+            api_host,
+            store_id,
+            credentials,
+            retry_params,
+            ssl_ca_cert=ssl_ca_cert,
+            api_url=api_url,
+        )
         self._authorization_model_id = authorization_model_id
 
     def is_valid(self):
         super().is_valid()
 
-        if self.authorization_model_id is not None and self.authorization_model_id != "" and is_well_formed_ulid_string(self.authorization_model_id) is False:
+        if (
+            self.authorization_model_id is not None
+            and self.authorization_model_id != ""
+            and is_well_formed_ulid_string(self.authorization_model_id) is False
+        ):
             raise FgaValidationException(
-                "authorization_model_id ('%s') is not in a valid ulid format" % self.authorization_model_id)
+                "authorization_model_id ('%s') is not in a valid ulid format"
+                % self.authorization_model_id
+            )
 
     @property
     def authorization_model_id(self):

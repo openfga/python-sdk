@@ -1,4 +1,3 @@
-# coding: utf-8
 """
    Python SDK for OpenFGA
 
@@ -13,15 +12,20 @@
 
 from openfga_sdk.client.models.tuple import ClientTuple
 
-from typing import List
 
-
-class ClientListObjectsRequest():
+class ClientListObjectsRequest:
     """
     ClientListObjectsRequest encapsulates the parameters required for list objects
     """
 
-    def __init__(self, user: str, relation: str, type: str, contextual_tuples: List[ClientTuple] = None, context: object = None):
+    def __init__(
+        self,
+        user: str,
+        relation: str,
+        type: str,
+        contextual_tuples: list[ClientTuple] = None,
+        context: object = None,
+    ):
         self._user = user
         self._relation = relation
         self._type = type
