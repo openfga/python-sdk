@@ -29,6 +29,7 @@ from openfga_sdk.exceptions import (
     ApiValueError,
     FgaValidationException,
     RateLimitExceededError,
+    ServiceException,
 )
 from openfga_sdk.sync import oauth2, rest
 
@@ -256,8 +257,8 @@ class ApiClient:
                     _preload_content=_preload_content,
                     _request_timeout=_request_timeout,
                 )
-            except RateLimitExceededError as e:
-                if x < max_retry:
+            except (RateLimitExceededError, ServiceException) as e:
+                if x < max_retry and e.status != 501:
                     time.sleep(random_time(x, min_wait_in_ms))
                     continue
                 e.body = e.body.decode("utf-8")
