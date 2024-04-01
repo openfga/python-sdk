@@ -1247,10 +1247,9 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             http_resp=http_mock_response(response_body, 500)
         )
 
-        retry = openfga_sdk.configuration.RetryParams(0, 10)
         configuration = self.configuration
         configuration.store_id = store_id
-        configuration.retry_params = retry
+        configuration.retry_params.max_retry = 0
 
         with ApiClient(configuration) as api_client:
             api_instance = open_fga_api.OpenFgaApi(api_client)
@@ -1276,6 +1275,8 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 api_exception.exception.parsed_exception.message,
                 "Internal Server Error",
             )
+            mock_request.assert_called()
+            self.assertEqual(mock_request.call_count, 1)
 
         @patch.object(rest.RESTClientObject, "request")
         async def test_500_error(self, mock_request):

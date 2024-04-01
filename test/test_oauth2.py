@@ -67,7 +67,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
             configuration=CredentialConfiguration(
                 client_id="myclientid",
                 client_secret="mysecret",
-                api_issuer="www.testme.com",
+                api_issuer="issuer.fga.example",
                 api_audience="myaudience",
             ),
         )
@@ -89,7 +89,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         )
         mock_request.assert_called_once_with(
             "POST",
-            "https://www.testme.com/oauth/token",
+            "https://issuer.fga.example/oauth/token",
             headers=expected_header,
             query_params=None,
             body=None,
@@ -123,7 +123,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
             configuration=CredentialConfiguration(
                 client_id="myclientid",
                 client_secret="mysecret",
-                api_issuer="www.testme.com",
+                api_issuer="issuer.fga.example",
                 api_audience="myaudience",
             ),
         )
@@ -131,4 +131,146 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         client = OAuth2Client(credentials)
         with self.assertRaises(AuthenticationError):
             await client.get_authentication_header(rest_client)
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_obtain_with_expired_client_credentials_failed(
+        self, mock_request
+    ):
+        """
+        Expired token should trigger a new token request
+        """
+
+        response_body = """
+{
+  "reason": "Unauthorized"
+}
+        """
+        mock_request.return_value = mock_response(response_body, 403)
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+
+        client._access_token = "XYZ123"
+        client._access_expiry_time = datetime.now() - timedelta(seconds=240)
+
+        with self.assertRaises(AuthenticationError):
+            await client.get_authentication_header(rest_client)
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_unexpected_response_fails(self, mock_request):
+        """
+        Receiving an unexpected response from the server should raise an exception
+        """
+
+        response_body = """
+This is not a JSON response
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+
+        with self.assertRaises(AuthenticationError):
+            await client.get_authentication_header(rest_client)
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_erroneous_response_fails(self, mock_request):
+        """
+        Receiving an erroneous response from the server that's missing properties should raise an exception
+        """
+
+        response_body = """
+{
+  "access_token": "AABBCCDD"
+}
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+
+        with self.assertRaises(AuthenticationError):
+            await client.get_authentication_header(rest_client)
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_retries_5xx_responses(self, mock_request):
+        """
+        Receiving a 5xx response from the server should be retried
+        """
+
+        error_response_body = """
+{
+  "code": "rate_limit_exceeded",
+  "message": "Rate Limit exceeded"
+}
+        """
+
+        response_body = """
+{
+  "expires_in": 120,
+  "access_token": "AABBCCDD"
+}
+        """
+
+        mock_request.side_effect = [
+            mock_response(error_response_body, 429),
+            mock_response(error_response_body, 429),
+            mock_response(error_response_body, 429),
+            mock_response(response_body, 200),
+        ]
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+
+        configuration = Configuration()
+        configuration.retry_params.max_retry = 5
+        configuration.retry_params.retry_interval = 0
+
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(credentials, configuration)
+
+        auth_header = await client.get_authentication_header(rest_client)
+
+        mock_request.assert_called()
+        self.assertEqual(mock_request.call_count, 4)  # 3 retries, 1 success
+        self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+
         await rest_client.close()
