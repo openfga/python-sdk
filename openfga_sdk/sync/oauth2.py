@@ -11,20 +11,45 @@
 """
 
 import json
+import math
+import random
+import sys
+import time
 from datetime import datetime, timedelta
 
 import urllib3
 
+from openfga_sdk.configuration import Configuration
 from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
 
 
+def jitter(loop_count, min_wait_in_ms):
+    """
+    Generate a random jitter value for exponential backoff
+    """
+    minimum = math.ceil(2**loop_count * min_wait_in_ms)
+    maximum = math.ceil(2 ** (loop_count + 1) * min_wait_in_ms)
+    jitter = random.randrange(minimum, maximum) / 1000
+
+    # If running in pytest, set jitter to 0 to speed up tests
+    if "pytest" in sys.modules:
+        jitter = 0
+
+    return jitter
+
+
 class OAuth2Client:
 
-    def __init__(self, credentials: Credentials):
+    def __init__(self, credentials: Credentials, configuration=None):
         self._credentials = credentials
         self._access_token = None
         self._access_expiry_time = None
+
+        if configuration is None:
+            configuration = Configuration.get_default_copy()
+
+        self.configuration = configuration
 
     def _token_valid(self):
         """
@@ -41,13 +66,16 @@ class OAuth2Client:
         Perform OAuth2 and obtain token
         """
         configuration = self._credentials.configuration
+
         token_url = f"https://{configuration.api_issuer}/oauth/token"
+
         post_params = {
             "client_id": configuration.client_id,
             "client_secret": configuration.client_secret,
             "audience": configuration.api_audience,
             "grant_type": "client_credentials",
         }
+
         headers = urllib3.response.HTTPHeaderDict(
             {
                 "Accept": "application/json",
@@ -55,21 +83,48 @@ class OAuth2Client:
                 "User-Agent": "openfga-sdk (python) 0.4.1",
             }
         )
-        raw_response = client.POST(token_url, headers=headers, post_params=post_params)
-        if 200 <= raw_response.status <= 299:
-            try:
-                api_response = json.loads(raw_response.data)
-            except:
-                raise AuthenticationError(http_resp=raw_response)
-            if not api_response.get("expires_in") or not api_response.get(
-                "access_token"
-            ):
-                raise AuthenticationError(http_resp=raw_response)
-            self._access_expiry_time = datetime.now() + timedelta(
-                seconds=int(api_response.get("expires_in"))
+
+        max_retry = (
+            self.configuration.retry_params.max_retry
+            if (
+                self.configuration.retry_params is not None
+                and self.configuration.retry_params.max_retry is not None
             )
-            self._access_token = api_response.get("access_token")
-        else:
+            else 0
+        )
+
+        min_wait_in_ms = (
+            self.configuration.retry_params.min_wait_in_ms
+            if (
+                self.configuration.retry_params is not None
+                and self.configuration.retry_params.min_wait_in_ms is not None
+            )
+            else 0
+        )
+
+        for attempt in range(max_retry + 1):
+            raw_response = client.POST(
+                token_url, headers=headers, post_params=post_params
+            )
+
+            if 500 <= raw_response.status <= 599 or raw_response.status == 429:
+                if attempt < max_retry and raw_response.status != 501:
+                    time.sleep(jitter(attempt, min_wait_in_ms))
+                    continue
+
+            if 200 <= raw_response.status <= 299:
+                try:
+                    api_response = json.loads(raw_response.data)
+                except:
+                    raise AuthenticationError(http_resp=raw_response)
+
+                if api_response.get("expires_in") and api_response.get("access_token"):
+                    self._access_expiry_time = datetime.now() + timedelta(
+                        seconds=int(api_response.get("expires_in"))
+                    )
+                    self._access_token = api_response.get("access_token")
+                    break
+
             raise AuthenticationError(http_resp=raw_response)
 
     def get_authentication_header(self, client):

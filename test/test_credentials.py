@@ -98,7 +98,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             configuration=CredentialConfiguration(
                 client_id="myclientid",
                 client_secret="mysecret",
-                api_issuer="www.testme.com",
+                api_issuer="issuer.fga.example",
                 api_audience="myaudience",
             ),
         )
@@ -121,7 +121,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             method="client_credentials",
             configuration=CredentialConfiguration(
                 client_secret="mysecret",
-                api_issuer="www.testme.com",
+                api_issuer="issuer.fga.example",
                 api_audience="myaudience",
             ),
         )
@@ -136,7 +136,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             method="client_credentials",
             configuration=CredentialConfiguration(
                 client_id="myclientid",
-                api_issuer="www.testme.com",
+                api_issuer="issuer.fga.example",
                 api_audience="myaudience",
             ),
         )
@@ -167,7 +167,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             configuration=CredentialConfiguration(
                 client_id="myclientid",
                 client_secret="mysecret",
-                api_issuer="www.testme.com",
+                api_issuer="issuer.fga.example",
             ),
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
