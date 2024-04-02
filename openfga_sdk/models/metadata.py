@@ -33,21 +33,41 @@ class Metadata:
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    openapi_types = {"relations": "dict[str, RelationMetadata]"}
+    openapi_types = {
+        "relations": "dict[str, RelationMetadata]",
+        "module": "str",
+        "source_info": "SourceInfo",
+    }
 
-    attribute_map = {"relations": "relations"}
+    attribute_map = {
+        "relations": "relations",
+        "module": "module",
+        "source_info": "source_info",
+    }
 
-    def __init__(self, relations=None, local_vars_configuration=None):
+    def __init__(
+        self,
+        relations=None,
+        module=None,
+        source_info=None,
+        local_vars_configuration=None,
+    ):
         """Metadata - a model defined in OpenAPI"""
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
         self._relations = None
+        self._module = None
+        self._source_info = None
         self.discriminator = None
 
         if relations is not None:
             self.relations = relations
+        if module is not None:
+            self.module = module
+        if source_info is not None:
+            self.source_info = source_info
 
     @property
     def relations(self):
@@ -69,6 +89,48 @@ class Metadata:
         """
 
         self._relations = relations
+
+    @property
+    def module(self):
+        """Gets the module of this Metadata.
+
+
+        :return: The module of this Metadata.
+        :rtype: str
+        """
+        return self._module
+
+    @module.setter
+    def module(self, module):
+        """Sets the module of this Metadata.
+
+
+        :param module: The module of this Metadata.
+        :type module: str
+        """
+
+        self._module = module
+
+    @property
+    def source_info(self):
+        """Gets the source_info of this Metadata.
+
+
+        :return: The source_info of this Metadata.
+        :rtype: SourceInfo
+        """
+        return self._source_info
+
+    @source_info.setter
+    def source_info(self, source_info):
+        """Sets the source_info of this Metadata.
+
+
+        :param source_info: The source_info of this Metadata.
+        :type source_info: SourceInfo
+        """
+
+        self._source_info = source_info
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

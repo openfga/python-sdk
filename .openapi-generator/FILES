@@ -24,6 +24,7 @@ docs/CheckRequestTupleKey.md
 docs/CheckResponse.md
 docs/Computed.md
 docs/Condition.md
+docs/ConditionMetadata.md
 docs/ConditionParamTypeRef.md
 docs/ContextualTupleKeys.md
 docs/CreateStoreRequest.md
@@ -58,6 +59,7 @@ docs/ReadResponse.md
 docs/RelationMetadata.md
 docs/RelationReference.md
 docs/RelationshipCondition.md
+docs/SourceInfo.md
 docs/Status.md
 docs/Store.md
 docs/Tuple.md
@@ -123,6 +125,7 @@ openfga_sdk/models/check_request_tuple_key.py
 openfga_sdk/models/check_response.py
 openfga_sdk/models/computed.py
 openfga_sdk/models/condition.py
+openfga_sdk/models/condition_metadata.py
 openfga_sdk/models/condition_param_type_ref.py
 openfga_sdk/models/contextual_tuple_keys.py
 openfga_sdk/models/create_store_request.py
@@ -156,6 +159,7 @@ openfga_sdk/models/read_response.py
 openfga_sdk/models/relation_metadata.py
 openfga_sdk/models/relation_reference.py
 openfga_sdk/models/relationship_condition.py
+openfga_sdk/models/source_info.py
 openfga_sdk/models/status.py
 openfga_sdk/models/store.py
 openfga_sdk/models/tuple.py
