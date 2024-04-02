@@ -1,3 +1,4 @@
+
 name: Build, Test and Publish
 
 on:
@@ -6,15 +7,22 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - name: Checkout code
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
         with:
           fetch-depth: 0
 
@@ -26,13 +34,36 @@ jobs:
           cache-dependency-path: |
             **/setup.cfg
             **/requirements*.txt
+            **/test-requirements*.txt
+
       - name: Install dependencies
-        run: |
-          python -m pip install -r test-requirements.txt
-      - name: Test
-        run: python -m pytest
-      - name: Flake8
+        run: pip install -r test-requirements.txt --upgrade pip
+
+      - if: matrix.python-version == '3.10'
+        name: Run Flake8
         run: flake8 . --count --show-source --statistics
+
+      - if: matrix.python-version == '3.10'
+        name: Run Black
+        run: black . --check
+
+      - if: matrix.python-version == '3.10'
+        name: Run isort
+        run: isort . --profile black --diff --check-only
+
+      - if: matrix.python-version == '3.10'
+        name: Run autoflake
+        run: autoflake --exclude=__init__.py --remove-unused-variables --remove-all-unused-imports --quiet --check-diff --recursive .
+
+      - name: Run tests and collect coverage
+        run: pytest --cov-fail-under 60 --cov openfga_sdk
+
+      - if: matrix.python-version == '3.10'
+        name: Upload coverage to Codecov
+        uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8 # v4.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: openfga/python-sdk
 
   publish:
     runs-on: ubuntu-latest
@@ -40,8 +71,7 @@ jobs:
     needs: [test]
 
     permissions:
-      # Required for PyPI trusted publishing
-      id-token: write
+      id-token: write # Required for PyPI trusted publishing
 
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
@@ -56,9 +86,10 @@ jobs:
           cache-dependency-path: |
             **/setup.cfg
             **/requirements*.txt
+            **/test-requirements*.txt
+
       - name: Install dependencies
-        run: |
-          python -m pip install -r test-requirements.txt
+        run: pip install -r test-requirements.txt --upgrade pip
 
       - name: Build package
         run: |
