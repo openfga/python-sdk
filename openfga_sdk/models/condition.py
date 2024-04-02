@@ -37,16 +37,23 @@ class Condition:
         "name": "str",
         "expression": "str",
         "parameters": "dict[str, ConditionParamTypeRef]",
+        "metadata": "ConditionMetadata",
     }
 
     attribute_map = {
         "name": "name",
         "expression": "expression",
         "parameters": "parameters",
+        "metadata": "metadata",
     }
 
     def __init__(
-        self, name=None, expression=None, parameters=None, local_vars_configuration=None
+        self,
+        name=None,
+        expression=None,
+        parameters=None,
+        metadata=None,
+        local_vars_configuration=None,
     ):
         """Condition - a model defined in OpenAPI"""
         if local_vars_configuration is None:
@@ -56,12 +63,15 @@ class Condition:
         self._name = None
         self._expression = None
         self._parameters = None
+        self._metadata = None
         self.discriminator = None
 
         self.name = name
         self.expression = expression
         if parameters is not None:
             self.parameters = parameters
+        if metadata is not None:
+            self.metadata = metadata
 
     @property
     def name(self):
@@ -133,6 +143,27 @@ class Condition:
         """
 
         self._parameters = parameters
+
+    @property
+    def metadata(self):
+        """Gets the metadata of this Condition.
+
+
+        :return: The metadata of this Condition.
+        :rtype: ConditionMetadata
+        """
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, metadata):
+        """Sets the metadata of this Condition.
+
+
+        :param metadata: The metadata of this Condition.
+        :type metadata: ConditionMetadata
+        """
+
+        self._metadata = metadata
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""
