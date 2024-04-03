@@ -1,6 +1,10 @@
 -r requirements.txt
 
 mock >= 5.1.0, < 6
+autoflake==2.3.0
+black==24.2.0
 flake8 >= 7.0.0, < 8
-pytest-cov >= 5, < 6
 griffe >= 0.41.2, < 1
+isort==5.13.2
+pytest-cov >= 5, < 6
+pyupgrade==3.15.1
