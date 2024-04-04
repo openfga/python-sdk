@@ -33,7 +33,7 @@ from openfga_sdk.exceptions import (
 )
 from openfga_sdk.sync import oauth2, rest
 
-DEFAULT_USER_AGENT = "openfga-sdk python/0.4.1"
+DEFAULT_USER_AGENT = "openfga-sdk python/0.4.2"
 
 
 def random_time(loop_count, min_wait_in_ms):
