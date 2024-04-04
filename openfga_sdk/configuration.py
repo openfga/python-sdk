@@ -56,6 +56,11 @@ class RetryParams:
         """
         Return the maximum number of retry
         """
+        if self._max_retry > 15:
+            raise FgaValidationException(
+                "RetryParams.max_retry exceeds maximum allowed limit of 15"
+            )
+
         return self._max_retry
 
     @max_retry.setter
@@ -63,6 +68,16 @@ class RetryParams:
         """
         Update the maximum number of retry
         """
+        if not isinstance(value, int) or value < 0:
+            raise FgaValidationException(
+                "RetryParams.max_retry must be an integer greater than or equal to 0"
+            )
+
+        if value > 15:
+            raise FgaValidationException(
+                "RetryParams.max_retry exceeds maximum allowed limit of 15"
+            )
+
         self._max_retry = value
 
     @property
@@ -77,6 +92,11 @@ class RetryParams:
         """
         Update the minimum wait (in ms) in between retry
         """
+        if not isinstance(value, int) or value < 0:
+            raise FgaValidationException(
+                "RetryParams.min_wait_in_ms must be an integer greater than or equal to 0"
+            )
+
         self._min_wait_in_ms = value
 
 
@@ -286,15 +306,6 @@ class Configuration:
         result.logger_file = self.logger_file
         result.debug = self.debug
         return result
-
-    def __setattr__(self, name, value):
-        object.__setattr__(self, name, value)
-        if name == "disabled_client_side_validations":
-            s = set(filter(None, value.split(",")))
-            for v in s:
-                if v not in JSON_SCHEMA_VALIDATION_KEYWORDS:
-                    raise ApiValueError(f"Invalid keyword: '{v}''")
-            self._disabled_client_side_validations = s
 
     @classmethod
     def set_default(cls, default):
@@ -574,6 +585,11 @@ class Configuration:
     @api_scheme.setter
     def api_scheme(self, value):
         """Update connection scheme (https or http)."""
+        if value is not None and value not in ["https", "http"]:
+            raise FgaValidationException(
+                f"api_scheme `{value}` must be either `http` or `https`"
+            )
+
         self._scheme = value
 
     @property
@@ -631,3 +647,20 @@ class Configuration:
         Update retry parameters
         """
         self._retry_params = value
+
+    @property
+    def disabled_client_side_validations(self):
+        """Return disable_client_side_validations."""
+        return self._disabled_client_side_validations
+
+    @disabled_client_side_validations.setter
+    def disabled_client_side_validations(self, value):
+        """Update disable_client_side_validations."""
+        self._disabled_client_side_validations = {}
+
+        if isinstance(value, str) and value:
+            s = set(filter(None, value.split(",")))
+            for v in s:
+                if v not in JSON_SCHEMA_VALIDATION_KEYWORDS:
+                    raise FgaValidationException(f"Invalid keyword: '{v}''")
+            self._disabled_client_side_validations = s

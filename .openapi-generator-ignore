@@ -2,6 +2,7 @@ git_push.sh
 test/*
 !test/__init__.py
 !test/test_open_fga_api.py
+!test/test_configuration.py
 !test/test_credentials.py
 !test/test_client.py
 !test/test_client_sync.py
