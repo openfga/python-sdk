@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.2
+
+### [0.4.2](https://github.com/openfga/python-sdk/compare/v0.4.1...v0.4.2) (2024-04-04)
+
+- feat: support for modular models metadata
+- feat: support auto-retry of failed network requests
+- refactor: remove Python 2 code
+- fix: limit the number of network retries
+- fix: Configuration class `api_scheme`, `min_wait_in_ms` and `disabled_client_side_validations` validation issues
+- chore: update aiohttp to 3.9.2
+- chore: update black to 24.3.0
+
 ## v0.4.1
 
 ### [0.4.1](https://github.com/openfga/python-sdk/compare/v0.4.0...v0.4.1) (2024-02-13)
