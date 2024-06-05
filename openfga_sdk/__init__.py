@@ -1,7 +1,7 @@
 """
    Python SDK for OpenFGA
 
-   API version: 0.1
+   API version: 1.x
    Website: https://openfga.dev
    Documentation: https://openfga.dev/docs
    Support: https://openfga.dev/community
@@ -45,6 +45,7 @@ from openfga_sdk.models.error_code import ErrorCode
 from openfga_sdk.models.expand_request import ExpandRequest
 from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.expand_response import ExpandResponse
+from openfga_sdk.models.fga_object import FgaObject
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.internal_error_code import InternalErrorCode
 from openfga_sdk.models.internal_error_message_response import (
@@ -54,11 +55,14 @@ from openfga_sdk.models.leaf import Leaf
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
 from openfga_sdk.models.list_objects_response import ListObjectsResponse
 from openfga_sdk.models.list_stores_response import ListStoresResponse
+from openfga_sdk.models.list_users_request import ListUsersRequest
+from openfga_sdk.models.list_users_response import ListUsersResponse
 from openfga_sdk.models.metadata import Metadata
 from openfga_sdk.models.node import Node
 from openfga_sdk.models.nodes import Nodes
 from openfga_sdk.models.not_found_error_code import NotFoundErrorCode
 from openfga_sdk.models.null_value import NullValue
+from openfga_sdk.models.object_or_userset import ObjectOrUserset
 from openfga_sdk.models.object_relation import ObjectRelation
 from openfga_sdk.models.path_unknown_error_message_response import (
     PathUnknownErrorMessageResponse,
@@ -88,11 +92,22 @@ from openfga_sdk.models.tuple_operation import TupleOperation
 from openfga_sdk.models.tuple_to_userset import TupleToUserset
 from openfga_sdk.models.type_definition import TypeDefinition
 from openfga_sdk.models.type_name import TypeName
+from openfga_sdk.models.typed_wildcard import TypedWildcard
+from openfga_sdk.models.unauthenticated_response import UnauthenticatedResponse
+from openfga_sdk.models.unprocessable_content_error_code import (
+    UnprocessableContentErrorCode,
+)
+from openfga_sdk.models.unprocessable_content_message_response import (
+    UnprocessableContentMessageResponse,
+)
+from openfga_sdk.models.user import User
+from openfga_sdk.models.user_type_filter import UserTypeFilter
 from openfga_sdk.models.users import Users
 from openfga_sdk.models.userset import Userset
 from openfga_sdk.models.userset_tree import UsersetTree
 from openfga_sdk.models.userset_tree_difference import UsersetTreeDifference
 from openfga_sdk.models.userset_tree_tuple_to_userset import UsersetTreeTupleToUserset
+from openfga_sdk.models.userset_user import UsersetUser
 from openfga_sdk.models.usersets import Usersets
 from openfga_sdk.models.validation_error_message_response import (
     ValidationErrorMessageResponse,
