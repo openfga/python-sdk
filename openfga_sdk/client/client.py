@@ -1,7 +1,7 @@
 """
    Python SDK for OpenFGA
 
-   API version: 0.1
+   API version: 1.x
    Website: https://openfga.dev
    Documentation: https://openfga.dev/docs
    Support: https://openfga.dev/community
@@ -25,6 +25,7 @@ from openfga_sdk.client.models.check_request import (
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
+from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
 from openfga_sdk.client.models.write_request import ClientWriteRequest
@@ -41,6 +42,7 @@ from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.expand_request import ExpandRequest
 from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
+from openfga_sdk.models.list_users_request import ListUsersRequest
 from openfga_sdk.models.read_authorization_model_response import (
     ReadAuthorizationModelResponse,
 )
@@ -717,6 +719,39 @@ class OpenFgaClient:
         result_iterator = filter(_check_allowed, result)
         result_list = list(result_iterator)
         return [i.request.relation for i in result_list]
+
+    async def list_users(
+        self, body: ClientListUsersRequest, options: dict[str, str] = None
+    ):
+        """
+        Run list users request
+        :param body - list user parameters
+        :param authorization_model_id(options) - Overrides the authorization model id in the configuration
+        :param header(options) - Custom headers to send alongside the request
+        :param retryParams(options) - Override the retry parameters for this request
+        :param retryParams.maxRetry(options) - Override the max number of retries on each API request
+        :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListUsers")
+        kwargs = options_to_kwargs(options)
+
+        req_body = ListUsersRequest(
+            authorization_model_id=self._get_authorization_model_id(options),
+            object=body.object,
+            relation=body.relation,
+            user_filters=body.user_filters,
+            contextual_tuples=body.contextual_tuples,
+            context=body.context,
+        )
+
+        if body.contextual_tuples:
+            req_body.contextual_tuples = ContextualTupleKeys(
+                tuple_keys=convert_tuple_keys(body.contextual_tuples)
+            )
+
+        api_response = await self._api.list_users(body=req_body, **kwargs)
+
+        return api_response
 
     #######################
     # Assertions

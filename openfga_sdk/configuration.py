@@ -1,7 +1,7 @@
 """
    Python SDK for OpenFGA
 
-   API version: 0.1
+   API version: 1.x
    Website: https://openfga.dev
    Documentation: https://openfga.dev/docs
    Support: https://openfga.dev/community
@@ -468,7 +468,7 @@ class Configuration:
             "Python SDK Debug Report:\n"
             "OS: {env}\n"
             "Python Version: {pyversion}\n"
-            "Version of the API: 0.1\n"
+            "Version of the API: 1.x\n"
             "SDK Package Version: 0.4.2".format(env=sys.platform, pyversion=sys.version)
         )
 

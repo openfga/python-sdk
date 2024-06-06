@@ -1,7 +1,7 @@
 """
    Python SDK for OpenFGA
 
-   API version: 0.1
+   API version: 1.x
    Website: https://openfga.dev
    Documentation: https://openfga.dev/docs
    Support: https://openfga.dev/community
@@ -22,6 +22,7 @@ from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
+from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
@@ -42,6 +43,7 @@ from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.leaf import Leaf
 from openfga_sdk.models.list_objects_response import ListObjectsResponse
 from openfga_sdk.models.list_stores_response import ListStoresResponse
+from openfga_sdk.models.list_users_response import ListUsersResponse
 from openfga_sdk.models.node import Node
 from openfga_sdk.models.object_relation import ObjectRelation
 from openfga_sdk.models.read_assertions_response import ReadAssertionsResponse
@@ -61,6 +63,7 @@ from openfga_sdk.models.tuple_key import TupleKey
 from openfga_sdk.models.tuple_key_without_condition import TupleKeyWithoutCondition
 from openfga_sdk.models.tuple_operation import TupleOperation
 from openfga_sdk.models.type_definition import TypeDefinition
+from openfga_sdk.models.user_type_filter import UserTypeFilter
 from openfga_sdk.models.users import Users
 from openfga_sdk.models.userset import Userset
 from openfga_sdk.models.userset_tree import UsersetTree
@@ -2466,6 +2469,127 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 _preload_content=ANY,
                 _request_timeout=None,
             )
+            api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_list_users(self, mock_request):
+        """
+        Test case for list_users
+        """
+
+        response_body = """{
+  "excluded_users": [],
+  "users": [
+    {
+      "object": {
+        "id": "81684243-9356-4421-8fbf-a4f8d36aa31b",
+        "type": "user"
+      }
+    },
+    {
+      "userset": {
+        "id": "fga",
+        "relation": "member",
+        "type": "team"
+      }
+    },
+    {
+      "wildcard": {
+        "type": "user"
+      }
+    }
+  ]
+}"""
+
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            body = ClientListUsersRequest()
+            body.object = "document:2021-budget"
+            body.relation = "can_read"
+            body.user_filters = [
+                UserTypeFilter(type="user"),
+                UserTypeFilter(type="team", relation="member"),
+            ]
+            body.context = {}
+            body.contextual_tuples = [
+                ClientTuple(
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    relation="editor",
+                    object="folder:product",
+                ),
+                ClientTuple(
+                    user="folder:product",
+                    relation="parent",
+                    object="document:roadmap",
+                ),
+            ]
+
+            response = api_client.list_users(
+                body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+            )
+
+            self.assertIsInstance(response, ListUsersResponse)
+
+            self.assertEqual(response.users.__len__(), 3)
+
+            self.assertIsNotNone(response.users[0].object)
+            self.assertEqual(
+                response.users[0].object.id, "81684243-9356-4421-8fbf-a4f8d36aa31b"
+            )
+            self.assertEqual(response.users[0].object.type, "user")
+            self.assertIsNone(response.users[0].userset)
+            self.assertIsNone(response.users[0].wildcard)
+
+            self.assertIsNone(response.users[1].object)
+            self.assertIsNotNone(response.users[1].userset)
+            self.assertEqual(response.users[1].userset.id, "fga")
+            self.assertEqual(response.users[1].userset.relation, "member")
+            self.assertEqual(response.users[1].userset.type, "team")
+            self.assertIsNone(response.users[1].wildcard)
+
+            self.assertIsNone(response.users[2].object)
+            self.assertIsNone(response.users[2].userset)
+            self.assertIsNotNone(response.users[2].wildcard)
+            self.assertEqual(response.users[2].wildcard.type, "user")
+
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-users",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "object": "document:2021-budget",
+                    "relation": "can_read",
+                    "user_filters": [
+                        {"type": "user"},
+                        {"type": "team", "relation": "member"},
+                    ],
+                    "contextual_tuples": {
+                        "tuple_keys": [
+                            {
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                                "relation": "editor",
+                                "object": "folder:product",
+                            },
+                            {
+                                "user": "folder:product",
+                                "relation": "parent",
+                                "object": "document:roadmap",
+                            },
+                        ]
+                    },
+                    "context": {},
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
