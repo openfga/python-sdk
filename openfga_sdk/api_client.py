@@ -33,7 +33,7 @@ from openfga_sdk.exceptions import (
     ServiceException,
 )
 
-DEFAULT_USER_AGENT = "openfga-sdk python/0.4.2"
+DEFAULT_USER_AGENT = "openfga-sdk python/0.4.3"
 
 
 def random_time(loop_count, min_wait_in_ms):
