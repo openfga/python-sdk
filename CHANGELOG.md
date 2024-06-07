@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.3
+
+### [0.4.3](https://github.com/openfga/python-sdk/compare/v0.4.2...v0.4.3) (2024-06-07)
+
+- feat: support for list users
+
 ## v0.4.2
 
 ### [0.4.2](https://github.com/openfga/python-sdk/compare/v0.4.1...v0.4.2) (2024-04-04)
