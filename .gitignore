@@ -89,3 +89,4 @@ credentials.json
 
 VERSION.txt
 git_push.sh
+setup.local.cfg
