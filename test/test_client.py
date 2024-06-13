@@ -41,6 +41,7 @@ from openfga_sdk.models.check_response import CheckResponse
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.create_store_response import CreateStoreResponse
 from openfga_sdk.models.expand_response import ExpandResponse
+from openfga_sdk.models.fga_object import FgaObject
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.leaf import Leaf
 from openfga_sdk.models.list_objects_response import ListObjectsResponse
@@ -2430,7 +2431,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         async with OpenFgaClient(configuration) as api_client:
             body = ClientListUsersRequest(
-                object="document:2021-budget",
+                object=FgaObject(type="document", id="2021-budget"),
                 relation="can_read",
                 user_filters=[
                     UserTypeFilter(type="user"),
@@ -2487,7 +2488,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 post_params=[],
                 body={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "object": "document:2021-budget",
+                    "object": {"id": "2021-budget", "type": "document"},
                     "relation": "can_read",
                     "user_filters": [
                         {"type": "user"},
