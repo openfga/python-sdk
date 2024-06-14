@@ -32,7 +32,11 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
-from openfga_sdk.exceptions import FgaValidationException
+from openfga_sdk.exceptions import (
+    AuthenticationError,
+    FgaValidationException,
+    UnauthorizedException,
+)
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
@@ -177,16 +181,6 @@ class OpenFgaClient:
         Return the authorization model id
         """
         return self._client_configuration.authorization_model_id
-
-    def _check_valid_api_connection(self, options: dict[str, int | str]):
-        """
-        Checks that a connection with the given configuration can be established
-        """
-        authorization_model_id = self._get_authorization_model_id(options)
-        if authorization_model_id is not None and authorization_model_id != "":
-            self.read_authorization_model(options)
-        else:
-            self.read_latest_authorization_model(options)
 
     #################
     # Stores
@@ -410,6 +404,8 @@ class OpenFgaClient:
                 ClientWriteRequest(writes=write_batch, deletes=delete_batch), options
             )
             return [construct_write_single_response(i, True, None) for i in batch]
+        except (AuthenticationError, UnauthorizedException) as err:
+            raise err
         except Exception as err:
             return [construct_write_single_response(i, False, err) for i in batch]
 
@@ -493,8 +489,6 @@ class OpenFgaClient:
         options = set_heading_if_not_set(
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
-        # TODO: this should be run in parallel
-        self._check_valid_api_connection(options)
 
         # otherwise, it is not a transaction and it is a batch write requests
         writes_response = None
@@ -584,6 +578,8 @@ class OpenFgaClient:
                 response=api_response,
                 error=None,
             )
+        except (AuthenticationError, UnauthorizedException) as err:
+            raise err
         except Exception as err:
             return BatchCheckResponse(
                 allowed=False, request=body, response=None, error=err
@@ -606,9 +602,6 @@ class OpenFgaClient:
         options = set_heading_if_not_set(
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
-
-        # TODO: this should be run in parallel
-        self._check_valid_api_connection(options)
 
         max_parallel_requests = 10
         if options is not None and "max_parallel_requests" in options:

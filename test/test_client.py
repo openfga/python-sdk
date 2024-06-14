@@ -974,7 +974,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response("{}", 200),
             mock_response("{}", 200),
             mock_response("{}", 200),
-            mock_response("{}", 200),
         ]
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1043,15 +1042,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ),
                 ],
             )
-            self.assertEqual(mock_request.call_count, 4)
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
+            self.assertEqual(mock_request.call_count, 3)
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
@@ -1126,7 +1117,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response("{}", 200),
             mock_response("{}", 200),
             mock_response("{}", 200),
-            mock_response("{}", 200),
         ]
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1195,15 +1185,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ),
                 ],
             )
-            self.assertEqual(mock_request.call_count, 4)
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
+            self.assertEqual(mock_request.call_count, 3)
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
@@ -1277,7 +1259,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         mock_request.side_effect = [
             mock_response("{}", 200),
             mock_response("{}", 200),
-            mock_response("{}", 200),
         ]
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1346,15 +1327,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ),
                 ],
             )
-            self.assertEqual(mock_request.call_count, 3)
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
+            self.assertEqual(mock_request.call_count, 2)
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
@@ -1417,7 +1390,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         """
 
         mock_request.side_effect = [
-            mock_response("{}", 200),
             mock_response("{}", 200),
             ValidationException(http_resp=http_mock_response(response_body, 400)),
             mock_response("{}", 200),
@@ -1496,15 +1468,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     error=None,
                 ),
             )
-            self.assertEqual(mock_request.call_count, 4)
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
+            self.assertEqual(mock_request.call_count, 3)
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
@@ -1577,7 +1541,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         """
         mock_request.side_effect = [
             mock_response("{}", 200),
-            mock_response("{}", 200),
         ]
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1602,14 +1565,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "transaction": transaction,
                 },
-            )
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1771,7 +1726,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(UnauthorizedException) as api_exception:
+            with self.assertRaises(UnauthorizedException):
                 body = ClientWriteRequest(
                     writes=[
                         ClientTuple(
@@ -1792,17 +1747,29 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                 )
 
-            self.assertIsInstance(api_exception.exception, UnauthorizedException)
             mock_request.assert_called()
             self.assertEqual(mock_request.call_count, 1)
 
             mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
                 headers=ANY,
                 query_params=[],
+                post_params=[],
+                body={
+                    "writes": {
+                        "tuple_keys": [
+                            {
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                                "relation": "reader",
+                                "object": "document:2021-budget",
+                            }
+                        ]
+                    },
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                },
                 _preload_content=ANY,
-                _request_timeout=None,
+                _request_timeout=ANY,
             )
             await api_client.close()
 
@@ -1918,7 +1885,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         # First, mock the response
         response_body = '{"allowed": true, "resolution": "1234"}'
         mock_request.side_effect = [
-            mock_response("{}", 200),
             mock_response(response_body, 200),
         ]
         body = ClientCheckRequest(
@@ -1939,14 +1905,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertTrue(api_response[0].allowed)
             self.assertEqual(api_response[0].request, body)
             # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01GXSA8YR785C4FYS3C0RTG7B1",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
@@ -1975,7 +1933,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         # First, mock the response
         mock_request.side_effect = [
-            mock_response("{}", 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
@@ -2017,14 +1974,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertTrue(api_response[2].allowed)
             self.assertEqual(api_response[2].request, body3)
             # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01GXSA8YR785C4FYS3C0RTG7B1",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
@@ -2093,7 +2042,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         # First, mock the response
         mock_request.side_effect = [
-            mock_response("{}", 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
             ValidationException(http_resp=http_mock_response(response_body, 400)),
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
@@ -2138,14 +2086,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertFalse(api_response[2].allowed)
             self.assertEqual(api_response[2].request, body3)
             # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01GXSA8YR785C4FYS3C0RTG7B1",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
@@ -2357,7 +2297,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         # First, mock the response
         mock_request.side_effect = [
-            mock_response("{}", 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
@@ -2376,14 +2315,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertEqual(api_response, ["reader", "viewer"])
 
             # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01GXSA8YR785C4FYS3C0RTG7B1",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
             mock_request.assert_any_call(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
@@ -2447,7 +2378,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(UnauthorizedException) as api_exception:
+            with self.assertRaises(UnauthorizedException):
                 await api_client.list_relations(
                     body=ClientListRelationsRequest(
                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -2457,18 +2388,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
                 )
 
-            self.assertIsInstance(api_exception.exception, UnauthorizedException)
             mock_request.assert_called()
-            self.assertEqual(mock_request.call_count, 1)
+            self.assertEqual(mock_request.call_count, 3)
 
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01GXSA8YR785C4FYS3C0RTG7B1",
-                headers=ANY,
-                query_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
