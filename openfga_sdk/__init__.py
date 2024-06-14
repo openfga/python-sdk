@@ -62,7 +62,6 @@ from openfga_sdk.models.node import Node
 from openfga_sdk.models.nodes import Nodes
 from openfga_sdk.models.not_found_error_code import NotFoundErrorCode
 from openfga_sdk.models.null_value import NullValue
-from openfga_sdk.models.object_or_userset import ObjectOrUserset
 from openfga_sdk.models.object_relation import ObjectRelation
 from openfga_sdk.models.path_unknown_error_message_response import (
     PathUnknownErrorMessageResponse,

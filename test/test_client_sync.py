@@ -2402,7 +2402,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         """
 
         response_body = """{
-  "excluded_users": [],
   "users": [
     {
       "object": {
