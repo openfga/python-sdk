@@ -33,22 +33,20 @@ class ListUsersResponse:
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    openapi_types = {"users": "list[User]", "excluded_users": "list[ObjectOrUserset]"}
+    openapi_types = {"users": "list[User]"}
 
-    attribute_map = {"users": "users", "excluded_users": "excluded_users"}
+    attribute_map = {"users": "users"}
 
-    def __init__(self, users=None, excluded_users=None, local_vars_configuration=None):
+    def __init__(self, users=None, local_vars_configuration=None):
         """ListUsersResponse - a model defined in OpenAPI"""
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
         self._users = None
-        self._excluded_users = None
         self.discriminator = None
 
         self.users = users
-        self.excluded_users = excluded_users
 
     @property
     def users(self):
@@ -72,32 +70,6 @@ class ListUsersResponse:
             raise ValueError("Invalid value for `users`, must not be `None`")
 
         self._users = users
-
-    @property
-    def excluded_users(self):
-        """Gets the excluded_users of this ListUsersResponse.
-
-
-        :return: The excluded_users of this ListUsersResponse.
-        :rtype: list[ObjectOrUserset]
-        """
-        return self._excluded_users
-
-    @excluded_users.setter
-    def excluded_users(self, excluded_users):
-        """Sets the excluded_users of this ListUsersResponse.
-
-
-        :param excluded_users: The excluded_users of this ListUsersResponse.
-        :type excluded_users: list[ObjectOrUserset]
-        """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and excluded_users is None
-        ):
-            raise ValueError("Invalid value for `excluded_users`, must not be `None`")
-
-        self._excluded_users = excluded_users
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""
