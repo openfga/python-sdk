@@ -28,7 +28,9 @@ from openfga_sdk.client.models import (
     ClientWriteRequest,
     WriteTransactionOpts,
 )
+from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
+from openfga_sdk.models.fga_object import FgaObject
 
 
 async def main():
@@ -264,7 +266,7 @@ async def main():
         print(f"Allowed: {response.allowed}")
 
         # List objects with context
-        print("Listing objects  for access with context")
+        print("Listing objects for access with context")
 
         response = await fga_client.list_objects(
             ClientListObjectsRequest(
@@ -300,6 +302,20 @@ async def main():
             )
         )
         print(f"Relations: {response}")
+
+        # ListUsers
+        print("Listing user who have access to object")
+
+        response = await fga_client.list_objects(
+            ClientListUsersRequest(
+                relation="viewer",
+                object=FgaObject(type="document", id="roadmap"),
+                user_filters=[
+                    FgaObject(type="user"),
+                ],
+            )
+        )
+        print(f"Users: {response.objects}")
 
         # WriteAssertions
         await fga_client.write_assertions(

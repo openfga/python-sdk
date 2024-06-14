@@ -914,6 +914,7 @@ List the users who have a certain relation to a particular type.
 
 ```python
 from openfga_sdk import OpenFgaClient
+from openfga_sdk.models.fga_object import FgaObject
 from openfga_sdk.client.models import ClientListUsersRequest, ClientTuple
 
 configuration = ClientConfiguration(
@@ -927,7 +928,7 @@ async with OpenFgaClient(configuration) as api_client:
     }
 
     request = ClientListUsersRequest(
-        object="document:2021-budget",
+        object=FgaObject(type="document", id="2021-budget"),
         relation="can_read",
         user_filters=[
             UserTypeFilter(type="user"),
