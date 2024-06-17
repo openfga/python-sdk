@@ -84,7 +84,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.4.4",
+                "User-Agent": "openfga-sdk (python) 0.5.0",
             }
         )
         mock_request.assert_called_once_with(
