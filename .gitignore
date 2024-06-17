@@ -68,6 +68,9 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
+# Python tooling
+setup.local.cfg
+
 
 # IDEs
 .idea
@@ -89,4 +92,3 @@ credentials.json
 
 VERSION.txt
 git_push.sh
-setup.local.cfg
