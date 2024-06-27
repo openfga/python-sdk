@@ -1,22 +1,21 @@
-import opentelemetry.sdk.metrics as opentelemetry
-from opentelemetry.metrics import get_meter
+from opentelemetry.metrics import Histogram, Meter, get_meter
 
 from openfga_sdk import __version__
 from openfga_sdk.telemetry.histograms import TelemetryHistogram, TelemetryHistograms
 
 
 class MetricsTelemetry:
-    _meter: opentelemetry.Meter = None
-    _histograms: dict[str, opentelemetry.Histogram] = {}
+    _meter: Meter = None
+    _histograms: dict[str, Histogram] = {}
 
     def __init__(self):
         self._meter = get_meter(__name__, __version__)
         self._histograms = {}
 
-    def meter(self) -> opentelemetry.Meter:
+    def meter(self) -> Meter:
         return self._meter
 
-    def histogram(self, histogram: str | TelemetryHistogram) -> opentelemetry.Histogram:
+    def histogram(self, histogram: str | TelemetryHistogram) -> Histogram:
         if isinstance(histogram, str):
             histogram = TelemetryHistograms[histogram]
 
