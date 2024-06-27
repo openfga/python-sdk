@@ -432,7 +432,6 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         """
 
         response_body = """{
-  "excluded_users": [],
   "users": [
     {
       "object": {
@@ -1521,7 +1520,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.4.3",
+                    "User-Agent": "openfga-sdk python/0.5.0",
                     "Authorization": "Bearer TOKEN1",
                 }
             )
@@ -1575,7 +1574,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.4.3",
+                    "User-Agent": "openfga-sdk python/0.5.0",
                     "Custom Header": "custom value",
                 }
             )

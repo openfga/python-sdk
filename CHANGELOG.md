@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.0
+
+### [0.5.0](https://github.com/openfga/python-sdk/compare/v0.4.2...v0.5.0) (2024-06-17)
+
+- fix: ClientTuple condition property type
+- fix: list_users should accept FgaObject type
+- fix: remove ReadAuthorizationModel calls from BatchCheck and writes
+- chore!: remove excluded users from ListUsers response
+
 ## v0.4.3
 
 ### [0.4.3](https://github.com/openfga/python-sdk/compare/v0.4.2...v0.4.3) (2024-06-07)

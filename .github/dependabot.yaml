@@ -10,6 +10,14 @@ updates:
           - "*"
     ignore:
       - dependency-name: "urllib3"
+  - package-ecosystem: "pip"
+    directory: "/example/example1"
+    schedule:
+      interval: "monthly"
+    groups:
+     dependencies:
+        patterns:
+          - "*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

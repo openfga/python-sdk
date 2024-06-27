@@ -50,7 +50,6 @@ docs/Node.md
 docs/Nodes.md
 docs/NotFoundErrorCode.md
 docs/NullValue.md
-docs/ObjectOrUserset.md
 docs/ObjectRelation.md
 docs/OpenFgaApi.md
 docs/PathUnknownErrorMessageResponse.md
@@ -163,7 +162,6 @@ openfga_sdk/models/node.py
 openfga_sdk/models/nodes.py
 openfga_sdk/models/not_found_error_code.py
 openfga_sdk/models/null_value.py
-openfga_sdk/models/object_or_userset.py
 openfga_sdk/models/object_relation.py
 openfga_sdk/models/path_unknown_error_message_response.py
 openfga_sdk/models/read_assertions_response.py

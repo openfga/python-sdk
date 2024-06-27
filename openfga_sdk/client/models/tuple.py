@@ -24,7 +24,7 @@ class ClientTuple:
         user: str,
         relation: str,
         object: str,
-        condition: RelationshipCondition = None,
+        condition: RelationshipCondition | None = None,
     ):
         self._user = user
         self._relation = relation

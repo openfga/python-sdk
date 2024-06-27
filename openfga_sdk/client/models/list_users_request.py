@@ -11,6 +11,7 @@
 """
 
 from openfga_sdk.client.models.tuple import ClientTuple
+from openfga_sdk.models.fga_object import FgaObject
 from openfga_sdk.models.user_type_filter import UserTypeFilter
 
 
@@ -21,7 +22,7 @@ class ClientListUsersRequest:
 
     def __init__(
         self,
-        object: str = None,
+        object: FgaObject = None,
         relation: str = None,
         user_filters: list[UserTypeFilter] = None,
         contextual_tuples: list[ClientTuple] = None,
@@ -34,7 +35,7 @@ class ClientListUsersRequest:
         self._context = context
 
     @property
-    def object(self):
+    def object(self) -> FgaObject:
         """Gets the object of this ClientListUsersRequest.
 
 
@@ -44,7 +45,7 @@ class ClientListUsersRequest:
         return self._object
 
     @object.setter
-    def object(self, object):
+    def object(self, object: FgaObject):
         """Sets the object of this ClientListUsersRequest.
 
 
@@ -55,7 +56,7 @@ class ClientListUsersRequest:
         self._object = object
 
     @property
-    def relation(self):
+    def relation(self) -> str:
         """Gets the relation of this ClientListUsersRequest.
 
 
@@ -65,7 +66,7 @@ class ClientListUsersRequest:
         return self._relation
 
     @relation.setter
-    def relation(self, relation):
+    def relation(self, relation: str):
         """Sets the relation of this ClientListUsersRequest.
 
 
@@ -76,7 +77,7 @@ class ClientListUsersRequest:
         self._relation = relation
 
     @property
-    def user_filters(self):
+    def user_filters(self) -> list[UserTypeFilter]:
         """Gets the user_filters of this ClientListUsersRequest.
 
 
@@ -86,7 +87,7 @@ class ClientListUsersRequest:
         return self._user_filters
 
     @user_filters.setter
-    def user_filters(self, user_filters):
+    def user_filters(self, user_filters: list[UserTypeFilter]):
         """Sets the user_filters of this ClientListUsersRequest.
 
 
@@ -97,7 +98,7 @@ class ClientListUsersRequest:
         self._user_filters = user_filters
 
     @property
-    def contextual_tuples(self):
+    def contextual_tuples(self) -> list[ClientTuple]:
         """Gets the contextual_tuples of this ClientListUsersRequest.
 
 
@@ -107,7 +108,7 @@ class ClientListUsersRequest:
         return self._contextual_tuples
 
     @contextual_tuples.setter
-    def contextual_tuples(self, contextual_tuples):
+    def contextual_tuples(self, contextual_tuples: list[ClientTuple]):
         """Sets the contextual_tuples of this ClientListUsersRequest.
 
 
@@ -118,7 +119,7 @@ class ClientListUsersRequest:
         self._contextual_tuples = contextual_tuples
 
     @property
-    def context(self):
+    def context(self) -> object:
         """Gets the context of this ClientListUsersRequest.
 
         Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
@@ -129,7 +130,7 @@ class ClientListUsersRequest:
         return self._context
 
     @context.setter
-    def context(self, context):
+    def context(self, context: object):
         """Sets the context of this ClientListUsersRequest.
 
         Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.

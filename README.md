@@ -914,6 +914,7 @@ List the users who have a certain relation to a particular type.
 
 ```python
 from openfga_sdk import OpenFgaClient
+from openfga_sdk.models.fga_object import FgaObject
 from openfga_sdk.client.models import ClientListUsersRequest, ClientTuple
 
 configuration = ClientConfiguration(
@@ -927,7 +928,7 @@ async with OpenFgaClient(configuration) as api_client:
     }
 
     request = ClientListUsersRequest(
-        object="document:2021-budget",
+        object=FgaObject(type="document", id="2021-budget"),
         relation="can_read",
         user_filters=[
             UserTypeFilter(type="user"),
@@ -951,7 +952,6 @@ async with OpenFgaClient(configuration) as api_client:
     response = await api_client.list_users(request, options)
 
     # response.users = [{object: {type: "user", id: "81684243-9356-4421-8fbf-a4f8d36aa31b"}}, {userset: { type: "user" }}, ...]
-    # response.excluded_users = [ {object: {type: "user", id: "4a455e27-d15a-4434-82e0-136f9c2aa4cf"}}, ... ]
 ```
 
 #### Assertions
@@ -1093,7 +1093,6 @@ Class | Method | HTTP request | Description
  - [Nodes](https://github.com/openfga/python-sdk/blob/main/docs/Nodes.md)
  - [NotFoundErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/NotFoundErrorCode.md)
  - [NullValue](https://github.com/openfga/python-sdk/blob/main/docs/NullValue.md)
- - [ObjectOrUserset](https://github.com/openfga/python-sdk/blob/main/docs/ObjectOrUserset.md)
  - [ObjectRelation](https://github.com/openfga/python-sdk/blob/main/docs/ObjectRelation.md)
  - [PathUnknownErrorMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/PathUnknownErrorMessageResponse.md)
  - [ReadAssertionsResponse](https://github.com/openfga/python-sdk/blob/main/docs/ReadAssertionsResponse.md)
