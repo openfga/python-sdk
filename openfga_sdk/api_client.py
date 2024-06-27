@@ -17,6 +17,7 @@ import json
 import math
 import random
 import re
+import time
 import urllib
 from multiprocessing.pool import ThreadPool
 
@@ -32,6 +33,9 @@ from openfga_sdk.exceptions import (
     RateLimitExceededError,
     ServiceException,
 )
+from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
+from openfga_sdk.telemetry.histograms import TelemetryHistograms
+from openfga_sdk.telemetry.telemetry import Telemetry
 
 DEFAULT_USER_AGENT = "openfga-sdk python/0.4.3"
 
@@ -101,6 +105,7 @@ class ApiClient:
         # Set default User-Agent.
         self.user_agent = DEFAULT_USER_AGENT
         self.client_side_validation = configuration.client_side_validation
+        self._telemetry = Telemetry()
 
     async def __aenter__(self):
         return self
@@ -158,10 +163,13 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
+        _telemetry_attributes: dict[TelemetryAttribute, str] = None,
     ):
 
         self.configuration.is_valid()
         config = self.configuration
+
+        benchmark: dict[str, int] = {"start": int(time.time())}
 
         # header parameters
         header_params = header_params or {}
@@ -245,6 +253,7 @@ class ApiClient:
                 max_retry = _retry_params.max_retry
             if _retry_params.min_wait_in_ms is not None:
                 max_retry = _retry_params.min_wait_in_ms
+
         for x in range(max_retry + 1):
             try:
                 # perform request and return response
@@ -284,6 +293,20 @@ class ApiClient:
             self.last_response = response_data
 
             return_data = response_data
+
+            benchmark["end"] = int(time.time()) - benchmark["start"]
+
+            attributes = TelemetryAttributes().fromResponse(response_data)
+            duration = response_data.getheader("fga-query-duration-ms")
+
+            if duration is not None:
+                self._telemetry.metrics().histogram(
+                    TelemetryHistograms.query_duration
+                ).record(int(duration, 10), attributes)
+
+            self._telemetry.metrics().histogram(TelemetryHistograms.duration).record(
+                benchmark["end"], attributes
+            )
 
             if not _preload_content:
                 return return_data
@@ -430,6 +453,7 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
+        _telemetry_attributes: dict[TelemetryAttribute, str] = None,
     ):
         """Makes the HTTP request (synchronous) and returns deserialized data.
 
@@ -490,6 +514,7 @@ class ApiClient:
                 _request_auth,
                 _retry_params,
                 _oauth2_client,
+                _telemetry_attributes,
             )
 
         return self.pool.apply_async(
