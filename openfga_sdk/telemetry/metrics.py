@@ -1,7 +1,8 @@
 import opentelemetry.sdk.metrics as opentelemetry
 from opentelemetry.metrics import get_meter
+
 from openfga_sdk import __version__
-from openfga_sdk.telemetry.histograms import TelemetryHistograms, TelemetryHistogram
+from openfga_sdk.telemetry.histograms import TelemetryHistogram, TelemetryHistograms
 
 
 class MetricsTelemetry:

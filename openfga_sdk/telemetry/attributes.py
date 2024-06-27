@@ -1,9 +1,9 @@
-from aiohttp import ClientResponse, RequestInfo
-import opentelemetry.semconv.attributes.http_attributes as SEMATTRS_HTTP
-
 from typing import NamedTuple
 
+import opentelemetry.semconv.attributes.http_attributes as SEMATTRS_HTTP
+from aiohttp import ClientResponse, RequestInfo
 from urllib3 import HTTPResponse
+
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.rest import RESTResponse
 
