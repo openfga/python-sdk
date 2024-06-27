@@ -33,9 +33,9 @@ from openfga_sdk.exceptions import (
     RateLimitExceededError,
     ServiceException,
 )
+from openfga_sdk.telemetry import Telemetry
 from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
 from openfga_sdk.telemetry.histograms import TelemetryHistograms
-from openfga_sdk.telemetry import Telemetry
 
 DEFAULT_USER_AGENT = "openfga-sdk python/0.5.0"
 
