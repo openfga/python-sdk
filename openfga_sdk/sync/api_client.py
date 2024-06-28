@@ -32,6 +32,8 @@ from openfga_sdk.exceptions import (
     ServiceException,
 )
 from openfga_sdk.sync import oauth2, rest
+from openfga_sdk.telemetry import Telemetry
+from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
 
 DEFAULT_USER_AGENT = "openfga-sdk python/0.5.0"
 
@@ -101,6 +103,7 @@ class ApiClient:
         # Set default User-Agent.
         self.user_agent = DEFAULT_USER_AGENT
         self.client_side_validation = configuration.client_side_validation
+        self._telemetry = Telemetry()
 
     def __enter__(self):
         return self
@@ -157,10 +160,19 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
+        _telemetry_attributes: dict[TelemetryAttribute | str, str] = None,
     ):
 
         self.configuration.is_valid()
         config = self.configuration
+
+        benchmark: dict[str, float] = {"start": float(time.time())}
+        _telemetry_attributes = _telemetry_attributes or {}
+
+        _telemetry_attributes[TelemetryAttributes().http_host] = urllib.parse.urlparse(
+            config.api_url
+        ).hostname
+        _telemetry_attributes[TelemetryAttributes().http_method] = method
 
         # header parameters
         header_params = header_params or {}
@@ -244,7 +256,7 @@ class ApiClient:
                 max_retry = _retry_params.max_retry
             if _retry_params.min_wait_in_ms is not None:
                 max_retry = _retry_params.min_wait_in_ms
-        for x in range(max_retry + 1):
+        for retry in range(max_retry + 1):
             try:
                 # perform request and return response
                 response_data = self.request(
@@ -258,8 +270,8 @@ class ApiClient:
                     _request_timeout=_request_timeout,
                 )
             except (RateLimitExceededError, ServiceException) as e:
-                if x < max_retry and e.status != 501:
-                    time.sleep(random_time(x, min_wait_in_ms))
+                if retry < max_retry and e.status != 501:
+                    time.sleep(random_time(retry, min_wait_in_ms))
                     continue
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
@@ -282,6 +294,31 @@ class ApiClient:
             self.last_response = response_data
 
             return_data = response_data
+
+            benchmark["end"] = float(time.time())
+
+            _telemetry_attributes[TelemetryAttributes().request_retries] = retry
+
+            _telemetry_attributes.update(
+                TelemetryAttributes().fromResponse(response_data)
+            )
+
+            try:
+                _telemetry_attributes[TelemetryAttributes().request_client_id] = (
+                    self.configuration.credentials.configuration.client_id
+                )
+            except AttributeError:
+                pass
+
+            duration = response_data.getheader("fga-query-duration-ms")
+            attributes = TelemetryAttributes().prepare(_telemetry_attributes)
+
+            if duration is not None:
+                self._telemetry.metrics().queryDuration(int(duration, 10), attributes)
+
+            self._telemetry.metrics().requestDuration().record(
+                float(benchmark["end"] - benchmark["start"]), attributes
+            )
 
             if not _preload_content:
                 return return_data
@@ -428,6 +465,7 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
+        _telemetry_attributes: dict[TelemetryAttribute, str] = None,
     ):
         """Makes the HTTP request (synchronous) and returns deserialized data.
 
@@ -488,6 +526,7 @@ class ApiClient:
                 _request_auth,
                 _retry_params,
                 _oauth2_client,
+                _telemetry_attributes,
             )
 
         return self.pool.apply_async(
@@ -510,6 +549,7 @@ class ApiClient:
                 _request_auth,
                 _retry_params,
                 _oauth2_client,
+                _telemetry_attributes,
             ),
         )
 
