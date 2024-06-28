@@ -12,18 +12,17 @@
 
 from setuptools import find_packages, setup
 
-NAME = "example1"
+NAME = "openfga-sdk"
 VERSION = "0.0.1"
-REQUIRES = ["openfga-sdk >= 0.5"]
+REQUIRES = [""]
 
 setup(
     name=NAME,
     version=VERSION,
-    description="An example of using the OpenFGA Python SDK",
+    description="An example of using the OpenFGA Python SDK with OpenTelemetry",
     author="OpenFGA (https://openfga.dev)",
     author_email="community@openfga.dev",
     url="https://github.com/openfga/python-sdk",
-    install_requires=REQUIRES,
     python_requires=">=3.10",
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,

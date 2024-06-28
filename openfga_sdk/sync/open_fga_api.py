@@ -13,6 +13,8 @@
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
 from openfga_sdk.sync.api_client import ApiClient
 from openfga_sdk.sync.oauth2 import OAuth2Client
+from openfga_sdk.telemetry import Telemetry
+from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
 
 
 class OpenFgaApi:
@@ -25,13 +27,15 @@ class OpenFgaApi:
     def __init__(self, api_client=None):
         if api_client is None:
             api_client = ApiClient()
-        self.api_client = api_client
+        self.api_client: ApiClient = api_client
 
         self._oauth2_client = None
         if api_client.configuration is not None:
             credentials = api_client.configuration.credentials
             if credentials is not None and credentials.method == "client_credentials":
                 self._oauth2_client = OAuth2Client(credentials)
+
+        self._telemetry = Telemetry()
 
     def __enter__(self):
         return self
@@ -183,6 +187,27 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "check",
+        }
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
+
         return self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
             "POST",
@@ -202,6 +227,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def create_store(self, body, **kwargs):
@@ -332,6 +358,10 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_method: "createStore",
+        }
+
         return self.api_client.call_api(
             "/stores",
             "POST",
@@ -351,6 +381,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def delete_store(self, **kwargs):
@@ -463,6 +494,10 @@ class OpenFgaApi:
 
         response_types_map = {}
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_method: "deleteStore",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
             "DELETE",
@@ -482,6 +517,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def expand(self, body, **kwargs):
@@ -625,6 +661,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "expand",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/expand".replace("{store_id}", store_id),
             "POST",
@@ -644,6 +685,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def get_store(self, **kwargs):
@@ -764,6 +806,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "getStore",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
             "GET",
@@ -783,6 +830,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def list_objects(self, body, **kwargs):
@@ -927,6 +975,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "listObjects",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/list-objects".replace("{store_id}", store_id),
             "POST",
@@ -946,6 +999,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def list_stores(self, **kwargs):
@@ -1074,6 +1128,10 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_method: "listStores",
+        }
+
         return self.api_client.call_api(
             "/stores",
             "GET",
@@ -1093,6 +1151,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def list_users(self, body, **kwargs):
@@ -1237,6 +1296,27 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "listUsers",
+        }
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
+
         return self.api_client.call_api(
             "/stores/{store_id}/list-users".replace("{store_id}", store_id),
             "POST",
@@ -1256,6 +1336,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def read(self, body, **kwargs):
@@ -1399,6 +1480,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "read",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/read".replace("{store_id}", store_id),
             "POST",
@@ -1418,6 +1504,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def read_assertions(self, authorization_model_id, **kwargs):
@@ -1555,6 +1642,12 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_model_id: authorization_model_id,
+            TelemetryAttributes.request_method: "readAssertions",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
                 "{store_id}", store_id
@@ -1576,6 +1669,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def read_authorization_model(self, id, **kwargs):
@@ -1711,6 +1805,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "readAuthorizationModel",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models/{id}".replace(
                 "{store_id}", store_id
@@ -1732,6 +1831,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def read_authorization_models(self, **kwargs):
@@ -1866,6 +1966,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "readAuthorizationModels",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
             "GET",
@@ -1885,6 +1990,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def read_changes(self, **kwargs):
@@ -2025,6 +2131,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "readChanges",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/changes".replace("{store_id}", store_id),
             "GET",
@@ -2044,6 +2155,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def write(self, body, **kwargs):
@@ -2187,6 +2299,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "write",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/write".replace("{store_id}", store_id),
             "POST",
@@ -2206,6 +2323,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def write_assertions(self, authorization_model_id, body, **kwargs):
@@ -2361,6 +2479,12 @@ class OpenFgaApi:
 
         response_types_map = {}
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_model_id: authorization_model_id,
+            TelemetryAttributes.request_method: "writeAssertions",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
                 "{store_id}", store_id
@@ -2382,6 +2506,7 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )
 
     def write_authorization_model(self, body, **kwargs):
@@ -2526,6 +2651,11 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_method: "writeAuthorizationModel",
+        }
+
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
             "POST",
@@ -2545,4 +2675,5 @@ class OpenFgaApi:
             collection_formats=collection_formats,
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
         )

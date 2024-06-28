@@ -22,6 +22,8 @@ import urllib3
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
+from openfga_sdk.telemetry.attributes import TelemetryAttributes
+from openfga_sdk.telemetry.telemetry import Telemetry
 
 
 def jitter(loop_count, min_wait_in_ms):
@@ -45,6 +47,7 @@ class OAuth2Client:
         self._credentials = credentials
         self._access_token = None
         self._access_expiry_time = None
+        self._telemetry = Telemetry()
 
         if configuration is None:
             configuration = Configuration.get_default_copy()
@@ -123,6 +126,12 @@ class OAuth2Client:
                         seconds=int(api_response.get("expires_in"))
                     )
                     self._access_token = api_response.get("access_token")
+                    self._telemetry.metrics().credentialsRequest(
+                        1,
+                        {
+                            TelemetryAttributes.request_client_id: configuration.client_id
+                        },
+                    )
                     break
 
             raise AuthenticationError(http_resp=raw_response)

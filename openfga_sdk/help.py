@@ -3,6 +3,8 @@ import platform
 import sys
 from collections import OrderedDict
 
+import opentelemetry.version
+
 from . import __version__ as openfga_sdk_version
 
 try:
@@ -25,6 +27,13 @@ try:
     aiohttp_version = aiohttp.__version__
 except ModuleNotFoundError:
     aiohttp_version = ""
+
+try:
+    import opentelemetry
+
+    opentelemetry_version = opentelemetry.version.__version__
+except ModuleNotFoundError:
+    opentelemetry_version = ""
 
 
 def info() -> dict[str, dict[str, str]]:
@@ -70,6 +79,7 @@ def info() -> dict[str, dict[str, str]]:
                 "urllib3": {"version": urllib3_version},
                 "python-dateutil": {"version": dateutil_version},
                 "aiohttp": {"version": aiohttp_version},
+                "opentelemetry": {"version": opentelemetry_version},
             },
         }
     )
