@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.0
+
+### [0.6.0](https://github.com/openfga/python-sdk/compare/v0.5.0...v0.6.0) (2024-06-28)
+
+- feat: add OpenTelemetry metrics reporting
+
 ## v0.5.0
 
 ### [0.5.0](https://github.com/openfga/python-sdk/compare/v0.4.2...v0.5.0) (2024-06-17)
