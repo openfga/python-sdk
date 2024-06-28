@@ -1312,7 +1312,7 @@ class OpenFgaApi:
         try:
             if body_params.authorization_model_id:
                 telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_.params.authorization_model_id
+                    body_params.authorization_model_id
                 )
         except:
             pass

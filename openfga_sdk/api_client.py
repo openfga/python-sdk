@@ -275,7 +275,7 @@ class ApiClient:
                 )
             except (RateLimitExceededError, ServiceException) as e:
                 if retry < max_retry and e.status != 501:
-                    await asyncio.sleep(random_time(x, min_wait_in_ms))
+                    await asyncio.sleep(random_time(retry, min_wait_in_ms))
 
                     continue
                 e.body = e.body.decode("utf-8")
