@@ -22,7 +22,7 @@ import urllib3
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
-from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
+from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
 
 

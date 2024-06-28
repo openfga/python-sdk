@@ -1,8 +1,6 @@
 import asyncio
 import os
 import sys
-import time
-from math import floor
 from operator import attrgetter
 from random import randint
 from typing import Any
@@ -10,7 +8,6 @@ from typing import Any
 from dotenv import load_dotenv
 from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
@@ -27,8 +24,7 @@ from openfga_sdk import (
     OpenFgaClient,
     ReadRequestTupleKey,
 )
-from openfga_sdk.client.models import ClientCheckRequest, ClientWriteRequest
-from openfga_sdk.client.models.tuple import ClientTuple
+from openfga_sdk.client.models import ClientCheckRequest
 from openfga_sdk.credentials import (
     CredentialConfiguration,
     Credentials,
