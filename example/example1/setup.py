@@ -24,7 +24,7 @@ setup(
     author_email="community@openfga.dev",
     url="https://github.com/openfga/python-sdk",
     install_requires=REQUIRES,
-    python_requires=">=3.11",
+    python_requires=">=3.10",
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,
     license="Apache-2.0",
