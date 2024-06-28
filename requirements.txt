@@ -3,4 +3,3 @@ python-dateutil >= 2.9.0, < 3
 setuptools >= 69.1.1
 urllib3 >= 1.25.11, < 3
 opentelemetry-api >= 1.25.0, < 2
-opentelemetry-semantic-conventions >= 0.46b0, < 1
