@@ -1,6 +1,5 @@
 from typing import NamedTuple
 
-import opentelemetry.semconv.attributes.http_attributes as SEMATTRS_HTTP
 from aiohttp import ClientResponse
 from urllib3 import HTTPResponse
 
@@ -25,35 +24,49 @@ class TelemetryAttributes:
     request_client_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.request.client_id",
     )
+    request_retries: TelemetryAttribute = TelemetryAttribute(
+        name="fga-client.request.retries",
+    )
     response_model_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.response.model_id",
     )
-    user: TelemetryAttribute = TelemetryAttribute(
+    client_user: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.user",
     )
+    http_host: TelemetryAttribute = TelemetryAttribute(
+        name="http.host",
+    )
+    http_method: TelemetryAttribute = TelemetryAttribute(
+        name="http.method",
+    )
+    http_status_code: TelemetryAttribute = TelemetryAttribute(
+        name="http.status_code",
+    )
+
+    def prepare(
+        self, attributes: dict[TelemetryAttribute | str, str | int] | None
+    ) -> dict:
+        response = {}
+
+        if attributes is not None:
+            for attribute, value in attributes.items():
+                if isinstance(attribute, TelemetryAttribute):
+                    response[attribute.name] = value
+                else:
+                    response[attribute] = value
+
+        return dict(sorted(response.items()))
 
     def fromResponse(
         self,
         response: HTTPResponse | RESTResponse | ClientResponse = None,
         credentials: Credentials = None,
     ):
-        attributes: dict[str, str | int] = {}
+        attributes: dict[TelemetryAttribute | str, str | int] = {}
 
         if response:
-            # request = None
-
-            # if isinstance(response, ClientResponse) and response._request_info:
-            #     request = response._request_info
-            # elif isinstance(response, RESTResponse) and response.aiohttp_response:
-            #     request = response.aiohttp_response
-
-            # if request and request.method:
-            #     attributes[SEMATTRS_HTTP.HTTP_REQUEST_METHOD] = str(request.method)
-
             if response.status:
-                attributes[SEMATTRS_HTTP.HTTP_RESPONSE_STATUS_CODE] = int(
-                    response.status
-                )
+                attributes[self.http_status_code] = int(response.status)
 
             response_model_id = response.getheader("openfga-authorization-model-id")
 

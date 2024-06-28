@@ -11,10 +11,10 @@ class TelemetryHistograms:
     duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.request.duration",
         unit="milliseconds",
-        description="The duration of requests",
+        description="How long it took for a request to be fulfilled.",
     )
     query_duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.query.duration",
         unit="milliseconds",
-        description="The duration of queries on the FGA server",
+        description="How long it took to perform a query request.",
     )

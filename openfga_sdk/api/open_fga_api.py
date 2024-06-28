@@ -192,6 +192,22 @@ class OpenFgaApi:
             TelemetryAttributes.request_method: "check",
         }
 
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
+
         return await self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
             "POST",
@@ -1285,6 +1301,22 @@ class OpenFgaApi:
             TelemetryAttributes.request_method: "listUsers",
         }
 
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_.params.authorization_model_id
+                )
+        except:
+            pass
+
         return await self.api_client.call_api(
             "/stores/{store_id}/list-users".replace("{store_id}", store_id),
             "POST",
@@ -1614,6 +1646,7 @@ class OpenFgaApi:
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
             TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_model_id: authorization_model_id,
             TelemetryAttributes.request_method: "readAssertions",
         }
 
@@ -2452,6 +2485,7 @@ class OpenFgaApi:
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
             TelemetryAttributes.request_store_id: store_id,
+            TelemetryAttributes.request_model_id: authorization_model_id,
             TelemetryAttributes.request_method: "writeAssertions",
         }
 

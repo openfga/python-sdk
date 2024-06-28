@@ -163,13 +163,19 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute, str] = None,
+        _telemetry_attributes: dict[TelemetryAttribute | str, str] = None,
     ):
 
         self.configuration.is_valid()
         config = self.configuration
 
-        benchmark: dict[str, int] = {"start": int(time.time())}
+        benchmark: dict[str, float] = {"start": float(time.time())}
+        _telemetry_attributes = _telemetry_attributes or {}
+
+        _telemetry_attributes[TelemetryAttributes().http_host] = urllib.parse.urlparse(
+            config.api_url
+        ).hostname
+        _telemetry_attributes[TelemetryAttributes().http_method] = method
 
         # header parameters
         header_params = header_params or {}
@@ -254,7 +260,7 @@ class ApiClient:
             if _retry_params.min_wait_in_ms is not None:
                 max_retry = _retry_params.min_wait_in_ms
 
-        for x in range(max_retry + 1):
+        for retry in range(max_retry + 1):
             try:
                 # perform request and return response
                 response_data = await self.request(
@@ -268,7 +274,7 @@ class ApiClient:
                     _request_timeout=_request_timeout,
                 )
             except (RateLimitExceededError, ServiceException) as e:
-                if x < max_retry and e.status != 501:
+                if retry < max_retry and e.status != 501:
                     await asyncio.sleep(random_time(x, min_wait_in_ms))
 
                     continue
@@ -294,18 +300,29 @@ class ApiClient:
 
             return_data = response_data
 
-            benchmark["end"] = int(time.time()) - benchmark["start"]
+            benchmark["end"] = float(time.time())
 
-            attributes = TelemetryAttributes().fromResponse(response_data)
+            _telemetry_attributes[TelemetryAttributes().request_retries] = retry
+
+            _telemetry_attributes.update(
+                TelemetryAttributes().fromResponse(response_data)
+            )
+
+            try:
+                _telemetry_attributes[TelemetryAttributes().request_client_id] = (
+                    self.configuration.credentials.configuration.client_id
+                )
+            except AttributeError:
+                pass
+
             duration = response_data.getheader("fga-query-duration-ms")
+            attributes = TelemetryAttributes().prepare(_telemetry_attributes)
 
             if duration is not None:
-                self._telemetry.metrics().histogram(
-                    TelemetryHistograms.query_duration
-                ).record(int(duration, 10), attributes)
+                self._telemetry.metrics().queryDuration(int(duration, 10), attributes)
 
-            self._telemetry.metrics().histogram(TelemetryHistograms.duration).record(
-                benchmark["end"], attributes
+            self._telemetry.metrics().requestDuration().record(
+                float(benchmark["end"] - benchmark["start"]), attributes
             )
 
             if not _preload_content:
