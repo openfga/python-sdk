@@ -90,7 +90,9 @@ class app:
 
         exporters = []
         exporters.append(PeriodicExportingMetricReader(OTLPMetricExporter()))
-        # exporters.append(PeriodicExportingMetricReader(ConsoleMetricExporter()))
+
+        if os.getenv("OTEL_EXPORTER_CONSOLE") == "true":
+            exporters.append(PeriodicExportingMetricReader(ConsoleMetricExporter()))
 
         metrics.set_meter_provider(
             MeterProvider(
