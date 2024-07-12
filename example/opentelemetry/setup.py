@@ -12,7 +12,7 @@
 
 from setuptools import find_packages, setup
 
-NAME = "openfga-sdk"
+NAME = "openfga-opentelemetry-example"
 VERSION = "0.0.1"
 REQUIRES = [""]
 

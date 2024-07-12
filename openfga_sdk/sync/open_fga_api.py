@@ -143,6 +143,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `check`"
@@ -188,9 +190,14 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "check",
+            TelemetryAttributes.request_method: "check"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
 
         try:
             if body_params.tuple_key:
@@ -201,7 +208,11 @@ class OpenFgaApi:
             pass
 
         try:
-            if body_params.authorization_model_id:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
                 telemetry_attributes[TelemetryAttributes.request_model_id] = (
                     body_params.authorization_model_id
                 )
@@ -320,6 +331,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         query_params = []
 
         header_params = dict(local_var_params.get("_headers", {}))
@@ -359,8 +372,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "createStore",
+            TelemetryAttributes.request_method: "create_store"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores",
@@ -470,6 +509,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `delete_store`"
@@ -495,8 +536,34 @@ class OpenFgaApi:
         response_types_map = {}
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "deleteStore",
+            TelemetryAttributes.request_method: "delete_store"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -617,6 +684,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `expand`"
@@ -662,9 +731,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "expand",
+            TelemetryAttributes.request_method: "expand"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/expand".replace("{store_id}", store_id),
@@ -774,6 +868,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `get_store`"
@@ -807,9 +903,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "getStore",
+            TelemetryAttributes.request_method: "get_store"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -931,6 +1052,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `list_objects`"
@@ -976,9 +1099,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "listObjects",
+            TelemetryAttributes.request_method: "list_objects"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/list-objects".replace("{store_id}", store_id),
@@ -1096,6 +1244,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         query_params = []
         if local_var_params.get("page_size") is not None:
             query_params.append(("page_size", local_var_params["page_size"]))
@@ -1129,8 +1279,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "listStores",
+            TelemetryAttributes.request_method: "list_stores"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores",
@@ -1252,6 +1428,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `list_users`"
@@ -1297,9 +1475,14 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "listUsers",
+            TelemetryAttributes.request_method: "list_users"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
 
         try:
             if body_params.tuple_key:
@@ -1310,7 +1493,11 @@ class OpenFgaApi:
             pass
 
         try:
-            if body_params.authorization_model_id:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
                 telemetry_attributes[TelemetryAttributes.request_model_id] = (
                     body_params.authorization_model_id
                 )
@@ -1436,6 +1623,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `read`"
@@ -1481,9 +1670,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "read",
+            TelemetryAttributes.request_method: "read"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/read".replace("{store_id}", store_id),
@@ -1605,6 +1819,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `read_assertions`"
@@ -1643,10 +1859,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_model_id: authorization_model_id,
-            TelemetryAttributes.request_method: "readAssertions",
+            TelemetryAttributes.request_method: "read_assertions"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -1770,6 +2010,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `read_authorization_model`"
@@ -1806,9 +2048,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "readAuthorizationModel",
+            TelemetryAttributes.request_method: "read_authorization_model"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models/{id}".replace(
@@ -1928,6 +2195,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `read_authorization_models`"
@@ -1967,9 +2236,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "readAuthorizationModels",
+            TelemetryAttributes.request_method: "read_authorization_models"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
@@ -2091,6 +2385,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `read_changes`"
@@ -2132,9 +2428,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "readChanges",
+            TelemetryAttributes.request_method: "read_changes"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/changes".replace("{store_id}", store_id),
@@ -2255,6 +2576,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `write`"
@@ -2300,9 +2623,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "write",
+            TelemetryAttributes.request_method: "write"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/write".replace("{store_id}", store_id),
@@ -2438,6 +2786,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `write_assertions`"
@@ -2480,10 +2830,34 @@ class OpenFgaApi:
         response_types_map = {}
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_model_id: authorization_model_id,
-            TelemetryAttributes.request_method: "writeAssertions",
+            TelemetryAttributes.request_method: "write_assertions"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -2607,6 +2981,8 @@ class OpenFgaApi:
 
         path_params = {}
 
+        store_id = None
+
         if self.api_client._get_store_id() is None:
             raise ApiValueError(
                 "Store ID expected in api_client's configuration when calling `write_authorization_model`"
@@ -2652,9 +3028,34 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_store_id: store_id,
-            TelemetryAttributes.request_method: "writeAuthorizationModel",
+            TelemetryAttributes.request_method: "write_authorization_model"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    local_var_params["authorization_model_id"]
+                )
+            elif body_params.authorization_model_id:
+                telemetry_attributes[TelemetryAttributes.request_model_id] = (
+                    body_params.authorization_model_id
+                )
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),

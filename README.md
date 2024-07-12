@@ -205,7 +205,8 @@ from `openfga_sdk.sync` that supports all the credential types and calls,
 without requiring async/await.
 
 ```python
-from openfga_sdk.sync import ClientConfiguration, OpenFgaClient
+from openfga_sdk.client import ClientConfiguration
+from openfga_sdk.sync import OpenFgaClient
 
 
 def main():
@@ -1143,8 +1144,6 @@ Class | Method | HTTP request | Description
 ### OpenTelemetry
 
 This SDK supports producing metrics that can be consumed as part of an [OpenTelemetry](https://opentelemetry.io/) setup. For more information, please see [the documentation](https://github.com/openfga/python-sdk/blob/main/docs/opentelemetry.md)
-
-
 
 ## Contributing
 
