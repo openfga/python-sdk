@@ -13,7 +13,7 @@
 import pathlib
 
 import pkg_resources
-import setuptools
+from setuptools import find_packages, setup
 
 NAME = "openfga-sdk"
 VERSION = "0.6.0"
@@ -29,7 +29,7 @@ with pathlib.Path("requirements.txt").open() as requirements_txt:
 this_directory = pathlib.Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-setuptools.setup(
+setup(
     name=NAME,
     version=VERSION,
     description="A high performance and flexible authorization/permission engine built for developers and inspired by Google Zanzibar.",
@@ -54,7 +54,7 @@ setuptools.setup(
     ],
     install_requires=REQUIRES,
     python_requires=">=3.10",
-    packages=setuptools.find_packages(exclude=["test", "tests"]),
+    packages=find_packages(exclude=["test"]),
     include_package_data=True,
     license="Apache-2.0",
     long_description_content_type="text/markdown",

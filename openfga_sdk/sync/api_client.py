@@ -92,16 +92,20 @@ class ApiClient:
     ):
         if configuration is None:
             configuration = Configuration.get_default_copy()
+
         self.configuration = configuration
         self.pool_threads = pool_threads
 
         self.rest_client = rest.RESTClientObject(configuration)
+
         self.default_headers = {}
         if header_name is not None:
             self.default_headers[header_name] = header_value
+
         self.cookie = cookie
-        # Set default User-Agent.
+
         self.user_agent = DEFAULT_USER_AGENT
+
         self.client_side_validation = configuration.client_side_validation
         self._telemetry = Telemetry()
 
