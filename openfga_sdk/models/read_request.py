@@ -37,12 +37,14 @@ class ReadRequest:
         "tuple_key": "ReadRequestTupleKey",
         "page_size": "int",
         "continuation_token": "str",
+        "consistency": "ConsistencyPreference",
     }
 
     attribute_map = {
         "tuple_key": "tuple_key",
         "page_size": "page_size",
         "continuation_token": "continuation_token",
+        "consistency": "consistency",
     }
 
     def __init__(
@@ -50,6 +52,7 @@ class ReadRequest:
         tuple_key=None,
         page_size=None,
         continuation_token=None,
+        consistency=None,
         local_vars_configuration=None,
     ):
         """ReadRequest - a model defined in OpenAPI"""
@@ -60,6 +63,7 @@ class ReadRequest:
         self._tuple_key = None
         self._page_size = None
         self._continuation_token = None
+        self._consistency = None
         self.discriminator = None
 
         if tuple_key is not None:
@@ -68,6 +72,8 @@ class ReadRequest:
             self.page_size = page_size
         if continuation_token is not None:
             self.continuation_token = continuation_token
+        if consistency is not None:
+            self.consistency = consistency
 
     @property
     def tuple_key(self):
@@ -131,6 +137,27 @@ class ReadRequest:
         """
 
         self._continuation_token = continuation_token
+
+    @property
+    def consistency(self):
+        """Gets the consistency of this ReadRequest.
+
+
+        :return: The consistency of this ReadRequest.
+        :rtype: ConsistencyPreference
+        """
+        return self._consistency
+
+    @consistency.setter
+    def consistency(self, consistency):
+        """Sets the consistency of this ReadRequest.
+
+
+        :param consistency: The consistency of this ReadRequest.
+        :type consistency: ConsistencyPreference
+        """
+
+        self._consistency = consistency
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

@@ -36,6 +36,7 @@ from openfga_sdk.exceptions import (
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.authorization_model import AuthorizationModel
 from openfga_sdk.models.check_response import CheckResponse
+from openfga_sdk.models.consistency_preference import ConsistencyPreference
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.create_store_response import CreateStoreResponse
 from openfga_sdk.models.expand_response import ExpandResponse
@@ -711,6 +712,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "page_size": 50,
                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
                 },
             )
             self.assertIsInstance(api_response, ReadResponse)
@@ -738,6 +740,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "page_size": 50,
                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -1802,7 +1805,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         with OpenFgaClient(configuration) as api_client:
             api_response = api_client.check(
                 body=body,
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                },
             )
             self.assertIsInstance(api_response, CheckResponse)
             self.assertTrue(api_response.allowed)
@@ -1829,6 +1835,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         ]
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -1899,7 +1906,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         with OpenFgaClient(configuration) as api_client:
             api_response = api_client.batch_check(
                 body=[body],
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                },
             )
             self.assertIsInstance(api_response, list)
             self.assertEqual(len(api_response), 1)
@@ -1920,6 +1930,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -2160,7 +2171,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             api_response = api_client.expand(
                 body=body,
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                },
             )
             self.assertIsInstance(api_response, ExpandResponse)
             cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
@@ -2178,6 +2192,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body={
                     "tuple_key": {"object": "document:budget", "relation": "reader"},
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -2208,7 +2223,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             # Get all stores
             api_response = api_client.list_objects(
-                body, options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+                body,
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                },
             )
             self.assertIsInstance(api_response, ListObjectsResponse)
             self.assertEqual(api_response.objects, ["document:abcd1234"])
@@ -2223,6 +2242,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "type": "document",
                     "relation": "reader",
                     "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -2312,7 +2332,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     relations=["reader", "owner", "viewer"],
                     object="document:2021-budget",
                 ),
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                },
             )
             self.assertEqual(api_response, ["reader", "viewer"])
 
@@ -2330,6 +2353,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -2347,6 +2371,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -2364,6 +2389,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
@@ -2452,7 +2478,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             ]
 
             response = api_client.list_users(
-                body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+                body,
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                },
             )
 
             self.assertIsInstance(response, ListUsersResponse)
@@ -2508,6 +2538,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         ]
                     },
                     "context": {},
+                    "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,

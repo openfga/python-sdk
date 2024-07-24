@@ -40,6 +40,7 @@ class ListObjectsRequest:
         "user": "str",
         "contextual_tuples": "ContextualTupleKeys",
         "context": "object",
+        "consistency": "ConsistencyPreference",
     }
 
     attribute_map = {
@@ -49,6 +50,7 @@ class ListObjectsRequest:
         "user": "user",
         "contextual_tuples": "contextual_tuples",
         "context": "context",
+        "consistency": "consistency",
     }
 
     def __init__(
@@ -59,6 +61,7 @@ class ListObjectsRequest:
         user=None,
         contextual_tuples=None,
         context=None,
+        consistency=None,
         local_vars_configuration=None,
     ):
         """ListObjectsRequest - a model defined in OpenAPI"""
@@ -72,6 +75,7 @@ class ListObjectsRequest:
         self._user = None
         self._contextual_tuples = None
         self._context = None
+        self._consistency = None
         self.discriminator = None
 
         if authorization_model_id is not None:
@@ -83,6 +87,8 @@ class ListObjectsRequest:
             self.contextual_tuples = contextual_tuples
         if context is not None:
             self.context = context
+        if consistency is not None:
+            self.consistency = consistency
 
     @property
     def authorization_model_id(self):
@@ -233,6 +239,27 @@ class ListObjectsRequest:
         """
 
         self._context = context
+
+    @property
+    def consistency(self):
+        """Gets the consistency of this ListObjectsRequest.
+
+
+        :return: The consistency of this ListObjectsRequest.
+        :rtype: ConsistencyPreference
+        """
+        return self._consistency
+
+    @consistency.setter
+    def consistency(self, consistency):
+        """Sets the consistency of this ListObjectsRequest.
+
+
+        :param consistency: The consistency of this ListObjectsRequest.
+        :type consistency: ConsistencyPreference
+        """
+
+        self._consistency = consistency
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

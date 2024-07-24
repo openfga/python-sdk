@@ -39,6 +39,7 @@ class CheckRequest:
         "authorization_model_id": "str",
         "trace": "bool",
         "context": "object",
+        "consistency": "ConsistencyPreference",
     }
 
     attribute_map = {
@@ -47,6 +48,7 @@ class CheckRequest:
         "authorization_model_id": "authorization_model_id",
         "trace": "trace",
         "context": "context",
+        "consistency": "consistency",
     }
 
     def __init__(
@@ -56,6 +58,7 @@ class CheckRequest:
         authorization_model_id=None,
         trace=None,
         context=None,
+        consistency=None,
         local_vars_configuration=None,
     ):
         """CheckRequest - a model defined in OpenAPI"""
@@ -68,6 +71,7 @@ class CheckRequest:
         self._authorization_model_id = None
         self._trace = None
         self._context = None
+        self._consistency = None
         self.discriminator = None
 
         self.tuple_key = tuple_key
@@ -79,6 +83,8 @@ class CheckRequest:
             self.trace = trace
         if context is not None:
             self.context = context
+        if consistency is not None:
+            self.consistency = consistency
 
     @property
     def tuple_key(self):
@@ -190,6 +196,27 @@ class CheckRequest:
         """
 
         self._context = context
+
+    @property
+    def consistency(self):
+        """Gets the consistency of this CheckRequest.
+
+
+        :return: The consistency of this CheckRequest.
+        :rtype: ConsistencyPreference
+        """
+        return self._consistency
+
+    @consistency.setter
+    def consistency(self, consistency):
+        """Sets the consistency of this CheckRequest.
+
+
+        :param consistency: The consistency of this CheckRequest.
+        :type consistency: ConsistencyPreference
+        """
+
+        self._consistency = consistency
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

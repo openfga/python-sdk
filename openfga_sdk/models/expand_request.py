@@ -36,15 +36,21 @@ class ExpandRequest:
     openapi_types = {
         "tuple_key": "ExpandRequestTupleKey",
         "authorization_model_id": "str",
+        "consistency": "ConsistencyPreference",
     }
 
     attribute_map = {
         "tuple_key": "tuple_key",
         "authorization_model_id": "authorization_model_id",
+        "consistency": "consistency",
     }
 
     def __init__(
-        self, tuple_key=None, authorization_model_id=None, local_vars_configuration=None
+        self,
+        tuple_key=None,
+        authorization_model_id=None,
+        consistency=None,
+        local_vars_configuration=None,
     ):
         """ExpandRequest - a model defined in OpenAPI"""
         if local_vars_configuration is None:
@@ -53,11 +59,14 @@ class ExpandRequest:
 
         self._tuple_key = None
         self._authorization_model_id = None
+        self._consistency = None
         self.discriminator = None
 
         self.tuple_key = tuple_key
         if authorization_model_id is not None:
             self.authorization_model_id = authorization_model_id
+        if consistency is not None:
+            self.consistency = consistency
 
     @property
     def tuple_key(self):
@@ -102,6 +111,27 @@ class ExpandRequest:
         """
 
         self._authorization_model_id = authorization_model_id
+
+    @property
+    def consistency(self):
+        """Gets the consistency of this ExpandRequest.
+
+
+        :return: The consistency of this ExpandRequest.
+        :rtype: ConsistencyPreference
+        """
+        return self._consistency
+
+    @consistency.setter
+    def consistency(self, consistency):
+        """Sets the consistency of this ExpandRequest.
+
+
+        :param consistency: The consistency of this ExpandRequest.
+        :type consistency: ConsistencyPreference
+        """
+
+        self._consistency = consistency
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

@@ -27,6 +27,7 @@ docs/Computed.md
 docs/Condition.md
 docs/ConditionMetadata.md
 docs/ConditionParamTypeRef.md
+docs/ConsistencyPreference.md
 docs/ContextualTupleKeys.md
 docs/CreateStoreRequest.md
 docs/CreateStoreResponse.md
@@ -147,6 +148,7 @@ openfga_sdk/models/computed.py
 openfga_sdk/models/condition.py
 openfga_sdk/models/condition_metadata.py
 openfga_sdk/models/condition_param_type_ref.py
+openfga_sdk/models/consistency_preference.py
 openfga_sdk/models/contextual_tuple_keys.py
 openfga_sdk/models/create_store_request.py
 openfga_sdk/models/create_store_response.py
