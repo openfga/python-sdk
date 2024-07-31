@@ -22,6 +22,7 @@ from openfga_sdk.models.computed import Computed
 from openfga_sdk.models.condition import Condition
 from openfga_sdk.models.condition_metadata import ConditionMetadata
 from openfga_sdk.models.condition_param_type_ref import ConditionParamTypeRef
+from openfga_sdk.models.consistency_preference import ConsistencyPreference
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.create_store_response import CreateStoreResponse

@@ -158,6 +158,15 @@ class OpenFgaClient:
             )
         return authorization_model_id
 
+    def _get_consistency(self, options: object) -> str | None:
+        """
+        Returns the consistency requested if specified in the options.
+        Otherwise, returns None.
+        """
+        if options is not None and "consistency" in options:
+            return options["consistency"]
+        return None
+
     def set_store_id(self, value):
         """
         Update the store ID in the configuration
@@ -360,6 +369,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Read")
         page_size = None
@@ -385,6 +395,7 @@ class OpenFgaClient:
                 tuple_key=tuple_key,
                 page_size=page_size,
                 continuation_token=continuation_token,
+                consistency=self._get_consistency(options),
             ),
             **kwargs,
         )
@@ -541,6 +552,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Check")
 
@@ -554,6 +566,7 @@ class OpenFgaClient:
             ),
             context=body.context,
             authorization_model_id=self._get_authorization_model_id(options),
+            consistency=self._get_consistency(options),
         )
         if body.contextual_tuples:
             req_body.contextual_tuples = ContextualTupleKeys(
@@ -597,6 +610,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
         options = set_heading_if_not_set(
@@ -627,6 +641,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "Expand")
         kwargs = options_to_kwargs(options)
@@ -637,6 +652,7 @@ class OpenFgaClient:
                 object=body.object,
             ),
             authorization_model_id=self._get_authorization_model_id(options),
+            consistency=self._get_consistency(options),
         )
         api_response = self._api.expand(body=req_body, **kwargs)
         return api_response
@@ -652,6 +668,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListObjects")
         kwargs = options_to_kwargs(options)
@@ -662,6 +679,7 @@ class OpenFgaClient:
             relation=body.relation,
             type=body.type,
             context=body.context,
+            consistency=self._get_consistency(options),
         )
         if body.contextual_tuples:
             req_body.contextual_tuples = ContextualTupleKeys(
@@ -681,6 +699,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListRelations")
         options = set_heading_if_not_set(
@@ -712,6 +731,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListUsers")
         kwargs = options_to_kwargs(options)
@@ -723,6 +743,7 @@ class OpenFgaClient:
             user_filters=body.user_filters,
             contextual_tuples=body.contextual_tuples,
             context=body.context,
+            consistency=self._get_consistency(options),
         )
 
         if body.contextual_tuples:

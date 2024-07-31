@@ -40,6 +40,7 @@ class ListUsersRequest:
         "user_filters": "list[UserTypeFilter]",
         "contextual_tuples": "list[TupleKey]",
         "context": "object",
+        "consistency": "ConsistencyPreference",
     }
 
     attribute_map = {
@@ -49,6 +50,7 @@ class ListUsersRequest:
         "user_filters": "user_filters",
         "contextual_tuples": "contextual_tuples",
         "context": "context",
+        "consistency": "consistency",
     }
 
     def __init__(
@@ -59,6 +61,7 @@ class ListUsersRequest:
         user_filters=None,
         contextual_tuples=None,
         context=None,
+        consistency=None,
         local_vars_configuration=None,
     ):
         """ListUsersRequest - a model defined in OpenAPI"""
@@ -72,6 +75,7 @@ class ListUsersRequest:
         self._user_filters = None
         self._contextual_tuples = None
         self._context = None
+        self._consistency = None
         self.discriminator = None
 
         if authorization_model_id is not None:
@@ -83,6 +87,8 @@ class ListUsersRequest:
             self.contextual_tuples = contextual_tuples
         if context is not None:
             self.context = context
+        if consistency is not None:
+            self.consistency = consistency
 
     @property
     def authorization_model_id(self):
@@ -222,6 +228,27 @@ class ListUsersRequest:
         """
 
         self._context = context
+
+    @property
+    def consistency(self):
+        """Gets the consistency of this ListUsersRequest.
+
+
+        :return: The consistency of this ListUsersRequest.
+        :rtype: ConsistencyPreference
+        """
+        return self._consistency
+
+    @consistency.setter
+    def consistency(self, consistency):
+        """Sets the consistency of this ListUsersRequest.
+
+
+        :param consistency: The consistency of this ListUsersRequest.
+        :type consistency: ConsistencyPreference
+        """
+
+        self._consistency = consistency
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

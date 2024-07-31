@@ -1044,7 +1044,7 @@ Class | Method | HTTP request | Description
 *OpenFgaApi* | [**get_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#get_store) | **GET** /stores/{store_id} | Get a store
 *OpenFgaApi* | [**list_objects**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_objects) | **POST** /stores/{store_id}/list-objects | List all objects of the given type that the user has a relation with
 *OpenFgaApi* | [**list_stores**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_stores) | **GET** /stores | List all stores
-*OpenFgaApi* | [**list_users**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_users) | **POST** /stores/{store_id}/list-users | [EXPERIMENTAL] List the users matching the provided filter who have a certain relation to a particular type.
+*OpenFgaApi* | [**list_users**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#list_users) | **POST** /stores/{store_id}/list-users | List the users matching the provided filter who have a certain relation to a particular type.
 *OpenFgaApi* | [**read**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read) | **POST** /stores/{store_id}/read | Get tuples from the store that matches a query, without following userset rewrite rules
 *OpenFgaApi* | [**read_assertions**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_assertions) | **GET** /stores/{store_id}/assertions/{authorization_model_id} | Read assertions for an authorization model ID
 *OpenFgaApi* | [**read_authorization_model**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#read_authorization_model) | **GET** /stores/{store_id}/authorization-models/{id} | Return a particular version of an authorization model
@@ -1072,6 +1072,7 @@ Class | Method | HTTP request | Description
  - [Condition](https://github.com/openfga/python-sdk/blob/main/docs/Condition.md)
  - [ConditionMetadata](https://github.com/openfga/python-sdk/blob/main/docs/ConditionMetadata.md)
  - [ConditionParamTypeRef](https://github.com/openfga/python-sdk/blob/main/docs/ConditionParamTypeRef.md)
+ - [ConsistencyPreference](https://github.com/openfga/python-sdk/blob/main/docs/ConsistencyPreference.md)
  - [ContextualTupleKeys](https://github.com/openfga/python-sdk/blob/main/docs/ContextualTupleKeys.md)
  - [CreateStoreRequest](https://github.com/openfga/python-sdk/blob/main/docs/CreateStoreRequest.md)
  - [CreateStoreResponse](https://github.com/openfga/python-sdk/blob/main/docs/CreateStoreResponse.md)
