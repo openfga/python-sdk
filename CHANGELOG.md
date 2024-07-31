@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.1
+
+### [0.6.1](https://github.com/openfga/python-sdk/compare/v0.6.0...v0.6.1) (2024-07-31)
+- feat: add support for specifying consistency when evaluating or reading (#129)
+  Note: To use this feature, you need to be running OpenFGA v1.5.7+ with the experimental flag
+  `enable-consistency-params` enabled. See the [v1.5.7 release notes](https://github.com/openfga/openfga/releases/tag/v1.5.7) for details.
+
+- feat: add OpenTelemetry metrics reporting
+
 ## v0.6.0
 
 ### [0.6.0](https://github.com/openfga/python-sdk/compare/v0.5.0...v0.6.0) (2024-06-28)

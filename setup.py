@@ -16,7 +16,7 @@ import pkg_resources
 from setuptools import find_packages, setup
 
 NAME = "openfga-sdk"
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 REQUIRES = []
 
 
