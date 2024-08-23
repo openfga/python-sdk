@@ -311,9 +311,10 @@ class ApiClient:
             )
 
             try:
-                _telemetry_attributes[TelemetryAttributes().request_client_id] = (
-                    self.configuration.credentials.configuration.client_id
-                )
+                if self.configuration.credentials.configuration.client_id is not None:
+                    _telemetry_attributes[TelemetryAttributes().request_client_id] = (
+                        self.configuration.credentials.configuration.client_id
+                    )
             except AttributeError:
                 pass
 
