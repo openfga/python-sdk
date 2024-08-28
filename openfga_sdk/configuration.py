@@ -19,6 +19,7 @@ import urllib
 import urllib3
 
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
+from openfga_sdk.telemetry.configuration import TelemetryConfiguration
 from openfga_sdk.validation import is_well_formed_ulid_string
 
 JSON_SCHEMA_VALIDATION_KEYWORDS = {
@@ -183,6 +184,7 @@ class Configuration:
         server_operation_variables=None,
         ssl_ca_cert=None,
         api_url=None,  # TODO: restructure when removing api_scheme/api_host
+        telemetry: TelemetryConfiguration | None = None,
     ):
         """Constructor"""
         self._url = api_url
@@ -291,6 +293,13 @@ class Configuration:
 
         self.socket_options = None
         """Options to pass down to the underlying urllib3 socket
+        """
+
+        if telemetry is None:
+            telemetry = TelemetryConfiguration()
+
+        self.telemetry = telemetry
+        """Telemetry configuration
         """
 
     def __deepcopy__(self, memo):
