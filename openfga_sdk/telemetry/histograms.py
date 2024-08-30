@@ -8,7 +8,7 @@ class TelemetryHistogram(NamedTuple):
 
 
 class TelemetryHistograms:
-    duration: TelemetryHistogram = TelemetryHistogram(
+    request_duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.request.duration",
         unit="milliseconds",
         description="How long it took for a request to be fulfilled.",

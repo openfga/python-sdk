@@ -190,18 +190,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "check"
+            TelemetryAttributes.fga_client_request_method: "check"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -209,13 +211,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -372,18 +374,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "create_store"
+            TelemetryAttributes.fga_client_request_method: "create_store"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -391,13 +395,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -536,18 +540,20 @@ class OpenFgaApi:
         response_types_map = {}
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "delete_store"
+            TelemetryAttributes.fga_client_request_method: "delete_store"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -555,13 +561,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -731,18 +737,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "expand"
+            TelemetryAttributes.fga_client_request_method: "expand"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -750,13 +758,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -903,18 +911,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "get_store"
+            TelemetryAttributes.fga_client_request_method: "get_store"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -922,13 +932,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -1099,18 +1109,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "list_objects"
+            TelemetryAttributes.fga_client_request_method: "list_objects"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -1118,13 +1130,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -1279,18 +1291,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "list_stores"
+            TelemetryAttributes.fga_client_request_method: "list_stores"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -1298,13 +1312,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -1475,18 +1489,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "list_users"
+            TelemetryAttributes.fga_client_request_method: "list_users"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -1494,13 +1510,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -1670,18 +1686,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "read"
+            TelemetryAttributes.fga_client_request_method: "read"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -1689,13 +1707,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -1859,18 +1877,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "read_assertions"
+            TelemetryAttributes.fga_client_request_method: "read_assertions"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -1878,13 +1898,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -2048,18 +2068,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "read_authorization_model"
+            TelemetryAttributes.fga_client_request_method: "read_authorization_model"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -2067,13 +2089,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -2236,18 +2258,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "read_authorization_models"
+            TelemetryAttributes.fga_client_request_method: "read_authorization_models"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -2255,13 +2279,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -2428,18 +2452,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "read_changes"
+            TelemetryAttributes.fga_client_request_method: "read_changes"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -2447,13 +2473,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -2623,18 +2649,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "write"
+            TelemetryAttributes.fga_client_request_method: "write"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -2642,13 +2670,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -2830,18 +2858,20 @@ class OpenFgaApi:
         response_types_map = {}
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "write_assertions"
+            TelemetryAttributes.fga_client_request_method: "write_assertions"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -2849,13 +2879,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 
@@ -3028,18 +3058,20 @@ class OpenFgaApi:
         }
 
         telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.request_method: "write_authorization_model"
+            TelemetryAttributes.fga_client_request_method: "write_authorization_model"
         }
 
         try:
             if store_id:
-                telemetry_attributes[TelemetryAttributes.request_store_id] = store_id
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
         except:
             pass
 
         try:
             if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.client_user] = (
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
                     body_params.tuple_key.user
                 )
         except:
@@ -3047,13 +3079,13 @@ class OpenFgaApi:
 
         try:
             if "authorization_model_id" in local_var_params:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    local_var_params["authorization_model_id"]
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
             elif body_params.authorization_model_id:
-                telemetry_attributes[TelemetryAttributes.request_model_id] = (
-                    body_params.authorization_model_id
-                )
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
         except:
             pass
 

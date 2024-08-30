@@ -171,14 +171,7 @@ class ApiClient:
 
         self.configuration.is_valid()
         config = self.configuration
-
-        benchmark: dict[str, float] = {"start": float(time.time())}
-        _telemetry_attributes = _telemetry_attributes or {}
-
-        _telemetry_attributes[TelemetryAttributes().http_host] = urllib.parse.urlparse(
-            config.api_url
-        ).hostname
-        _telemetry_attributes[TelemetryAttributes().http_method] = method
+        start = float(time.time())
 
         # header parameters
         header_params = header_params or {}
@@ -302,30 +295,31 @@ class ApiClient:
 
             return_data = response_data
 
-            benchmark["end"] = float(time.time())
-
-            _telemetry_attributes[TelemetryAttributes().request_retries] = retry
-
-            _telemetry_attributes.update(
-                TelemetryAttributes().fromResponse(response_data)
+            _telemetry_attributes = TelemetryAttributes().fromRequest(
+                user_agent=self.user_agent,
+                fga_method=resource_path,
+                http_method=method,
+                url=url,
+                resend_count=retry,
+                start=start,
+                credentials=self.configuration.credentials,
+                attributes=_telemetry_attributes,
             )
 
-            try:
-                if self.configuration.credentials.configuration.client_id is not None:
-                    _telemetry_attributes[TelemetryAttributes().request_client_id] = (
-                        self.configuration.credentials.configuration.client_id
-                    )
-            except AttributeError:
-                pass
+            _telemetry_attributes = TelemetryAttributes().fromResponse(
+                response=response_data,
+                credentials=self.configuration.credentials,
+                attributes=_telemetry_attributes,
+            )
 
-            duration = response_data.getheader("fga-query-duration-ms")
-            attributes = TelemetryAttributes().prepare(_telemetry_attributes)
+            self._telemetry.metrics().queryDuration(
+                attributes=_telemetry_attributes,
+                configuration=self.configuration.telemetry,
+            )
 
-            if duration is not None:
-                self._telemetry.metrics().queryDuration(int(duration, 10), attributes)
-
-            self._telemetry.metrics().requestDuration().record(
-                float(benchmark["end"] - benchmark["start"]), attributes
+            self._telemetry.metrics().requestDuration(
+                attributes=_telemetry_attributes,
+                configuration=self.configuration.telemetry,
             )
 
             if not _preload_content:

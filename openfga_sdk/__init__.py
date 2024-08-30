@@ -122,3 +122,8 @@ from openfga_sdk.models.write_authorization_model_response import (
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.write_request_writes import WriteRequestWrites
+from openfga_sdk.telemetry.configuration import (
+    TelemetryConfiguration,
+    TelemetryMetricConfiguration,
+    TelemetryMetricsConfiguration,
+)

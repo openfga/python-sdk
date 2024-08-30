@@ -129,7 +129,7 @@ class OAuth2Client:
                     self._telemetry.metrics().credentialsRequest(
                         1,
                         {
-                            TelemetryAttributes.request_client_id: configuration.client_id
+                            TelemetryAttributes.fga_client_request_client_id: configuration.client_id
                         },
                     )
                     break
