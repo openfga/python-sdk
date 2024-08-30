@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.0
+
+### [0.7.0](https://github.com/openfga/python-sdk/compare/v0.6.1...v0.7.0) (2024-08-30)
+
+- feat: enhancements to OpenTelemetry support (#120)
+  
+Note this introduces some breaking changes to our metrics:
+1. `fga-client.request.method` is now in TitleCase to match the naming conventions in the Protos, e.g. `Check`, `ListObjects`, etc..
+2. Due to possible high costs for attributes with high cardinality, we are no longer including the following attributes by default:
+  * `fga-client.user`
+  * `http.client.request.duration`
+  * `http.server.request.duration`
+  We added configuration options to allow you to set which specific metrics and attributes you care about in case the defaults don't work for your use-case
+
 ## v0.6.1
 
 ### [0.6.1](https://github.com/openfga/python-sdk/compare/v0.6.0...v0.6.1) (2024-07-31)
