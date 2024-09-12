@@ -122,11 +122,27 @@ class MetricsTelemetry:
             configuration = TelemetryConfiguration()
 
         if (
-            isinstance(configuration, TelemetryMetricsConfiguration) is False
+            isinstance(configuration, TelemetryConfiguration) is False
             or configuration.metrics.histogram_request_duration.enabled is False
             or configuration.metrics.histogram_request_duration.attributes() == {}
         ):
             return self.histogram(TelemetryHistograms.request_duration)
+
+        if (
+            value is None
+            and TelemetryAttributes.http_client_request_duration.name in attributes
+        ):
+            value = attributes[TelemetryAttributes.http_client_request_duration.name]
+            attributes.pop(TelemetryAttributes.http_client_request_duration.name, None)
+
+        if value is not None:
+            try:
+                value = int(value)
+                attributes[TelemetryAttributes.http_client_request_duration.name] = (
+                    value
+                )
+            except ValueError:
+                value = None
 
         attributes = TelemetryAttributes().prepare(
             attributes,
@@ -138,6 +154,9 @@ class MetricsTelemetry:
             and TelemetryAttributes.http_client_request_duration.name in attributes
         ):
             value = attributes[TelemetryAttributes.http_client_request_duration.name]
+
+        if value is None:
+            return self.histogram(TelemetryHistograms.request_duration)
 
         return self.histogram(TelemetryHistograms.request_duration, value, attributes)
 
@@ -151,21 +170,34 @@ class MetricsTelemetry:
             configuration = TelemetryConfiguration()
 
         if (
-            isinstance(configuration, TelemetryMetricsConfiguration) is False
+            isinstance(configuration, TelemetryConfiguration) is False
             or configuration.metrics.histogram_query_duration.enabled is False
             or configuration.metrics.histogram_query_duration.attributes() == {}
         ):
             return self.histogram(TelemetryHistograms.query_duration)
-
-        attributes = TelemetryAttributes().prepare(
-            attributes,
-            filter=configuration.metrics.histogram_query_duration.attributes(),
-        )
 
         if (
             value is None
             and TelemetryAttributes.http_server_request_duration.name in attributes
         ):
             value = attributes[TelemetryAttributes.http_server_request_duration.name]
+            attributes.pop(TelemetryAttributes.http_server_request_duration.name, None)
+
+        if value is not None:
+            try:
+                value = int(value)
+                attributes[TelemetryAttributes.http_server_request_duration.name] = (
+                    value
+                )
+            except ValueError:
+                value = None
+
+        attributes = TelemetryAttributes().prepare(
+            attributes,
+            filter=configuration.metrics.histogram_query_duration.attributes(),
+        )
+
+        if value is None:
+            return self.histogram(TelemetryHistograms.query_duration)
 
         return self.histogram(TelemetryHistograms.query_duration, value, attributes)

@@ -11,53 +11,69 @@ from openfga_sdk.rest import RESTResponse
 
 class TelemetryAttribute(NamedTuple):
     name: str
+    format: str = None
 
 
 class TelemetryAttributes:
     fga_client_request_client_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.request.client_id",
+        format="string",
     )
     fga_client_request_method: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.request.method",
+        format="string",
     )
     fga_client_request_model_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.request.model_id",
+        format="string",
     )
     fga_client_request_store_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.request.store_id",
+        format="string",
     )
     fga_client_response_model_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.response.model_id",
+        format="string",
     )
     fga_client_user: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.user",
+        format="string",
     )
     http_client_request_duration: TelemetryAttribute = TelemetryAttribute(
         name="http.client.request.duration",
+        format="int",
     )
     http_host: TelemetryAttribute = TelemetryAttribute(
         name="http.host",
+        format="string",
     )
     http_request_method: TelemetryAttribute = TelemetryAttribute(
         name="http.request.method",
+        format="string",
     )
     http_request_resend_count: TelemetryAttribute = TelemetryAttribute(
         name="http.request.resend_count",
+        format="int",
     )
     http_response_status_code: TelemetryAttribute = TelemetryAttribute(
         name="http.response.status_code",
+        format="int",
     )
     http_server_request_duration: TelemetryAttribute = TelemetryAttribute(
         name="http.server.request.duration",
+        format="int",
     )
     url_scheme: TelemetryAttribute = TelemetryAttribute(
         name="url.scheme",
+        format="string",
     )
     url_full: TelemetryAttribute = TelemetryAttribute(
         name="url.full",
+        format="string",
     )
     user_agent_original: TelemetryAttribute = TelemetryAttribute(
         name="user_agent.original",
+        format="string",
     )
 
     def prepare(
@@ -67,23 +83,58 @@ class TelemetryAttributes:
     ) -> dict[str, str | int]:
         response = {}
 
+        if filter is None or filter == []:
+            return response
+
         if attributes is not None:
             for attribute, value in attributes.items():
-                if isinstance(attribute, TelemetryAttribute):
-                    if filter is not None and attribute not in filter:
-                        continue
-
-                    response[attribute.name] = value
+                if value is None:
                     continue
 
-                if attribute in self.__dict__:
-                    if filter is not None and self.__dict__[attribute] not in filter:
-                        continue
+                if isinstance(attribute, str):
+                    attributeTranslated = (
+                        attribute.lower().replace("-", "_").replace(".", "_")
+                    )
+                    attributeInstance = getattr(self, attributeTranslated, None)
 
-                    response[self.__dict__[attribute].name] = value
+                    if attributeInstance is None:
+                        raise ValueError("Invalid attribute specified: %s" % attribute)
+
+                    attribute = attributeInstance
+
+                if not isinstance(attribute, TelemetryAttribute):
+                    raise ValueError(
+                        "Invalid attribute specified: %s" % type(attribute)
+                    )
+
+                if (
+                    filter is not None
+                    and attribute.name not in filter
+                    and attribute not in filter
+                ):
                     continue
 
-        return dict(sorted(response.items()))
+                if attribute.format == "string":
+                    if not isinstance(value, str):
+                        try:
+                            value = str(value)
+                        except ValueError:
+                            continue
+
+                    if value == "":
+                        continue
+
+                if attribute.format == "int":
+                    if not isinstance(value, int):
+                        try:
+                            value = int(value)
+                        except ValueError:
+                            continue
+
+                response[attribute.name] = value
+                continue
+
+        return response
 
     def fromRequest(
         self,
@@ -114,8 +165,8 @@ class TelemetryAttributes:
             attributes[self.url_full.name] = url
 
         if start is not None and start > 0:
-            attributes[self.http_client_request_duration.name] = float(
-                time.time() - start
+            attributes[self.http_client_request_duration.name] = int(
+                (time.time() - start) * 1000
             )
 
         if resend_count is not None:
