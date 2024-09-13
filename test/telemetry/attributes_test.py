@@ -40,6 +40,16 @@ def test_prepare_with_none_attributes(telemetry_attributes):
     assert prepared == {}
 
 
+def test_prepare_with_invalid_attributes(telemetry_attributes):
+    attributes = {
+        "invalid_attribute": "value",
+    }
+    filters = [telemetry_attributes.fga_client_request_client_id]
+
+    with pytest.raises(ValueError):
+        telemetry_attributes.prepare(attributes, filter=filters)
+
+
 def test_from_request_with_all_params(telemetry_attributes):
     credentials = Credentials(
         method="client_credentials",

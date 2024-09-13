@@ -311,12 +311,12 @@ class ApiClient:
 
             self._telemetry.metrics().queryDuration(
                 attributes=_telemetry_attributes,
-                configuration=self.configuration,
+                configuration=self.configuration.telemetry,
             )
 
             self._telemetry.metrics().requestDuration(
                 attributes=_telemetry_attributes,
-                configuration=self.configuration,
+                configuration=self.configuration.telemetry,
             )
 
             if not _preload_content:
