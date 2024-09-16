@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.1
+
+### [0.7.1](https://github.com/openfga/python-sdk/compare/v0.7.0...v0.7.1) (2024-09-16)
+
+This release includes fixes for several bugs identified in the previous release related to OpenTelemetry metrics reporting: (#124)
+
+- fix: attribute values are now correctly exported as their intended types (previously, these were all sent as string values)
+- fix: `http_client_request_duration` being reported in seconds rather than the intended milliseconds
+- fix: sync client mistakenly passing the entire configuration (rather than just the OpenTelemetry configuration as intended) to `queryDuration()` and `requestDuration()`
+- fix: some attributes may not have been exported as expected under some conditions
+- fix: `queryDuration()` and `requestDuration()` may not have updated their histograms reliably when `attr_http_client_request_duration` or `attr_http_server_request_duration` (respectively) were not enabled (which is the default)
+
+Please note that if you use third-party OpenTelemetry tooling to visualize the attributes mentioned above, you may need to update your queries to account for these changes.
+
 ## v0.7.0
 
 ### [0.7.0](https://github.com/openfga/python-sdk/compare/v0.6.1...v0.7.0) (2024-08-30)
