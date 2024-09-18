@@ -225,6 +225,7 @@ openfga_sdk/sync/oauth2.py
 openfga_sdk/sync/rest.py
 openfga_sdk/telemetry/__init__.py
 openfga_sdk/telemetry/attributes.py
+openfga_sdk/telemetry/configuration.py
 openfga_sdk/telemetry/counters.py
 openfga_sdk/telemetry/histograms.py
 openfga_sdk/telemetry/metrics.py
@@ -247,4 +248,10 @@ test/sync/client/__init__.py
 test/sync/client/client_test.py
 test/sync/oauth2_test.py
 test/sync/open_fga_api_test.py
+test/telemetry/attributes_test.py
+test/telemetry/configuration_test.py
+test/telemetry/counters_test.py
+test/telemetry/histograms_test.py
+test/telemetry/metrics_test.py
+test/telemetry/telemetry_test.py
 test/test_open_fga_api.py
