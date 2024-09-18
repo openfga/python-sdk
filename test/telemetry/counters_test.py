@@ -16,11 +16,13 @@ def test_telemetry_counter_initialization():
 def test_telemetry_counters_default_values():
     counters = TelemetryCounters()
 
-    assert counters.credentials_request.name == "fga-client.credentials.request"
-    assert counters.credentials_request.unit == "milliseconds"
     assert (
-        counters.credentials_request.description
-        == "The number of times an access token is requested."
+        counters.fga_client_credentials_request.name == "fga-client.credentials.request"
+    )
+    assert counters.fga_client_credentials_request.unit == "milliseconds"
+    assert (
+        counters.fga_client_credentials_request.description
+        == "Total number of new token requests initiated using the Client Credentials flow."
     )
 
 

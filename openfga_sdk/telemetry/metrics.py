@@ -3,16 +3,19 @@ from typing import Optional
 from opentelemetry.metrics import Counter, Histogram, Meter, get_meter
 
 from openfga_sdk import __version__
-from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
+from openfga_sdk.telemetry.attributes import (
+    TelemetryAttribute,
+    TelemetryAttributes,
+)
 from openfga_sdk.telemetry.configuration import (
     TelemetryConfiguration,
-    TelemetryMetricsConfiguration,
+    isMetricEnabled,
 )
 from openfga_sdk.telemetry.counters import TelemetryCounter, TelemetryCounters
 from openfga_sdk.telemetry.histograms import TelemetryHistogram, TelemetryHistograms
 
 
-class MetricsTelemetry:
+class TelemetryMetrics:
     _meter: Meter = None
     _histograms: dict[str, Histogram] = {}
     _counters: dict[str, Counter] = {}
@@ -33,18 +36,7 @@ class MetricsTelemetry:
 
         return self._meter
 
-    def counter(
-        self,
-        counter: str | TelemetryCounter,
-        value: int = None,
-        attributes: dict[TelemetryAttribute | str, str | int] | None = None,
-    ) -> Counter:
-        if isinstance(counter, str):
-            try:
-                counter = TelemetryCounters[counter]
-            except (KeyError, TypeError):
-                raise KeyError(f"Invalid counter key: {counter}")
-
+    def counter(self, counter: TelemetryCounter) -> Counter:
         if not isinstance(counter, TelemetryCounter):
             raise ValueError(
                 "counter must be a TelemetryCounter, or a string that is a key in TelemetryCounters"
@@ -55,23 +47,9 @@ class MetricsTelemetry:
                 name=counter.name, unit=counter.unit, description=counter.description
             )
 
-        if value is not None:
-            self._counters[counter.name].add(amount=value, attributes=attributes)
-
         return self._counters[counter.name]
 
-    def histogram(
-        self,
-        histogram: str | TelemetryHistogram,
-        value: int | float = None,
-        attributes: dict[TelemetryAttribute | str, str | int] | None = None,
-    ) -> Histogram:
-        if isinstance(histogram, str):
-            try:
-                histogram = TelemetryHistograms[histogram]
-            except (KeyError, TypeError):
-                raise KeyError(f"Invalid histogram key: {histogram}")
-
+    def histogram(self, histogram: TelemetryHistogram) -> Histogram:
         if not isinstance(histogram, TelemetryHistogram):
             raise ValueError(
                 "histogram must be a TelemetryHistogram, or a string that is a key in TelemetryHistograms"
@@ -84,120 +62,92 @@ class MetricsTelemetry:
                 description=histogram.description,
             )
 
-        if value is not None:
-            self._histograms[histogram.name].record(amount=value, attributes=attributes)
-
         return self._histograms[histogram.name]
 
     def credentialsRequest(
         self,
-        value: int | float | None = None,
-        attributes: dict[TelemetryAttribute | str, str | int] | None = None,
+        value: int,
+        attributes: dict[TelemetryAttribute, str | int] | None = None,
         configuration: TelemetryConfiguration | None = None,
     ) -> Counter:
-        if configuration is None:
-            configuration = TelemetryConfiguration()
+        """
+        Record a client credentials request made by the client.
+        """
+        counter = self.counter(TelemetryCounters.fga_client_credentials_request)
 
-        if (
-            isinstance(configuration, TelemetryMetricsConfiguration) is False
-            or configuration.metrics.counter_credentials_request.enabled is False
-            or configuration.metrics.counter_credentials_request.attributes() == {}
+        if isMetricEnabled(
+            configuration, TelemetryCounters.fga_client_credentials_request
         ):
-            return self.counter(TelemetryCounters.credentials_request)
+            attributes = TelemetryAttributes.prepare(
+                attributes,
+                filter=configuration.metrics.fga_client_credentials_request.getAttributes(),
+            )
 
-        attributes = TelemetryAttributes().prepare(
-            attributes,
-            filter=configuration.metrics.counter_credentials_request.attributes(),
-        )
+            if value is not None:
+                counter.add(amount=value, attributes=attributes)
 
-        return self.counter(TelemetryCounters.credentials_request, value, attributes)
+        return counter
 
     def requestDuration(
         self,
         value: int | float | None = None,
-        attributes: dict[TelemetryAttribute | str, str | int] | None = None,
+        attributes: dict[TelemetryAttribute, str | int] | None = None,
         configuration: TelemetryConfiguration | None = None,
     ) -> Histogram:
-        if configuration is None:
-            configuration = TelemetryConfiguration()
+        """
+        Record the duration of a request made by the client.
+        """
+        histogram = self.histogram(TelemetryHistograms.fga_client_request_duration)
 
-        if (
-            isinstance(configuration, TelemetryConfiguration) is False
-            or configuration.metrics.histogram_request_duration.enabled is False
-            or configuration.metrics.histogram_request_duration.attributes() == {}
+        if isMetricEnabled(
+            configuration, TelemetryHistograms.fga_client_request_duration
         ):
-            return self.histogram(TelemetryHistograms.request_duration)
-
-        if (
-            value is None
-            and TelemetryAttributes.http_client_request_duration.name in attributes
-        ):
-            value = attributes[TelemetryAttributes.http_client_request_duration.name]
-            attributes.pop(TelemetryAttributes.http_client_request_duration.name, None)
-
-        if value is not None:
-            try:
-                value = int(value)
-                attributes[TelemetryAttributes.http_client_request_duration.name] = (
-                    value
+            attributes[TelemetryAttributes.http_client_request_duration] = value = (
+                TelemetryAttributes.coalesceAttributeValue(
+                    TelemetryAttributes.http_client_request_duration,
+                    value,
+                    attributes,
                 )
-            except ValueError:
-                value = None
+            )
 
-        attributes = TelemetryAttributes().prepare(
-            attributes,
-            filter=configuration.metrics.histogram_request_duration.attributes(),
-        )
+            attributes = TelemetryAttributes.prepare(
+                attributes,
+                filter=configuration.metrics.fga_client_request_duration.getAttributes(),
+            )
 
-        if (
-            value is None
-            and TelemetryAttributes.http_client_request_duration.name in attributes
-        ):
-            value = attributes[TelemetryAttributes.http_client_request_duration.name]
+            if value is not None:
+                histogram.record(amount=value, attributes=attributes)
 
-        if value is None:
-            return self.histogram(TelemetryHistograms.request_duration)
-
-        return self.histogram(TelemetryHistograms.request_duration, value, attributes)
+        return histogram
 
     def queryDuration(
         self,
         value: int | float | None = None,
-        attributes: dict[TelemetryAttribute | str, str | int] | None = None,
+        attributes: dict[TelemetryAttribute, str | int] | None = None,
         configuration: TelemetryConfiguration | None = None,
     ) -> Histogram:
-        if configuration is None:
-            configuration = TelemetryConfiguration()
+        """
+        Record the duration of a query made by the client, as reported by the server.
+        """
+        histogram = self.histogram(TelemetryHistograms.fga_client_query_duration)
 
-        if (
-            isinstance(configuration, TelemetryConfiguration) is False
-            or configuration.metrics.histogram_query_duration.enabled is False
-            or configuration.metrics.histogram_query_duration.attributes() == {}
+        if isMetricEnabled(
+            configuration, TelemetryHistograms.fga_client_query_duration
         ):
-            return self.histogram(TelemetryHistograms.query_duration)
-
-        if (
-            value is None
-            and TelemetryAttributes.http_server_request_duration.name in attributes
-        ):
-            value = attributes[TelemetryAttributes.http_server_request_duration.name]
-            attributes.pop(TelemetryAttributes.http_server_request_duration.name, None)
-
-        if value is not None:
-            try:
-                value = int(value)
-                attributes[TelemetryAttributes.http_server_request_duration.name] = (
-                    value
+            attributes[TelemetryAttributes.http_server_request_duration] = value = (
+                TelemetryAttributes.coalesceAttributeValue(
+                    TelemetryAttributes.http_server_request_duration,
+                    value,
+                    attributes,
                 )
-            except ValueError:
-                value = None
+            )
 
-        attributes = TelemetryAttributes().prepare(
-            attributes,
-            filter=configuration.metrics.histogram_query_duration.attributes(),
-        )
+            attributes = TelemetryAttributes.prepare(
+                attributes,
+                filter=configuration.metrics.fga_client_query_duration.getAttributes(),
+            )
 
-        if value is None:
-            return self.histogram(TelemetryHistograms.query_duration)
+            if value is not None:
+                histogram.record(amount=value, attributes=attributes)
 
-        return self.histogram(TelemetryHistograms.query_duration, value, attributes)
+        return histogram

@@ -166,7 +166,7 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute | str, str] = None,
+        _telemetry_attributes: dict[TelemetryAttribute, str | int] = None,
     ):
 
         self.configuration.is_valid()
@@ -255,7 +255,20 @@ class ApiClient:
                 max_retry = _retry_params.max_retry
             if _retry_params.min_wait_in_ms is not None:
                 max_retry = _retry_params.min_wait_in_ms
+
+        _telemetry_attributes = TelemetryAttributes.fromRequest(
+            user_agent=self.user_agent,
+            fga_method=resource_path,
+            http_method=method,
+            url=url,
+            resend_count=0,
+            start=start,
+            credentials=self.configuration.credentials,
+            attributes=_telemetry_attributes,
+        )
+
         for retry in range(max_retry + 1):
+            _telemetry_attributes[TelemetryAttributes.http_request_resend_count] = retry
             try:
                 # perform request and return response
                 response_data = await self.request(
@@ -289,35 +302,40 @@ class ApiClient:
                         json.loads(e.body), response_type
                     )
                     e.body = None
+
+                _telemetry_attributes = TelemetryAttributes.fromResponse(
+                    response=e,
+                    credentials=self.configuration.credentials,
+                    attributes=_telemetry_attributes,
+                )
+
+                self._telemetry.metrics.queryDuration(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
+                self._telemetry.metrics.requestDuration(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
                 raise e
 
             self.last_response = response_data
 
             return_data = response_data
 
-            _telemetry_attributes = TelemetryAttributes().fromRequest(
-                user_agent=self.user_agent,
-                fga_method=resource_path,
-                http_method=method,
-                url=url,
-                resend_count=retry,
-                start=start,
-                credentials=self.configuration.credentials,
-                attributes=_telemetry_attributes,
-            )
-
-            _telemetry_attributes = TelemetryAttributes().fromResponse(
+            _telemetry_attributes = TelemetryAttributes.fromResponse(
                 response=response_data,
                 credentials=self.configuration.credentials,
                 attributes=_telemetry_attributes,
             )
 
-            self._telemetry.metrics().queryDuration(
+            self._telemetry.metrics.queryDuration(
                 attributes=_telemetry_attributes,
                 configuration=self.configuration.telemetry,
             )
 
-            self._telemetry.metrics().requestDuration(
+            self._telemetry.metrics.requestDuration(
                 attributes=_telemetry_attributes,
                 configuration=self.configuration.telemetry,
             )
@@ -467,7 +485,7 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute, str] = None,
+        _telemetry_attributes: dict[TelemetryAttribute, str | int] = None,
     ):
         """Makes the HTTP request (synchronous) and returns deserialized data.
 
@@ -728,7 +746,7 @@ class ApiClient:
                 )
             if credentials.method == "client_credentials":
                 if oauth2_client is None:
-                    oauth2_client = oauth2.OAuth2Client(credentials)
+                    oauth2_client = oauth2.OAuth2Client(credentials, self.configuration)
                 oauth2_headers = await oauth2_client.get_authentication_header(
                     self.rest_client
                 )

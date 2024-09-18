@@ -42,7 +42,7 @@ If you configure the OpenTelemetry SDK, these metrics will be exported and sent 
 | `http.request.method`          | string | Yes                | HTTP method for the request                                                       |
 | `http.request.resend_count`    | int    | Yes                | Number of retries attempted, if any                                               |
 | `http.response.status_code`    | int    | Yes                | Status code of the response (e.g., `200` for success)                             |
-| `http.server.request.duration` | int    | Yes                | Time taken by the FGA server to process and evaluate the request, in milliseconds |
+| `http.server.request.duration` | int    | No                 | Time taken by the FGA server to process and evaluate the request, in milliseconds |
 | `url.scheme`                   | string | Yes                | HTTP scheme of the request (`http`/`https`)                                       |
 | `url.full`                     | string | Yes                | Full URL of the request                                                           |
 | `user_agent.original`          | string | Yes                | User Agent used in the query                                                      |
@@ -102,15 +102,15 @@ configuration = ClientConfiguration(
     store_id=os.getenv("FGA_STORE_ID"),
     authorization_model_id=os.getenv("FGA_AUTHORIZATION_MODEL_ID"),
 
-    # If you are comfortable with the default configuration outlined in the tables above, you can omit providing your own TelemetryConfiguration object.
-    telemetry=TelemetryConfiguration(
-        metrics=TelemetryMetricsConfiguration(
-            histogram_request_duration=TelemetryMetricConfiguration(
-                attr_fga_client_request_method=True,
-                attr_http_response_status_code=True,
-            ),
-        ),
-    ),
+    # If you are comfortable with the default configuration outlined in the tables above, you can omit providing your own TelemetryConfiguration object, as one will be created for you.
+    telemetry={
+        "metrics": {
+            "fga-client.request.duration": {
+                "fga-client.request.method": True,
+                "http.response.status_code": True,
+            },
+        },
+    },
 )
 
 fga = OpenFgaClient(configuration)

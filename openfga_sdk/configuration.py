@@ -15,11 +15,20 @@ import http
 import logging
 import sys
 import urllib
+from typing import Optional
 
 import urllib3
 
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
-from openfga_sdk.telemetry.configuration import TelemetryConfiguration
+from openfga_sdk.telemetry.attributes import TelemetryAttribute
+from openfga_sdk.telemetry.configuration import (
+    TelemetryConfiguration,
+    TelemetryConfigurationType,
+    TelemetryMetricConfiguration,
+    TelemetryMetricsConfiguration,
+)
+from openfga_sdk.telemetry.counters import TelemetryCounter
+from openfga_sdk.telemetry.histograms import TelemetryHistogram
 from openfga_sdk.validation import is_well_formed_ulid_string
 
 JSON_SCHEMA_VALIDATION_KEYWORDS = {
@@ -184,7 +193,19 @@ class Configuration:
         server_operation_variables=None,
         ssl_ca_cert=None,
         api_url=None,  # TODO: restructure when removing api_scheme/api_host
-        telemetry: TelemetryConfiguration | None = None,
+        telemetry: Optional[
+            dict[
+                TelemetryConfigurationType | str,
+                TelemetryMetricsConfiguration
+                | dict[
+                    TelemetryHistogram | TelemetryCounter,
+                    TelemetryMetricConfiguration
+                    | dict[TelemetryAttribute, bool]
+                    | None,
+                ]
+                | None,
+            ]
+        ] = None,
     ):
         """Constructor"""
         self._url = api_url
@@ -295,10 +316,16 @@ class Configuration:
         """Options to pass down to the underlying urllib3 socket
         """
 
+        self._telemetry: TelemetryConfiguration | None = None
         if telemetry is None:
-            telemetry = TelemetryConfiguration()
+            self._telemetry = TelemetryConfiguration(
+                TelemetryConfiguration.getSdkDefaults()
+            )
+        elif isinstance(telemetry, dict):
+            self._telemetry = TelemetryConfiguration(telemetry)
+        elif isinstance(telemetry, TelemetryConfiguration):
+            self._telemetry = telemetry
 
-        self.telemetry = telemetry
         """Telemetry configuration
         """
 
@@ -425,6 +452,40 @@ class Configuration:
         """
         self.__logger_format = value
         self.logger_formatter = logging.Formatter(self.__logger_format)
+
+    @property
+    def telemetry(self) -> TelemetryConfiguration | None:
+        """Return the telemetry configuration"""
+        return self._telemetry
+
+    @telemetry.setter
+    def telemetry(
+        self,
+        value: (
+            dict[
+                TelemetryConfigurationType | str,
+                TelemetryMetricsConfiguration
+                | dict[
+                    TelemetryHistogram | TelemetryCounter,
+                    TelemetryMetricConfiguration
+                    | dict[TelemetryAttribute, bool]
+                    | None,
+                ]
+                | None,
+            ]
+            | None
+        ),
+    ) -> None:
+        """Set the telemetry configuration"""
+        if value is not None:
+            if isinstance(value, dict):
+                self._telemetry = TelemetryConfiguration(value)
+                return
+            elif isinstance(value, TelemetryConfiguration):
+                self._telemetry = value
+                return
+
+        self._telemetry = None
 
     def get_api_key_with_prefix(self, identifier, alias=None):
         """Gets API key (with prefix if set).

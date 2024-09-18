@@ -33,7 +33,9 @@ class OpenFgaApi:
         if api_client.configuration is not None:
             credentials = api_client.configuration.credentials
             if credentials is not None and credentials.method == "client_credentials":
-                self._oauth2_client = OAuth2Client(credentials)
+                self._oauth2_client = OAuth2Client(
+                    credentials, api_client.configuration
+                )
 
         self._telemetry = Telemetry()
 
@@ -189,37 +191,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "check"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "check",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
@@ -373,37 +351,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "create_store"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "create_store",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores",
@@ -539,37 +493,13 @@ class OpenFgaApi:
 
         response_types_map = {}
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "delete_store"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "delete_store",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -736,37 +666,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "expand"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "expand",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/expand".replace("{store_id}", store_id),
@@ -910,37 +816,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "get_store"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "get_store",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -1108,37 +990,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "list_objects"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "list_objects",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/list-objects".replace("{store_id}", store_id),
@@ -1290,37 +1148,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "list_stores"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "list_stores",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores",
@@ -1488,37 +1322,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "list_users"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "list_users",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/list-users".replace("{store_id}", store_id),
@@ -1685,37 +1495,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "read"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "read",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/read".replace("{store_id}", store_id),
@@ -1878,37 +1664,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "read_assertions"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "read_assertions",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -2069,37 +1831,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "read_authorization_model"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "read_authorization_model",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/authorization-models/{id}".replace(
@@ -2259,37 +1997,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "read_authorization_models"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "read_authorization_models",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
@@ -2453,37 +2167,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "read_changes"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "read_changes",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/changes".replace("{store_id}", store_id),
@@ -2650,37 +2340,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "write"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "write",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/write".replace("{store_id}", store_id),
@@ -2861,37 +2527,13 @@ class OpenFgaApi:
 
         response_types_map = {}
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "write_assertions"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "write_assertions",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -3061,37 +2703,13 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str] = {
-            TelemetryAttributes.fga_client_request_method: "write_authorization_model"
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "write_authorization_model",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
         }
-
-        try:
-            if store_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = store_id
-        except:
-            pass
-
-        try:
-            if body_params.tuple_key:
-                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
-                    body_params.tuple_key.user
-                )
-        except:
-            pass
-
-        try:
-            if "authorization_model_id" in local_var_params:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = local_var_params["authorization_model_id"]
-            elif body_params.authorization_model_id:
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_model_id
-                ] = body_params.authorization_model_id
-        except:
-            pass
 
         return await self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
