@@ -24,6 +24,7 @@ from openfga_sdk.exceptions import (
     ApiValueError,
     ForbiddenException,
     NotFoundException,
+    RateLimitExceededError,
     ServiceException,
     UnauthorizedException,
     ValidationException,
@@ -251,6 +252,9 @@ class RESTClientObject:
 
             if r.status == 404:
                 raise NotFoundException(http_resp=r)
+
+            if r.status == 429:
+                raise RateLimitExceededError(http_resp=r)
 
             if 500 <= r.status <= 599:
                 raise ServiceException(http_resp=r)
