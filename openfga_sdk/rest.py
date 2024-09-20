@@ -27,6 +27,7 @@ from openfga_sdk.exceptions import (
     RateLimitExceededError,
     ServiceException,
     UnauthorizedException,
+    ValidationException,
 )
 
 logger = logging.getLogger(__name__)
@@ -174,6 +175,9 @@ class RESTClientObject:
             logger.debug("response body: %s", r.data)
 
             if not 200 <= r.status <= 299:
+                if r.status == 400:
+                    raise ValidationException(http_resp=r)
+
                 if r.status == 401:
                     raise UnauthorizedException(http_resp=r)
 
