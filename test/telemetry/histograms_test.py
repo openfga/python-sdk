@@ -16,18 +16,18 @@ def test_telemetry_histogram_initialization():
 def test_telemetry_histograms_default_values():
     histograms = TelemetryHistograms()
 
-    assert histograms.request_duration.name == "fga-client.request.duration"
-    assert histograms.request_duration.unit == "milliseconds"
+    assert histograms.fga_client_request_duration.name == "fga-client.request.duration"
+    assert histograms.fga_client_request_duration.unit == "milliseconds"
     assert (
-        histograms.request_duration.description
-        == "How long it took for a request to be fulfilled."
+        histograms.fga_client_request_duration.description
+        == "Total request time for FGA requests, in milliseconds."
     )
 
-    assert histograms.query_duration.name == "fga-client.query.duration"
-    assert histograms.query_duration.unit == "milliseconds"
+    assert histograms.fga_client_query_duration.name == "fga-client.query.duration"
+    assert histograms.fga_client_query_duration.unit == "milliseconds"
     assert (
-        histograms.query_duration.description
-        == "How long it took to perform a query request."
+        histograms.fga_client_query_duration.description
+        == "Time taken by the FGA server to process and evaluate the request, in milliseconds."
     )
 
 

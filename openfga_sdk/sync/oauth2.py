@@ -126,11 +126,12 @@ class OAuth2Client:
                         seconds=int(api_response.get("expires_in"))
                     )
                     self._access_token = api_response.get("access_token")
-                    self._telemetry.metrics().credentialsRequest(
+                    self._telemetry.metrics.credentialsRequest(
                         1,
                         {
                             TelemetryAttributes.fga_client_request_client_id: configuration.client_id
                         },
+                        self.configuration.telemetry,
                     )
                     break
 

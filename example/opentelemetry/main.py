@@ -15,12 +15,6 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
-from openfga_sdk.telemetry.configuration import (
-    TelemetryConfiguration,
-    TelemetryMetricConfiguration,
-    TelemetryMetricsConfiguration,
-)
-
 # For usage convenience of this example, we will import the OpenFGA SDK from the parent directory.
 sdk_path = os.path.realpath(os.path.join(os.path.abspath(__file__), "..", "..", ".."))
 sys.path.insert(0, sdk_path)
@@ -36,6 +30,7 @@ from openfga_sdk.credentials import (
     Credentials,
 )
 from openfga_sdk.exceptions import FgaValidationException
+from openfga_sdk.telemetry.configuration import TelemetryConfiguration
 
 
 class app:
@@ -88,62 +83,62 @@ class app:
 
             if not self._telemetry:
                 # Configure the telemetry metrics to be collected.
-                # Note: the following represents the default configuration values, so unless you want to change them, you can omit this step.
-                self._telemetry = TelemetryConfiguration(
-                    metrics=TelemetryMetricsConfiguration(
-                        counter_credentials_request=TelemetryMetricConfiguration(
-                            attr_fga_client_request_client_id=True,
-                            attr_fga_client_request_method=True,
-                            attr_fga_client_request_model_id=True,
-                            attr_fga_client_request_store_id=True,
-                            attr_fga_client_response_model_id=True,
-                            attr_fga_client_user=False,
-                            attr_http_client_request_duration=False,
-                            attr_http_host=True,
-                            attr_http_request_method=True,
-                            attr_http_request_resend_count=True,
-                            attr_http_response_status_code=True,
-                            attr_http_server_request_duration=False,
-                            attr_http_url_scheme=True,
-                            attr_http_url_full=True,
-                            attr_user_agent_original=True,
-                        ),
-                        histogram_request_duration=TelemetryMetricConfiguration(
-                            attr_fga_client_request_client_id=True,
-                            attr_fga_client_request_method=True,
-                            attr_fga_client_request_model_id=True,
-                            attr_fga_client_request_store_id=True,
-                            attr_fga_client_response_model_id=True,
-                            attr_fga_client_user=False,
-                            attr_http_client_request_duration=False,
-                            attr_http_host=True,
-                            attr_http_request_method=True,
-                            attr_http_request_resend_count=True,
-                            attr_http_response_status_code=True,
-                            attr_http_server_request_duration=False,
-                            attr_http_url_scheme=True,
-                            attr_http_url_full=True,
-                            attr_user_agent_original=True,
-                        ),
-                        histogram_query_duration=TelemetryMetricConfiguration(
-                            attr_fga_client_request_client_id=True,
-                            attr_fga_client_request_method=True,
-                            attr_fga_client_request_model_id=True,
-                            attr_fga_client_request_store_id=True,
-                            attr_fga_client_response_model_id=True,
-                            attr_fga_client_user=False,
-                            attr_http_client_request_duration=False,
-                            attr_http_host=True,
-                            attr_http_request_method=True,
-                            attr_http_request_resend_count=True,
-                            attr_http_response_status_code=True,
-                            attr_http_server_request_duration=False,
-                            attr_http_url_scheme=True,
-                            attr_http_url_full=True,
-                            attr_user_agent_original=True,
-                        ),
-                    ),
-                )
+                # Note: the following represents the default configuration values, so unless you want to customize what's reported, you can omit this.
+                self._telemetry = {
+                    "metrics": {
+                        "fga-client.credentials.request": {
+                            "fga-client.request.client_id": True,
+                            "fga-client.request.method": True,
+                            "fga-client.request.model_id": True,
+                            "fga-client.request.store_id": True,
+                            "fga-client.response.model_id": True,
+                            "fga-client.user": False,
+                            "http.client.request.duration": False,
+                            "http.host": True,
+                            "http.request.method": True,
+                            "http.request.resend_count": True,
+                            "http.response.status_code": True,
+                            "http.server.request.duration": False,
+                            "url.scheme": True,
+                            "url.full": True,
+                            "user_agent.original": True,
+                        },
+                        "fga-client.request.duration": {
+                            "fga-client.request.client_id": True,
+                            "fga-client.request.method": True,
+                            "fga-client.request.model_id": True,
+                            "fga-client.request.store_id": True,
+                            "fga-client.response.model_id": True,
+                            "fga-client.user": False,
+                            "http.client.request.duration": False,
+                            "http.host": True,
+                            "http.request.method": True,
+                            "http.request.resend_count": True,
+                            "http.response.status_code": True,
+                            "http.server.request.duration": False,
+                            "url.scheme": True,
+                            "url.full": True,
+                            "user_agent.original": True,
+                        },
+                        "fga-client.query.duration": {
+                            "fga-client.request.client_id": True,
+                            "fga-client.request.method": True,
+                            "fga-client.request.model_id": True,
+                            "fga-client.request.store_id": True,
+                            "fga-client.response.model_id": True,
+                            "fga-client.user": False,
+                            "http.client.request.duration": False,
+                            "http.host": True,
+                            "http.request.method": True,
+                            "http.request.resend_count": True,
+                            "http.response.status_code": True,
+                            "http.server.request.duration": False,
+                            "url.scheme": True,
+                            "url.full": True,
+                            "user_agent.original": True,
+                        },
+                    }
+                }
 
                 self._configuration.telemetry = self._telemetry
 

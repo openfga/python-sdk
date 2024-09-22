@@ -6,7 +6,9 @@ from urllib3 import HTTPResponse
 
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.rest import RESTResponse
-from openfga_sdk.telemetry.attributes import TelemetryAttributes
+from openfga_sdk.telemetry.attributes import (
+    TelemetryAttributes,
+)
 
 
 @pytest.fixture
@@ -67,15 +69,16 @@ def test_from_request_with_all_params(telemetry_attributes):
         credentials=credentials,
     )
 
-    assert attributes["fga-client.request.method"] == "FGA_METHOD"
-    assert attributes["user_agent.original"] == "TestAgent"
-    assert attributes["http.host"] == "example.com"
-    assert attributes["http.request.method"] == "POST"
-    assert attributes["url.scheme"] == "https"
-    assert attributes["url.full"] == "https://example.com/api"
-    assert "http.client.request.duration" in attributes
-    assert attributes["http.request.resend_count"] == 2
-    assert attributes["fga-client.request.client_id"] == "client_123"
+    assert attributes[TelemetryAttributes.fga_client_request_method] == "FgaMethod"
+    assert attributes[TelemetryAttributes.user_agent_original] == "TestAgent"
+    assert attributes[TelemetryAttributes.http_host] == "example.com"
+    assert attributes[TelemetryAttributes.http_request_method] == "POST"
+    assert attributes[TelemetryAttributes.url_scheme] == "https"
+    assert attributes[TelemetryAttributes.url_full] == "https://example.com/api"
+
+    assert TelemetryAttributes.http_client_request_duration in attributes
+    assert attributes[TelemetryAttributes.http_request_resend_count] == 2
+    assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_123"
 
 
 def test_from_request_without_optional_params(telemetry_attributes):
@@ -86,15 +89,16 @@ def test_from_request_without_optional_params(telemetry_attributes):
         url="http://minimal.com",
     )
 
-    assert attributes["fga-client.request.method"] == "FGA_METHOD"
-    assert attributes["user_agent.original"] == "MinimalAgent"
-    assert attributes["http.host"] == "minimal.com"
-    assert attributes["http.request.method"] == "GET"
-    assert attributes["url.scheme"] == "http"
-    assert attributes["url.full"] == "http://minimal.com"
-    assert "http.client.request.duration" not in attributes
-    assert "http.request.resend_count" not in attributes
-    assert "fga-client.request.client_id" not in attributes
+    assert attributes[TelemetryAttributes.fga_client_request_method] == "FgaMethod"
+    assert attributes[TelemetryAttributes.user_agent_original] == "MinimalAgent"
+    assert attributes[TelemetryAttributes.http_host] == "minimal.com"
+    assert attributes[TelemetryAttributes.http_request_method] == "GET"
+    assert attributes[TelemetryAttributes.url_scheme] == "http"
+    assert attributes[TelemetryAttributes.url_full] == "http://minimal.com"
+
+    assert TelemetryAttributes.http_client_request_duration not in attributes
+    assert TelemetryAttributes.http_request_resend_count not in attributes
+    assert TelemetryAttributes.fga_client_request_client_id not in attributes
 
 
 def test_from_response_with_http_response(telemetry_attributes):
@@ -113,10 +117,10 @@ def test_from_response_with_http_response(telemetry_attributes):
         response=response, credentials=credentials
     )
 
-    assert attributes["http.response.status_code"] == 200
-    assert attributes["fga-client.response.model_id"] == "model_123"
-    assert attributes["http.server.request.duration"] == "50"
-    assert attributes["fga-client.request.client_id"] == "client_123"
+    assert attributes[TelemetryAttributes.http_response_status_code] == 200
+    assert attributes[TelemetryAttributes.fga_client_response_model_id] == "model_123"
+    assert attributes[TelemetryAttributes.http_server_request_duration] == "50"
+    assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_123"
 
 
 def test_from_response_with_rest_response(telemetry_attributes):
@@ -137,30 +141,7 @@ def test_from_response_with_rest_response(telemetry_attributes):
         response=response, credentials=credentials
     )
 
-    assert attributes["http.response.status_code"] == 404
-    assert attributes["fga-client.response.model_id"] == "model_404"
-    assert attributes["http.server.request.duration"] == "100"
-    assert attributes["fga-client.request.client_id"] == "client_456"
-
-
-def test_instance_has_attribute(telemetry_attributes):
-    mock_instance = MagicMock(spec_set=["some_attribute"])
-    mock_instance.some_attribute = "value"
-    assert telemetry_attributes.instanceHasAttribute(mock_instance, "some_attribute")
-    assert not telemetry_attributes.instanceHasAttribute(
-        mock_instance, "missing_attribute"
-    )
-
-
-def test_instance_has_callable(telemetry_attributes):
-    mock_instance = MagicMock(spec_set=["some_callable", "some_attribute"])
-    mock_instance.some_callable = lambda: "I am callable"
-
-    assert telemetry_attributes.instanceHasCallable(mock_instance, "some_callable")
-
-    assert not telemetry_attributes.instanceHasCallable(
-        mock_instance, "missing_callable"
-    )
-
-    mock_instance.some_attribute = "not callable"
-    assert not telemetry_attributes.instanceHasCallable(mock_instance, "some_attribute")
+    assert attributes[TelemetryAttributes.http_response_status_code] == 404
+    assert attributes[TelemetryAttributes.fga_client_response_model_id] == "model_404"
+    assert attributes[TelemetryAttributes.http_server_request_duration] == "100"
+    assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_456"
