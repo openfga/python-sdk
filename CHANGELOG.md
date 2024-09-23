@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.2
+
+### [0.7.2](https://github.com/openfga/python-sdk/compare/v0.7.1...v0.7.2) (2024-09-22)
+
+This release includes improvements to the OpenTelemetry configuration API introduced in the previous releases
+
+- refactor: improve OpenTelemetry configuration (#127)
+
+This release also includes fixes for several bugs identified in previous releases:
+
+- fix: ensure max_parallel_requests is an int value in batch_check (#132)
+- fix: inconsistency in 429 handling between sync/async client (#131)
+- fix: ensure telemetry is reported when API exceptions are raised (#127)
+
 ## v0.7.1
 
 ### [0.7.1](https://github.com/openfga/python-sdk/compare/v0.7.0...v0.7.1) (2024-09-16)
