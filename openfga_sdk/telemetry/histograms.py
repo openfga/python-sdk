@@ -3,19 +3,17 @@ from typing import NamedTuple, Optional
 
 class TelemetryHistogram(NamedTuple):
     name: str
-    unit: str
     description: str
+    unit: str = "milliseconds"
 
 
 class TelemetryHistograms:
     fga_client_request_duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.request.duration",
-        unit="milliseconds",
         description="Total request time for FGA requests, in milliseconds.",
     )
     fga_client_query_duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.query.duration",
-        unit="milliseconds",
         description="Time taken by the FGA server to process and evaluate the request, in milliseconds.",
     )
 

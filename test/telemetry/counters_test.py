@@ -4,12 +4,10 @@ from openfga_sdk.telemetry.counters import TelemetryCounter, TelemetryCounters
 def test_telemetry_counter_initialization():
     counter = TelemetryCounter(
         name="fga-client.test.counter",
-        unit="seconds",
         description="A test counter for unit testing.",
     )
 
     assert counter.name == "fga-client.test.counter"
-    assert counter.unit == "seconds"
     assert counter.description == "A test counter for unit testing."
 
 
@@ -19,7 +17,6 @@ def test_telemetry_counters_default_values():
     assert (
         counters.fga_client_credentials_request.name == "fga-client.credentials.request"
     )
-    assert counters.fga_client_credentials_request.unit == "milliseconds"
     assert (
         counters.fga_client_credentials_request.description
         == "Total number of new token requests initiated using the Client Credentials flow."
