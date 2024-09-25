@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from opentelemetry.metrics import Counter, Histogram, Meter
 
-from openfga_sdk import __version__
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.counters import TelemetryCounters
 from openfga_sdk.telemetry.histograms import TelemetryHistograms
@@ -23,7 +22,7 @@ def test_meter_lazy_initialization(mock_get_meter):
     # Access the meter property, which should trigger lazy initialization
     meter = telemetry.meter()
     assert meter == mock_meter
-    mock_get_meter.assert_called_once_with("openfga-sdk", __version__)
+    mock_get_meter.assert_called_once_with("openfga-sdk")
 
     # Access the meter property again, no new instance should be created
     meter_again = telemetry.meter()

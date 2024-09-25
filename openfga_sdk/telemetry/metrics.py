@@ -2,7 +2,6 @@ from typing import Optional
 
 from opentelemetry.metrics import Counter, Histogram, Meter, get_meter
 
-from openfga_sdk import __version__
 from openfga_sdk.telemetry.attributes import (
     TelemetryAttribute,
     TelemetryAttributes,
@@ -32,7 +31,7 @@ class TelemetryMetrics:
 
     def meter(self) -> Meter:
         if self._meter is None:
-            self._meter = get_meter("openfga-sdk", __version__)
+            self._meter = get_meter("openfga-sdk")
 
         return self._meter
 
