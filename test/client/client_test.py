@@ -2412,6 +2412,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 )
 
             mock_request.assert_called()
+            self.assertEqual(mock_request.call_count, 3)
+
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")

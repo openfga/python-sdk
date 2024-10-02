@@ -13,6 +13,7 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
+from openfga_sdk import BatchCheckRequest
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_response import BatchCheckResponse
@@ -599,7 +600,7 @@ class OpenFgaClient:
             )
 
     def batch_check(
-        self, body: list[ClientCheckRequest], options: dict[str, str | int] = None
+        self, body: list[ClientCheckRequest], options: dict[str, str] = None
     ):
         """
         Run a set of checks
@@ -619,13 +620,7 @@ class OpenFgaClient:
 
         max_parallel_requests = 10
         if options is not None and "max_parallel_requests" in options:
-            if (
-                isinstance(options["max_parallel_requests"], str)
-                and options["max_parallel_requests"].isdigit()
-            ):
-                max_parallel_requests = int(options["max_parallel_requests"])
-            elif isinstance(options["max_parallel_requests"], int):
-                max_parallel_requests = options["max_parallel_requests"]
+            max_parallel_requests = options["max_parallel_requests"]
 
         batch_check_response = []
 
@@ -637,6 +632,11 @@ class OpenFgaClient:
                 batch_check_response.append(response)
 
         return batch_check_response
+
+    def justin_batch_check(self, body: any):
+        req_body = BatchCheckRequest(checks=body)
+        response = self._api.batch_check(body=req_body)
+        return response
 
     def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):
         """

@@ -1,12 +1,11 @@
-from openfga_sdk.telemetry.metrics import TelemetryMetrics
+from openfga_sdk.telemetry.metrics import MetricsTelemetry
 
 
 class Telemetry:
-    _metrics: TelemetryMetrics | None = None
+    _metrics: MetricsTelemetry = None
 
-    @property
-    def metrics(self) -> TelemetryMetrics:
+    def metrics(self) -> MetricsTelemetry:
         if self._metrics is None:
-            self._metrics = TelemetryMetrics()
+            self._metrics = MetricsTelemetry()
 
         return self._metrics

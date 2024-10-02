@@ -12,3 +12,4 @@
 
 from openfga_sdk.sync.api_client import ApiClient
 from openfga_sdk.sync.client.client import OpenFgaClient
+from openfga_sdk.sync.open_fga_api import OpenFgaApi

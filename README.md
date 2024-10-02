@@ -1037,6 +1037,7 @@ async def main():
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*OpenFgaApi* | [**batch_check**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#batch_check) | **POST** /stores/{store_id}/batch_check | Justin&#39;s low-budget test ground for BatchCheck
 *OpenFgaApi* | [**check**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#check) | **POST** /stores/{store_id}/check | Check whether a user is authorized to access an object
 *OpenFgaApi* | [**create_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#create_store) | **POST** /stores | Create a store
 *OpenFgaApi* | [**delete_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
@@ -1065,6 +1066,10 @@ Class | Method | HTTP request | Description
  - [Assertion](https://github.com/openfga/python-sdk/blob/main/docs/Assertion.md)
  - [AssertionTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/AssertionTupleKey.md)
  - [AuthorizationModel](https://github.com/openfga/python-sdk/blob/main/docs/AuthorizationModel.md)
+ - [BatchCheckChecks](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckChecks.md)
+ - [BatchCheckItem](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckItem.md)
+ - [BatchCheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckRequest.md)
+ - [BatchCheckResponse](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckResponse.md)
  - [CheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequest.md)
  - [CheckRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequestTupleKey.md)
  - [CheckResponse](https://github.com/openfga/python-sdk/blob/main/docs/CheckResponse.md)

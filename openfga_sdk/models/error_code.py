@@ -89,6 +89,7 @@ class ErrorCode:
     DUPLICATE_CONTEXTUAL_TUPLE = "duplicate_contextual_tuple"
     INVALID_AUTHORIZATION_MODEL = "invalid_authorization_model"
     UNSUPPORTED_SCHEMA_VERSION = "unsupported_schema_version"
+    CANCELLED = "cancelled"
 
     allowable_values = [
         NO_ERROR,
@@ -139,6 +140,7 @@ class ErrorCode:
         DUPLICATE_CONTEXTUAL_TUPLE,
         INVALID_AUTHORIZATION_MODEL,
         UNSUPPORTED_SCHEMA_VERSION,
+        CANCELLED,
     ]
 
     """

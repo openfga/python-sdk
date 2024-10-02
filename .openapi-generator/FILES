@@ -20,6 +20,10 @@ docs/Any.md
 docs/Assertion.md
 docs/AssertionTupleKey.md
 docs/AuthorizationModel.md
+docs/BatchCheckChecks.md
+docs/BatchCheckItem.md
+docs/BatchCheckRequest.md
+docs/BatchCheckResponse.md
 docs/CheckRequest.md
 docs/CheckRequestTupleKey.md
 docs/CheckResponse.md
@@ -141,6 +145,10 @@ openfga_sdk/models/any.py
 openfga_sdk/models/assertion.py
 openfga_sdk/models/assertion_tuple_key.py
 openfga_sdk/models/authorization_model.py
+openfga_sdk/models/batch_check_checks.py
+openfga_sdk/models/batch_check_item.py
+openfga_sdk/models/batch_check_request.py
+openfga_sdk/models/batch_check_response.py
 openfga_sdk/models/check_request.py
 openfga_sdk/models/check_request_tuple_key.py
 openfga_sdk/models/check_response.py

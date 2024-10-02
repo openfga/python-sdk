@@ -46,10 +46,208 @@ class OpenFgaApi:
     def close(self):
         self.api_client.close()
 
+    def batch_check(self, body, **kwargs):
+        """Justin's low-budget test ground for BatchCheck
+
+        Justin's low-budget test ground for BatchCheck
+
+        >>> thread = api.batch_check(body)
+
+        :param body: (required)
+        :type body: BatchCheckRequest
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :type _preload_content: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: BatchCheckResponse
+        """
+        kwargs["_return_http_data_only"] = True
+        return self.batch_check_with_http_info(body, **kwargs)
+
+    def batch_check_with_http_info(self, body, **kwargs):
+        """Justin's low-budget test ground for BatchCheck
+
+        Justin's low-budget test ground for BatchCheck
+
+        >>> thread = api.batch_check_with_http_info(body)
+
+        :param body: (required)
+        :type body: BatchCheckRequest
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _return_http_data_only: response data without head status code
+                                       and headers
+        :type _return_http_data_only: bool, optional
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :type _preload_content: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(BatchCheckResponse, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        local_var_params = locals()
+
+        all_params = ["body"]
+        all_params.extend(
+            [
+                "async_req",
+                "_return_http_data_only",
+                "_preload_content",
+                "_request_timeout",
+                "_request_auth",
+                "_content_type",
+                "_headers",
+                "_retry_parms",
+            ]
+        )
+
+        for key, val in local_var_params["kwargs"].items():
+            if key not in all_params:
+                raise FgaValidationException(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method batch_check" % key
+                )
+            local_var_params[key] = val
+        del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
+        if (
+            self.api_client.client_side_validation
+            and local_var_params.get("body") is None
+        ):
+            raise ApiValueError(
+                "Missing the required parameter `body` when calling `batch_check`"
+            )
+
+        collection_formats = {}
+
+        path_params = {}
+
+        store_id = None
+
+        if self.api_client._get_store_id() is None:
+            raise ApiValueError(
+                "Store ID expected in api_client's configuration when calling `batch_check`"
+            )
+        store_id = self.api_client._get_store_id()
+
+        query_params = []
+
+        header_params = dict(local_var_params.get("_headers", {}))
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if "body" in local_var_params:
+            body_params = local_var_params["body"]
+        # HTTP header `Accept`
+        header_params["Accept"] = self.api_client.select_header_accept(
+            ["application/json"]
+        )
+
+        # HTTP header `Content-Type`
+        content_types_list = local_var_params.get(
+            "_content_type",
+            self.api_client.select_header_content_type(
+                ["application/json"], "POST", body_params
+            ),
+        )
+        if content_types_list:
+            header_params["Content-Type"] = content_types_list
+
+        # Authentication setting
+        auth_settings = []
+
+        response_types_map = {
+            200: "BatchCheckResponse",
+            400: "ValidationErrorMessageResponse",
+            401: "UnauthenticatedResponse",
+            404: "PathUnknownErrorMessageResponse",
+            409: "AbortedMessageResponse",
+            422: "UnprocessableContentMessageResponse",
+            500: "InternalErrorMessageResponse",
+        }
+
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "batch_check"
+        }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
+
+        return self.api_client.call_api(
+            "/stores/{store_id}/batch_check".replace("{store_id}", store_id),
+            "POST",
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_types_map=response_types_map,
+            auth_settings=auth_settings,
+            async_req=local_var_params.get("async_req"),
+            _return_http_data_only=local_var_params.get("_return_http_data_only"),
+            _preload_content=local_var_params.get("_preload_content", True),
+            _request_timeout=local_var_params.get("_request_timeout"),
+            _retry_params=local_var_params.get("_retry_params"),
+            collection_formats=collection_formats,
+            _request_auth=local_var_params.get("_request_auth"),
+            _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
+        )
+
     def check(self, body, **kwargs):
         """Check whether a user is authorized to access an object
 
-        The Check API returns whether a given user has a relationship with a given object in a given store. The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`. To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`. You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will return whether the relationship exists in the field `allowed`.  Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.  For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response. ## Examples ### Querying with contextual tuples In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple ```json {   \"user\": \"user:anne\",   \"relation\": \"member\",   \"object\": \"time_slot:office_hours\" } ``` the Check API can be used with the following request body: ```json {   \"tuple_key\": {     \"user\": \"user:anne\",     \"relation\": \"reader\",     \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"time_slot:office_hours\"       }     ]   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` ### Querying usersets Some Checks will always return `true`, even without any tuples. For example, for the following authorization model ```python model   schema 1.1 type user type document   relations     define reader: [user] ``` the following query ```json {   \"tuple_key\": {      \"user\": \"document:2021-budget#reader\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   } } ``` will always return `{ \"allowed\": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`. ### Querying usersets with difference in the model A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model ```python model   schema 1.1 type user type group   relations     define member: [user] type document   relations     define blocked: [user]     define reader: [group#member] but not blocked ``` the following query ```json {   \"tuple_key\": {      \"user\": \"group:finance#member\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"group:finance\"       },       {         \"user\": \"group:finance#member\",         \"relation\": \"reader\",         \"object\": \"document:2021-budget\"       },       {         \"user\": \"user:anne\",         \"relation\": \"blocked\",         \"object\": \"document:2021-budget\"       }     ]   }, } ``` will return `{ \"allowed\": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+        The Check API returns whether a given user has a relationship with a given object in a given store. The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`. To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`. You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency. The response will return whether the relationship exists in the field `allowed`.  Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.  For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response. ## Examples ### Querying with contextual tuples In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple ```json {   \"user\": \"user:anne\",   \"relation\": \"member\",   \"object\": \"time_slot:office_hours\" } ``` the Check API can be used with the following request body: ```json {   \"tuple_key\": {     \"user\": \"user:anne\",     \"relation\": \"reader\",     \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"time_slot:office_hours\"       }     ]   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` ### Querying usersets Some Checks will always return `true`, even without any tuples. For example, for the following authorization model ```python model   schema 1.1 type user type document   relations     define reader: [user] ``` the following query ```json {   \"tuple_key\": {      \"user\": \"document:2021-budget#reader\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   } } ``` will always return `{ \"allowed\": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`. ### Querying usersets with difference in the model A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model ```python model   schema 1.1 type user type group   relations     define member: [user] type document   relations     define blocked: [user]     define reader: [group#member] but not blocked ``` the following query ```json {   \"tuple_key\": {      \"user\": \"group:finance#member\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"group:finance\"       },       {         \"user\": \"group:finance#member\",         \"relation\": \"reader\",         \"object\": \"document:2021-budget\"       },       {         \"user\": \"user:anne\",         \"relation\": \"blocked\",         \"object\": \"document:2021-budget\"       }     ]   }, } ``` will return `{ \"allowed\": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object. ### Requesting higher consistency By default, the Check API caches results for a short time to optimize performance. You may request higher consistency to inform the server that higher consistency should be preferred at the expense of increased latency. Care should be taken when requesting higher consistency due to the increased latency. ```json {   \"tuple_key\": {      \"user\": \"group:finance#member\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   },   \"consistency\": \"HIGHER_CONSISTENCY\" } ```
 
         >>> thread = api.check(body)
 
@@ -76,7 +274,7 @@ class OpenFgaApi:
     def check_with_http_info(self, body, **kwargs):
         """Check whether a user is authorized to access an object
 
-        The Check API returns whether a given user has a relationship with a given object in a given store. The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`. To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`. You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will return whether the relationship exists in the field `allowed`.  Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.  For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response. ## Examples ### Querying with contextual tuples In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple ```json {   \"user\": \"user:anne\",   \"relation\": \"member\",   \"object\": \"time_slot:office_hours\" } ``` the Check API can be used with the following request body: ```json {   \"tuple_key\": {     \"user\": \"user:anne\",     \"relation\": \"reader\",     \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"time_slot:office_hours\"       }     ]   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` ### Querying usersets Some Checks will always return `true`, even without any tuples. For example, for the following authorization model ```python model   schema 1.1 type user type document   relations     define reader: [user] ``` the following query ```json {   \"tuple_key\": {      \"user\": \"document:2021-budget#reader\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   } } ``` will always return `{ \"allowed\": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`. ### Querying usersets with difference in the model A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model ```python model   schema 1.1 type user type group   relations     define member: [user] type document   relations     define blocked: [user]     define reader: [group#member] but not blocked ``` the following query ```json {   \"tuple_key\": {      \"user\": \"group:finance#member\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"group:finance\"       },       {         \"user\": \"group:finance#member\",         \"relation\": \"reader\",         \"object\": \"document:2021-budget\"       },       {         \"user\": \"user:anne\",         \"relation\": \"blocked\",         \"object\": \"document:2021-budget\"       }     ]   }, } ``` will return `{ \"allowed\": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object.
+        The Check API returns whether a given user has a relationship with a given object in a given store. The `user` field of the request can be a specific target, such as `user:anne`, or a userset (set of users) such as `group:marketing#member` or a type-bound public access `user:*`. To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`. You may also provide an `authorization_model_id` in the body. This will be used to assert that the input `tuple_key` is valid for the model specified. If not specified, the assertion will be made against the latest authorization model ID. It is strongly recommended to specify authorization model id for better performance. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency. The response will return whether the relationship exists in the field `allowed`.  Some exceptions apply, but in general, if a Check API responds with `{allowed: true}`, then you can expect the equivalent ListObjects query to return the object, and viceversa.  For example, if `Check(user:anne, reader, document:2021-budget)` responds with `{allowed: true}`, then `ListObjects(user:anne, reader, document)` may include `document:2021-budget` in the response. ## Examples ### Querying with contextual tuples In order to check if user `user:anne` of type `user` has a `reader` relationship with object `document:2021-budget` given the following contextual tuple ```json {   \"user\": \"user:anne\",   \"relation\": \"member\",   \"object\": \"time_slot:office_hours\" } ``` the Check API can be used with the following request body: ```json {   \"tuple_key\": {     \"user\": \"user:anne\",     \"relation\": \"reader\",     \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"time_slot:office_hours\"       }     ]   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` ### Querying usersets Some Checks will always return `true`, even without any tuples. For example, for the following authorization model ```python model   schema 1.1 type user type document   relations     define reader: [user] ``` the following query ```json {   \"tuple_key\": {      \"user\": \"document:2021-budget#reader\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   } } ``` will always return `{ \"allowed\": true }`. This is because usersets are self-defining: the userset `document:2021-budget#reader` will always have the `reader` relation with `document:2021-budget`. ### Querying usersets with difference in the model A Check for a userset can yield results that must be treated carefully if the model involves difference. For example, for the following authorization model ```python model   schema 1.1 type user type group   relations     define member: [user] type document   relations     define blocked: [user]     define reader: [group#member] but not blocked ``` the following query ```json {   \"tuple_key\": {      \"user\": \"group:finance#member\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"user:anne\",         \"relation\": \"member\",         \"object\": \"group:finance\"       },       {         \"user\": \"group:finance#member\",         \"relation\": \"reader\",         \"object\": \"document:2021-budget\"       },       {         \"user\": \"user:anne\",         \"relation\": \"blocked\",         \"object\": \"document:2021-budget\"       }     ]   }, } ``` will return `{ \"allowed\": true }`, even though a specific user of the userset `group:finance#member` does not have the `reader` relationship with the given object. ### Requesting higher consistency By default, the Check API caches results for a short time to optimize performance. You may request higher consistency to inform the server that higher consistency should be preferred at the expense of increased latency. Care should be taken when requesting higher consistency due to the increased latency. ```json {   \"tuple_key\": {      \"user\": \"group:finance#member\",      \"relation\": \"reader\",      \"object\": \"document:2021-budget\"   },   \"consistency\": \"HIGHER_CONSISTENCY\" } ```
 
         >>> thread = api.check_with_http_info(body)
 
@@ -189,14 +387,40 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "check",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "check"
         }
 
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
+
+        # check is doing a whole bunch of shit
+        # that batch_check is not
         return self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
             "POST",
@@ -349,13 +573,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "create_store",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "create_store"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores",
@@ -491,13 +739,37 @@ class OpenFgaApi:
 
         response_types_map = {}
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "delete_store",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "delete_store"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -664,13 +936,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "expand",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "expand"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/expand".replace("{store_id}", store_id),
@@ -814,13 +1110,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "get_store",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "get_store"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -847,7 +1167,7 @@ class OpenFgaApi:
     def list_objects(self, body, **kwargs):
         """List all objects of the given type that the user has a relation with
 
-        The ListObjects API returns a list of all the objects of the given type that the user has a relation with.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first. The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
+        The ListObjects API returns a list of all the objects of the given type that the user has a relation with.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first. The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
 
         >>> thread = api.list_objects(body)
 
@@ -874,7 +1194,7 @@ class OpenFgaApi:
     def list_objects_with_http_info(self, body, **kwargs):
         """List all objects of the given type that the user has a relation with
 
-        The ListObjects API returns a list of all the objects of the given type that the user has a relation with.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first. The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
+        The ListObjects API returns a list of all the objects of the given type that the user has a relation with.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. By default, the Check API caches results for a short time to optimize performance. You may specify a value of `HIGHER_CONSISTENCY` for the optional `consistency` parameter in the body to inform the server that higher conisistency is preferred at the expense of increased latency. Consideration should be given to the increased latency if requesting higher consistency. The response will contain the related objects in an array in the \"objects\" field of the response and they will be strings in the object format `<type>:<id>` (e.g. \"document:roadmap\"). The number of objects in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_OBJECTS_MAX_RESULTS, whichever is hit first. The objects given will not be sorted, and therefore two identical calls can give a given different set of objects.
 
         >>> thread = api.list_objects_with_http_info(body)
 
@@ -988,13 +1308,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "list_objects",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "list_objects"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/list-objects".replace("{store_id}", store_id),
@@ -1146,13 +1490,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "list_stores",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "list_stores"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores",
@@ -1179,7 +1547,7 @@ class OpenFgaApi:
     def list_users(self, body, **kwargs):
         """List the users matching the provided filter who have a certain relation to a particular type.
 
-        The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will contain the related users in an array in the \"users\" field of the response. These results may include specific objects, usersets  or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects of that type have a relation to the object; it is possible that negations exist and checks should still be queried on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first. The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
+        The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will contain the related users in an array in the \"users\" field of the response. These results may include specific objects, usersets  or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public access result is returned (e.g. `user:*`), it cannot be inferred that all subjects of that type have a relation to the object; it is possible that negations exist and checks should still be queried on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first. The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
 
         >>> thread = api.list_users(body)
 
@@ -1206,7 +1574,7 @@ class OpenFgaApi:
     def list_users_with_http_info(self, body, **kwargs):
         """List the users matching the provided filter who have a certain relation to a particular type.
 
-        The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will contain the related users in an array in the \"users\" field of the response. These results may include specific objects, usersets  or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public acces result is returned (e.g. `user:*`), it cannot be inferred that all subjects of that type have a relation to the object; it is possible that negations exist and checks should still be queried on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first. The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
+        The ListUsers API returns a list of all the users of a specific type that have a relation to a given object.  To arrive at a result, the API uses: an authorization model, explicit tuples written through the Write API, contextual tuples present in the request, and implicit tuples that exist by virtue of applying set theory (such as `document:2021-budget#viewer@document:2021-budget#viewer`; the set of users who are viewers of `document:2021-budget` are the set of users who are the viewers of `document:2021-budget`). An `authorization_model_id` may be specified in the body. If it is not specified, the latest authorization model ID will be used. It is strongly recommended to specify authorization model id for better performance. You may also specify `contextual_tuples` that will be treated as regular tuples. Each of these tuples may have an associated `condition`. You may also provide a `context` object that will be used to evaluate the conditioned tuples in the system. It is strongly recommended to provide a value for all the input parameters of all the conditions, to ensure that all tuples be evaluated correctly. The response will contain the related users in an array in the \"users\" field of the response. These results may include specific objects, usersets  or type-bound public access. Each of these types of results is encoded in its own type and not represented as a string.In cases where a type-bound public access result is returned (e.g. `user:*`), it cannot be inferred that all subjects of that type have a relation to the object; it is possible that negations exist and checks should still be queried on individual subjects to ensure access to that document.The number of users in the response array will be limited by the execution timeout specified in the flag OPENFGA_LIST_USERS_DEADLINE and by the upper bound specified in the flag OPENFGA_LIST_USERS_MAX_RESULTS, whichever is hit first. The returned users will not be sorted, and therefore two identical calls may yield different sets of users.
 
         >>> thread = api.list_users_with_http_info(body)
 
@@ -1320,13 +1688,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "list_users",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "list_users"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/list-users".replace("{store_id}", store_id),
@@ -1493,13 +1885,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "read",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "read"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/read".replace("{store_id}", store_id),
@@ -1526,7 +1942,7 @@ class OpenFgaApi:
     def read_assertions(self, authorization_model_id, **kwargs):
         """Read assertions for an authorization model ID
 
-        The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+        The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
 
         >>> thread = api.read_assertions(authorization_model_id)
 
@@ -1553,7 +1969,7 @@ class OpenFgaApi:
     def read_assertions_with_http_info(self, authorization_model_id, **kwargs):
         """Read assertions for an authorization model ID
 
-        The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+        The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it.
 
         >>> thread = api.read_assertions_with_http_info(authorization_model_id)
 
@@ -1660,13 +2076,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "read_assertions",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "read_assertions"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -1827,13 +2267,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "read_authorization_model",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "read_authorization_model"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models/{id}".replace(
@@ -1993,13 +2457,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "read_authorization_models",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "read_authorization_models"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
@@ -2163,13 +2651,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "read_changes",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "read_changes"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/changes".replace("{store_id}", store_id),
@@ -2336,13 +2848,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "write",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "write"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/write".replace("{store_id}", store_id),
@@ -2369,7 +2905,7 @@ class OpenFgaApi:
     def write_assertions(self, authorization_model_id, body, **kwargs):
         """Upsert assertions for an authorization model ID
 
-        The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+        The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
 
         >>> thread = api.write_assertions(authorization_model_id, body)
 
@@ -2400,7 +2936,7 @@ class OpenFgaApi:
     def write_assertions_with_http_info(self, authorization_model_id, body, **kwargs):
         """Upsert assertions for an authorization model ID
 
-        The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false.
+        The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
 
         >>> thread = api.write_assertions_with_http_info(authorization_model_id, body)
 
@@ -2521,13 +3057,37 @@ class OpenFgaApi:
 
         response_types_map = {}
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "write_assertions",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "write_assertions"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -2697,13 +3257,37 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
-            TelemetryAttributes.fga_client_request_method: "write_authorization_model",
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
-                "authorization_model_id", ""
-            ),
+        telemetry_attributes: dict[TelemetryAttribute, str] = {
+            TelemetryAttributes.fga_client_request_method: "write_authorization_model"
         }
+
+        try:
+            if store_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = store_id
+        except:
+            pass
+
+        try:
+            if body_params.tuple_key:
+                telemetry_attributes[TelemetryAttributes.fga_client_user] = (
+                    body_params.tuple_key.user
+                )
+        except:
+            pass
+
+        try:
+            if "authorization_model_id" in local_var_params:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = local_var_params["authorization_model_id"]
+            elif body_params.authorization_model_id:
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_model_id
+                ] = body_params.authorization_model_id
+        except:
+            pass
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),

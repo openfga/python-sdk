@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class TelemetryHistogram(NamedTuple):
@@ -8,31 +8,13 @@ class TelemetryHistogram(NamedTuple):
 
 
 class TelemetryHistograms:
-    fga_client_request_duration: TelemetryHistogram = TelemetryHistogram(
+    request_duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.request.duration",
         unit="milliseconds",
-        description="Total request time for FGA requests, in milliseconds.",
+        description="How long it took for a request to be fulfilled.",
     )
-    fga_client_query_duration: TelemetryHistogram = TelemetryHistogram(
+    query_duration: TelemetryHistogram = TelemetryHistogram(
         name="fga-client.query.duration",
         unit="milliseconds",
-        description="Time taken by the FGA server to process and evaluate the request, in milliseconds.",
+        description="How long it took to perform a query request.",
     )
-
-    _histograms: list[TelemetryHistogram] = [
-        fga_client_request_duration,
-        fga_client_query_duration,
-    ]
-
-    @staticmethod
-    def get(
-        name: Optional[str] = None,
-    ) -> list[TelemetryHistogram] | TelemetryHistogram | None:
-        if name is None:
-            return TelemetryHistograms._histograms
-
-        for histogram in TelemetryHistograms._histograms:
-            if histogram.name == name:
-                return histogram
-
-        return None
