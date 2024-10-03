@@ -1,9 +1,11 @@
+import time
 from openfga_sdk.client.models import ClientCheckRequest
 from openfga_sdk.models.batch_check_request import BatchCheckRequest
 from openfga_sdk.models.batch_check_item import BatchCheckItem
 from openfga_sdk.models import TupleKey
 from openfga_sdk.sync import OpenFgaClient
 from openfga_sdk import ClientConfiguration
+from datetime import timedelta
 
 configuration = ClientConfiguration(
     api_url="http://localhost:8080",
@@ -11,6 +13,56 @@ configuration = ClientConfiguration(
 )
 
 client = OpenFgaClient(configuration)
+
+old_check_request = ClientCheckRequest(
+     user="user:justin",
+     relation="can_read",
+     object="doc:public-roadmap"
+)
+
+def time_old_way(num_checks):
+    start = time.time()
+    client.batch_check([old_check_request for _ in range(num_checks)])
+    delta = timedelta(seconds=time.time() - start)
+    return delta
+
+ttu_tuple = TupleKey(
+     user="user:justin",
+     relation="can_read",
+     object="doc:public-roadmap"
+)
+justin_can_read_item = BatchCheckItem(tuple_key=ttu_tuple)
+
+def time_new_way(num_checks):
+    start = time.time()
+    client.justin_batch_check(
+        BatchCheckRequest(checks=[justin_can_read_item for _ in range(num_checks)])
+    )
+
+    delta = timedelta(seconds=time.time() - start)
+    return delta
+
+
+def run_both_tests(checks_to_send, number_of_request_loops):
+    old_deltas = []
+    for _ in range(number_of_request_loops):
+        ms = time_old_way(checks_to_send).total_seconds() * 1000
+        print(f"old batch took {ms}ms")
+        old_deltas.append(ms)
+        time.sleep(.2)
+
+    avg_old_delta = sum(old_deltas) / len(old_deltas)
+    print(f"old delta average ms: {avg_old_delta}\n")
+
+    new_deltas = []
+    for _ in range(number_of_request_loops):
+        ms = time_new_way(checks_to_send).total_seconds() * 1000
+        print(f"new batch took: {ms}ms")
+        new_deltas.append(ms)
+        time.sleep(.2)
+
+    avg_new_delta = sum(new_deltas) / len(new_deltas)
+    print(f"new delta average ms: {avg_new_delta}")
 
 def the_old_way():
     existing_check_request = ClientCheckRequest(
