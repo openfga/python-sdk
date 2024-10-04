@@ -33,21 +33,29 @@ class BatchCheckRequest:
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    openapi_types = {"checks": "BatchCheckChecks"}
+    openapi_types = {"checks": "BatchCheckChecks", "authorization_model_id": "str"}
 
-    attribute_map = {"checks": "checks"}
+    attribute_map = {
+        "checks": "checks",
+        "authorization_model_id": "authorization_model_id",
+    }
 
-    def __init__(self, checks=None, local_vars_configuration=None):
+    def __init__(
+        self, checks=None, authorization_model_id=None, local_vars_configuration=None
+    ):
         """BatchCheckRequest - a model defined in OpenAPI"""
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
         self._checks = None
+        self._authorization_model_id = None
         self.discriminator = None
 
         if checks is not None:
             self.checks = checks
+        if authorization_model_id is not None:
+            self.authorization_model_id = authorization_model_id
 
     @property
     def checks(self):
@@ -69,6 +77,27 @@ class BatchCheckRequest:
         """
 
         self._checks = checks
+
+    @property
+    def authorization_model_id(self):
+        """Gets the authorization_model_id of this BatchCheckRequest.
+
+
+        :return: The authorization_model_id of this BatchCheckRequest.
+        :rtype: str
+        """
+        return self._authorization_model_id
+
+    @authorization_model_id.setter
+    def authorization_model_id(self, authorization_model_id):
+        """Sets the authorization_model_id of this BatchCheckRequest.
+
+
+        :param authorization_model_id: The authorization_model_id of this BatchCheckRequest.
+        :type authorization_model_id: str
+        """
+
+        self._authorization_model_id = authorization_model_id
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

@@ -419,8 +419,6 @@ class OpenFgaApi:
         except:
             pass
 
-        # check is doing a whole bunch of shit
-        # that batch_check is not
         return self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
             "POST",

@@ -5,19 +5,42 @@ from openfga_sdk.models.batch_check_item import BatchCheckItem
 from openfga_sdk.models import TupleKey
 from openfga_sdk.sync import OpenFgaClient
 from openfga_sdk import ClientConfiguration
+from openfga_sdk.credentials import Credentials, CredentialConfiguration
 from datetime import timedelta
 
-configuration = ClientConfiguration(
-    api_url="http://localhost:8080",
-    store_id="01J8QBXT1ZT41H73TB6DW6XQNK",
-)
 
-client = OpenFgaClient(configuration)
+# our test store in shared-fga-test
+TEST_AUTH_MODEL_ID = "01J99P5J93G224G6V605P53FK4"
+
+# config for Ewan / Justin test store
+def the_newest_client():
+    credentials = Credentials(
+        method='client_credentials',
+        configuration=CredentialConfiguration(
+            api_issuer= "sandcastle-dev.us.auth0.com",
+            # api_audience= "https://api.staging.fga.dev/",
+            api_audience="https://api.shared-fga-test-6.dev.fga.dev/",
+            client_id= "xLjsFehFRG8pGr8EJodic8Zh5CJMuvI9",
+            client_secret= "UGRPPyqJfrb6r5-M7UGGyvAmVvkZXVypwsKsut0JRAS1QIffZsqz7Wbb4GHzbr_G",
+        )
+    )
+
+    configuration = ClientConfiguration(
+        # api_url = "https://api.stage.fga.dev",
+        api_url="https://api.shared-fga-test-6.dev.fga.dev",
+        store_id = "01J99EC70YNERR04HX0PBQDJJG",
+        authorization_model_id = TEST_AUTH_MODEL_ID, # Ewan / Justin test store
+        credentials = credentials,
+    )
+
+    return OpenFgaClient(configuration)
+
+client = the_newest_client()
 
 old_check_request = ClientCheckRequest(
-     user="user:justin",
-     relation="can_read",
-     object="doc:public-roadmap"
+    user="user:justin",
+    relation="can_read",
+    object="doc:public-roadmap"
 )
 
 def time_old_way(num_checks):
@@ -36,20 +59,31 @@ justin_can_read_item = BatchCheckItem(tuple_key=ttu_tuple)
 def time_new_way(num_checks):
     start = time.time()
     client.justin_batch_check(
-        BatchCheckRequest(checks=[justin_can_read_item for _ in range(num_checks)])
+        BatchCheckRequest(
+            checks=[justin_can_read_item for _ in range(num_checks)],
+            authorization_model_id=TEST_AUTH_MODEL_ID,
+        )
     )
 
     delta = timedelta(seconds=time.time() - start)
     return delta
 
 
-def run_both_tests(checks_to_send, number_of_request_loops):
+def run_both_tests(checks_to_send, number_of_request_loops=10):
+    """
+    will run old batch check `number_of_request_loops` times
+    and print the average duration each batch took
+    then do same for new batch check
+
+    e.g. `run_both_tests(50,10)` will run a batch of 50 checks and repeat that 10 times
+    for the old batch check, then 10 times for the new batch check
+    """
     old_deltas = []
     for _ in range(number_of_request_loops):
         ms = time_old_way(checks_to_send).total_seconds() * 1000
         print(f"old batch took {ms}ms")
         old_deltas.append(ms)
-        time.sleep(.2)
+        time.sleep(.2) # not strictly necessary, mostly so I can see what's happening
 
     avg_old_delta = sum(old_deltas) / len(old_deltas)
     print(f"old delta average ms: {avg_old_delta}\n")
@@ -64,6 +98,8 @@ def run_both_tests(checks_to_send, number_of_request_loops):
     avg_new_delta = sum(new_deltas) / len(new_deltas)
     print(f"new delta average ms: {avg_new_delta}")
 
+
+# Don't worry about anything below here ----------------------------------
 def the_old_way():
     existing_check_request = ClientCheckRequest(
         user="user:charles",
@@ -102,7 +138,8 @@ def the_new_way():
     one_check_item = BatchCheckItem(tuple_key=simple_tuple)
 
     # justin_check_request = BatchCheckRequest(checks=[one_check_item for _ in range(10)])
-    justin_check_request = BatchCheckRequest(checks=[one_check_item])
+    # 01J99P5J93G224G6V605P53FK4 is ewan's test instance model
+    justin_check_request = BatchCheckRequest(checks=[one_check_item], authorization_model_id="01J99P5J93G224G6V605P53FK4")
 
     # currently failing:
     # results = client.justin_batch_check([existing_check_request for _ in range(50)])
@@ -171,3 +208,16 @@ fga query check user:charles viewer doc:public-roadmap
 fga query check group:fabrikam#member viewer doc:2021-roadmap
 fga query check user:charles viewer doc:public-roadmap
 """
+
+
+
+def local_client():
+    """
+    local config, justin's laptop
+    """
+    configuration = ClientConfiguration(
+        api_url="http://localhost:8080",
+        store_id="01J8QBXT1ZT41H73TB6DW6XQNK",
+        authorization_model_id="01J8QBXT27F1WJ4RK89M7FK1M8"
+    )
+    OpenFgaClient(configuration)

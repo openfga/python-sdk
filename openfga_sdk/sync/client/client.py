@@ -599,6 +599,11 @@ class OpenFgaClient:
                 allowed=False, request=body, response=None, error=err
             )
 
+    def justin_batch_check(self, body: any):
+        req_body = BatchCheckRequest(checks=body)
+        response = self._api.batch_check(body=req_body)
+        return response
+
     def batch_check(
         self, body: list[ClientCheckRequest], options: dict[str, str] = None
     ):
@@ -632,11 +637,6 @@ class OpenFgaClient:
                 batch_check_response.append(response)
 
         return batch_check_response
-
-    def justin_batch_check(self, body: any):
-        req_body = BatchCheckRequest(checks=body)
-        response = self._api.batch_check(body=req_body)
-        return response
 
     def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):
         """
