@@ -50,18 +50,27 @@ class BatchTester:
         )
 
         self.client = OpenFgaClient(configuration)
+        # Perform a read authorization models to issue a credential without touching any check caches
+        self.client.read_authorization_models()
 
 
     def time_old_way(self, num_checks):
         start = time.time()
-        self.client.batch_check([self.old_check_request for _ in range(num_checks)])
+        res = self.client.batch_check([self.old_check_request for _ in range(num_checks)])
         delta = timedelta(seconds=time.time() - start)
+
+        # all_true = all(r.allowed == True for r in res)
+        # print(f"all were allowed -> {all_true}")
+
+        # any_errors = any(r.error != None for r in res)
+        # print(f"any errors happened? -> {any_errors}")
+
         return delta
 
 
     def time_new_way(self, num_checks):
         start = time.time()
-        self.client.justin_batch_check(
+        res = self.client.justin_batch_check(
             BatchCheckRequest(
                 checks=[self.new_batch_check_item for _ in range(num_checks)],
                 authorization_model_id=TEST_AUTH_MODEL_ID,
@@ -69,6 +78,10 @@ class BatchTester:
         )
 
         delta = timedelta(seconds=time.time() - start)
+
+        # all_true = all(r.allowed == True for r in res.results)
+        # print(f"all were allowed -> {all_true}")
+
         return delta
 
 
@@ -92,6 +105,9 @@ class BatchTester:
         avg_old_delta = sum(old_deltas) / len(old_deltas)
         print(f"old delta average ms: {avg_old_delta}\n")
 
+        print("sleeping to allow cache to clear")
+        time.sleep(30)
+
         new_deltas = []
         for _ in range(number_of_request_loops):
             ms = self.time_new_way(checks_to_send).total_seconds() * 1000
@@ -102,6 +118,8 @@ class BatchTester:
         avg_new_delta = sum(new_deltas) / len(new_deltas)
         print(f"new delta average ms: {avg_new_delta}")
 
+t = BatchTester()
+t.run_both_tests(500, 10)
 
 # Don't worry about anything below here ----------------------------------
 def the_old_way():
