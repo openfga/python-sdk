@@ -12,91 +12,95 @@ from datetime import timedelta
 # our test store in shared-fga-test
 TEST_AUTH_MODEL_ID = "01J99P5J93G224G6V605P53FK4"
 
-# config for Ewan / Justin test store
-def the_newest_client():
-    credentials = Credentials(
-        method='client_credentials',
-        configuration=CredentialConfiguration(
-            api_issuer= "sandcastle-dev.us.auth0.com",
-            # api_audience= "https://api.staging.fga.dev/",
-            api_audience="https://api.shared-fga-test-6.dev.fga.dev/",
-            client_id= "xLjsFehFRG8pGr8EJodic8Zh5CJMuvI9",
-            client_secret= "UGRPPyqJfrb6r5-M7UGGyvAmVvkZXVypwsKsut0JRAS1QIffZsqz7Wbb4GHzbr_G",
+class BatchTester:
+    def __init__(self):
+        self.client = None
+        self.old_check_request = ClientCheckRequest(
+            user="user:justin",
+            relation="can_read",
+            object="doc:public-roadmap"
         )
-    )
 
-    configuration = ClientConfiguration(
-        # api_url = "https://api.stage.fga.dev",
-        api_url="https://api.shared-fga-test-6.dev.fga.dev",
-        store_id = "01J99EC70YNERR04HX0PBQDJJG",
-        authorization_model_id = TEST_AUTH_MODEL_ID, # Ewan / Justin test store
-        credentials = credentials,
-    )
-
-    return OpenFgaClient(configuration)
-
-client = the_newest_client()
-
-old_check_request = ClientCheckRequest(
-    user="user:justin",
-    relation="can_read",
-    object="doc:public-roadmap"
-)
-
-def time_old_way(num_checks):
-    start = time.time()
-    client.batch_check([old_check_request for _ in range(num_checks)])
-    delta = timedelta(seconds=time.time() - start)
-    return delta
-
-ttu_tuple = TupleKey(
-     user="user:justin",
-     relation="can_read",
-     object="doc:public-roadmap"
-)
-justin_can_read_item = BatchCheckItem(tuple_key=ttu_tuple)
-
-def time_new_way(num_checks):
-    start = time.time()
-    client.justin_batch_check(
-        BatchCheckRequest(
-            checks=[justin_can_read_item for _ in range(num_checks)],
-            authorization_model_id=TEST_AUTH_MODEL_ID,
+        ttu_tuple = TupleKey(
+            user="user:justin",
+            relation="can_read",
+            object="doc:public-roadmap"
         )
-    )
+        self.new_batch_check_item = BatchCheckItem(tuple_key=ttu_tuple)
 
-    delta = timedelta(seconds=time.time() - start)
-    return delta
+    # config for Ewan / Justin test store
+    def init_client(self):
+        credentials = Credentials(
+            method='client_credentials',
+            configuration=CredentialConfiguration(
+                api_issuer= "sandcastle-dev.us.auth0.com",
+                # api_audience= "https://api.staging.fga.dev/",
+                api_audience="https://api.shared-fga-test-6.dev.fga.dev/",
+                client_id= "xLjsFehFRG8pGr8EJodic8Zh5CJMuvI9",
+                client_secret= "UGRPPyqJfrb6r5-M7UGGyvAmVvkZXVypwsKsut0JRAS1QIffZsqz7Wbb4GHzbr_G",
+            )
+        )
+
+        configuration = ClientConfiguration(
+            # api_url = "https://api.stage.fga.dev",
+            api_url="https://api.shared-fga-test-6.dev.fga.dev",
+            store_id = "01J99EC70YNERR04HX0PBQDJJG",
+            authorization_model_id = TEST_AUTH_MODEL_ID, # Ewan / Justin test store
+            credentials = credentials,
+        )
+
+        self.client = OpenFgaClient(configuration)
 
 
-def run_both_tests(checks_to_send, number_of_request_loops=10):
-    """
-    will run old batch check `number_of_request_loops` times
-    and print the average duration each batch took
-    then do same for new batch check
+    def time_old_way(self, num_checks):
+        start = time.time()
+        self.client.batch_check([self.old_check_request for _ in range(num_checks)])
+        delta = timedelta(seconds=time.time() - start)
+        return delta
 
-    e.g. `run_both_tests(50,10)` will run a batch of 50 checks and repeat that 10 times
-    for the old batch check, then 10 times for the new batch check
-    """
-    old_deltas = []
-    for _ in range(number_of_request_loops):
-        ms = time_old_way(checks_to_send).total_seconds() * 1000
-        print(f"old batch took {ms}ms")
-        old_deltas.append(ms)
-        time.sleep(.2) # not strictly necessary, mostly so I can see what's happening
 
-    avg_old_delta = sum(old_deltas) / len(old_deltas)
-    print(f"old delta average ms: {avg_old_delta}\n")
+    def time_new_way(self, num_checks):
+        start = time.time()
+        self.client.justin_batch_check(
+            BatchCheckRequest(
+                checks=[self.new_batch_check_item for _ in range(num_checks)],
+                authorization_model_id=TEST_AUTH_MODEL_ID,
+            )
+        )
 
-    new_deltas = []
-    for _ in range(number_of_request_loops):
-        ms = time_new_way(checks_to_send).total_seconds() * 1000
-        print(f"new batch took: {ms}ms")
-        new_deltas.append(ms)
-        time.sleep(.2)
+        delta = timedelta(seconds=time.time() - start)
+        return delta
 
-    avg_new_delta = sum(new_deltas) / len(new_deltas)
-    print(f"new delta average ms: {avg_new_delta}")
+
+    def run_both_tests(self, checks_to_send, number_of_request_loops=10):
+        """
+        will run old batch check `number_of_request_loops` times
+        and print the average duration each batch took
+        then do same for new batch check
+
+        e.g. `run_both_tests(50,10)` will run a batch of 50 checks and repeat that 10 times
+        for the old batch check, then 10 times for the new batch check
+        """
+        self.init_client()
+        old_deltas = []
+        for _ in range(number_of_request_loops):
+            ms = self.time_old_way(checks_to_send).total_seconds() * 1000
+            print(f"old batch took {ms}ms")
+            old_deltas.append(ms)
+            time.sleep(.2) # not strictly necessary, mostly so I can see what's happening
+
+        avg_old_delta = sum(old_deltas) / len(old_deltas)
+        print(f"old delta average ms: {avg_old_delta}\n")
+
+        new_deltas = []
+        for _ in range(number_of_request_loops):
+            ms = self.time_new_way(checks_to_send).total_seconds() * 1000
+            print(f"new batch took: {ms}ms")
+            new_deltas.append(ms)
+            time.sleep(.2)
+
+        avg_new_delta = sum(new_deltas) / len(new_deltas)
+        print(f"new delta average ms: {avg_new_delta}")
 
 
 # Don't worry about anything below here ----------------------------------
