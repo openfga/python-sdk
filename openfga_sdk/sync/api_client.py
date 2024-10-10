@@ -253,7 +253,21 @@ class ApiClient:
                 max_retry = _retry_params.max_retry
             if _retry_params.min_wait_in_ms is not None:
                 max_retry = _retry_params.min_wait_in_ms
+
+        _telemetry_attributes = TelemetryAttributes.fromRequest(
+            user_agent=self.user_agent,
+            fga_method=resource_path,
+            http_method=method,
+            url=url,
+            resend_count=0,
+            start=start,
+            credentials=self.configuration.credentials,
+            attributes=_telemetry_attributes,
+        )
+
         for retry in range(max_retry + 1):
+            _telemetry_attributes[TelemetryAttributes.http_request_resend_count] = retry
+
             try:
                 # perform request and return response
                 response_data = self.request(
@@ -268,7 +282,19 @@ class ApiClient:
                 )
             except (RateLimitExceededError, ServiceException) as e:
                 if retry < max_retry and e.status != 501:
+                    _telemetry_attributes = TelemetryAttributes.fromResponse(
+                        response=e.body.decode("utf-8"),
+                        credentials=self.configuration.credentials,
+                        attributes=_telemetry_attributes,
+                    )
+
+                    self._telemetry.metrics.request(
+                        attributes=_telemetry_attributes,
+                        configuration=self.configuration.telemetry,
+                    )
+
                     time.sleep(random_time(retry, min_wait_in_ms))
+
                     continue
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
@@ -293,6 +319,11 @@ class ApiClient:
                     attributes=_telemetry_attributes,
                 )
 
+                self._telemetry.metrics.request(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
                 self._telemetry.metrics.queryDuration(
                     attributes=_telemetry_attributes,
                     configuration=self.configuration.telemetry,
@@ -308,21 +339,15 @@ class ApiClient:
 
             return_data = response_data
 
-            _telemetry_attributes = TelemetryAttributes.fromRequest(
-                user_agent=self.user_agent,
-                fga_method=resource_path,
-                http_method=method,
-                url=url,
-                resend_count=retry,
-                start=start,
-                credentials=self.configuration.credentials,
-                attributes=_telemetry_attributes,
-            )
-
             _telemetry_attributes = TelemetryAttributes.fromResponse(
                 response=response_data,
                 credentials=self.configuration.credentials,
                 attributes=_telemetry_attributes,
+            )
+
+            self._telemetry.metrics.request(
+                attributes=_telemetry_attributes,
+                configuration=self.configuration.telemetry,
             )
 
             self._telemetry.metrics.queryDuration(

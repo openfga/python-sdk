@@ -613,6 +613,7 @@ class TelemetryMetricsConfiguration:
         fga_client_credentials_request: Optional[TelemetryMetricConfiguration] = None,
         fga_client_request_duration: Optional[TelemetryMetricConfiguration] = None,
         fga_client_query_duration: Optional[TelemetryMetricConfiguration] = None,
+        fga_client_request: Optional[TelemetryMetricConfiguration] = None,
     ):
         """
         Initialize a new instance of the `TelemetryMetricsConfiguration` class.
@@ -621,6 +622,7 @@ class TelemetryMetricsConfiguration:
         :param fga_client_credentials_request: The `fga-client.credentials.request` counter collects the number of times a new token is requested using ClientCredentials.
         :param fga_client_request_duration: The `fga-client.query.duration` histogram tracks how long requests take to complete from the client's perspective.
         :param fga_client_query_duration: The `fga-client.request.duration` histogram tracks how long requests take to process from the server's perspective.
+        :param fga_client_request: The `fga-client.request` counter collects the number of requests made to the FGA server.
         """
 
         # Instantiate with default state, and apply the incoming configuration, if one was provided
@@ -641,8 +643,32 @@ class TelemetryMetricsConfiguration:
                 fga_client_query_duration
             )
 
+        if fga_client_request is not None:
+            self._state[TelemetryCounters.fga_client_request] = fga_client_request
+
         # Reset the validation state
         self._valid = None
+
+    @property
+    def fga_client_request(self) -> TelemetryMetricConfiguration | None:
+        """
+        Get the configuration for the `fga-client.request` counter.
+
+        :return: The configuration for the `fga-client.request` counter.
+        """
+
+        return self._state[TelemetryCounters.fga_client_request]
+
+    @fga_client_request.setter
+    def fga_client_request(self, value: TelemetryMetricConfiguration | None):
+        """
+        Set the configuration for the `fga-client.request` counter.
+
+        :param value: The configuration for the `fga-client.request` counter.
+        """
+
+        self._valid = None  # Reset the validation state
+        self._state[TelemetryCounters.fga_client_request] = value
 
     @property
     def fga_client_credentials_request(self) -> TelemetryMetricConfiguration | None:
@@ -714,6 +740,7 @@ class TelemetryMetricsConfiguration:
         Reset the configuration to the default state (all attributes disabled).
         """
         self._state = {
+            TelemetryCounters.fga_client_request: None,
             TelemetryCounters.fga_client_credentials_request: None,
             TelemetryHistograms.fga_client_request_duration: None,
             TelemetryHistograms.fga_client_query_duration: None,

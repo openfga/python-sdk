@@ -127,11 +127,10 @@ class OAuth2Client:
                     )
                     self._access_token = api_response.get("access_token")
                     self._telemetry.metrics.credentialsRequest(
-                        1,
-                        {
+                        attributes={
                             TelemetryAttributes.fga_client_request_client_id: configuration.client_id
                         },
-                        self.configuration.telemetry,
+                        configuration=self.configuration.telemetry,
                     )
                     break
 

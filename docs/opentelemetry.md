@@ -26,6 +26,7 @@ If you configure the OpenTelemetry SDK, these metrics will be exported and sent 
 | `fga-client.request.duration`    | Histogram | Yes                | Total request time for FGA requests, in milliseconds                              |
 | `fga-client.query.duration`      | Histogram | Yes                | Time taken by the FGA server to process and evaluate the request, in milliseconds |
 | `fga-client.credentials.request` | Counter   | Yes                | Total number of new token requests initiated using the Client Credentials flow    |
+| `fga-client.request`             | Counter   | No                 | Total number of requests made to the FGA server                                   |
 
 ### Supported Attributes
 
