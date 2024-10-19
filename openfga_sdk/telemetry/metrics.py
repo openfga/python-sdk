@@ -63,9 +63,31 @@ class TelemetryMetrics:
 
         return self._histograms[histogram.name]
 
+    def request(
+        self,
+        value: int = 1,
+        attributes: dict[TelemetryAttribute, str | int] | None = None,
+        configuration: TelemetryConfiguration | None = None,
+    ) -> Counter:
+        """
+        Record a request made by the client.
+        """
+        counter = self.counter(TelemetryCounters.fga_client_request)
+
+        if isMetricEnabled(configuration, TelemetryCounters.fga_client_request):
+            attributes = TelemetryAttributes.prepare(
+                attributes,
+                filter=configuration.metrics.fga_client_request.getAttributes(),
+            )
+
+            if value is not None:
+                counter.add(amount=value, attributes=attributes)
+
+        return counter
+
     def credentialsRequest(
         self,
-        value: int,
+        value: int = 1,
         attributes: dict[TelemetryAttribute, str | int] | None = None,
         configuration: TelemetryConfiguration | None = None,
     ) -> Counter:
