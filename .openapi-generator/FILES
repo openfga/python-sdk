@@ -230,6 +230,7 @@ openfga_sdk/telemetry/counters.py
 openfga_sdk/telemetry/histograms.py
 openfga_sdk/telemetry/metrics.py
 openfga_sdk/telemetry/telemetry.py
+openfga_sdk/telemetry/utilities.py
 openfga_sdk/validation.py
 requirements.txt
 setup.cfg
@@ -254,4 +255,5 @@ test/telemetry/counters_test.py
 test/telemetry/histograms_test.py
 test/telemetry/metrics_test.py
 test/telemetry/telemetry_test.py
+test/telemetry/utilities_test.py
 test/test_open_fga_api.py
