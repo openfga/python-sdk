@@ -714,10 +714,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "page_size": 50,
                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                    "retry_params": RetryParams(
-                        max_retry=3,
-                        min_wait_in_ms=1000
-                    )
+                    "retry_params": RetryParams(max_retry=3, min_wait_in_ms=1000),
                 },
             )
             self.assertIsInstance(api_response, ReadResponse)
