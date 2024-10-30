@@ -121,7 +121,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -294,7 +294,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -450,7 +450,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -596,7 +596,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -765,7 +765,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -919,7 +919,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -1097,7 +1097,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -1251,7 +1251,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -1425,7 +1425,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -1600,7 +1600,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -1769,7 +1769,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -1940,7 +1940,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -2108,7 +2108,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -2270,7 +2270,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -2451,7 +2451,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
@@ -2632,7 +2632,7 @@ class OpenFgaApi:
                 "_request_auth",
                 "_content_type",
                 "_headers",
-                "_retry_parms",
+                "_retry_params",
             ]
         )
 
