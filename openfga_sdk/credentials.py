@@ -171,7 +171,7 @@ class Credentials:
             raise ApiValueError(e)
 
         if parsed_url.netloc is None and parsed_url.path is None:
-            raise ApiValueError(f"Invalid issuer")
+            raise ApiValueError("Invalid issuer")
 
         if parsed_url.scheme == "":
             parsed_url = urlparse(f"https://{issuer}")
