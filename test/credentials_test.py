@@ -13,8 +13,8 @@
 from unittest import IsolatedAsyncioTestCase
 
 import openfga_sdk
-from openfga_sdk.exceptions import ApiValueError
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
+from openfga_sdk.exceptions import ApiValueError
 
 
 class TestCredentials(IsolatedAsyncioTestCase):
