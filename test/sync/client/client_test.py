@@ -2318,9 +2318,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         """
 
         def mock_check_requests(*args, **kwargs):
-            body = kwargs.get('body')
-            tuple_key = body.get('tuple_key')
-            if tuple_key['relation'] == "owner":
+            body = kwargs.get("body")
+            tuple_key = body.get("tuple_key")
+            if tuple_key["relation"] == "owner":
                 return mock_response('{"allowed": false, "resolution": "1234"}', 200)
             return mock_response('{"allowed": true, "resolution": "1234"}', 200)
 
