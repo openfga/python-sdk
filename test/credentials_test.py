@@ -14,6 +14,7 @@ from unittest import IsolatedAsyncioTestCase
 
 import openfga_sdk
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
+from openfga_sdk.exceptions import ApiValueError
 
 
 class TestCredentials(IsolatedAsyncioTestCase):
@@ -172,3 +173,58 @@ class TestCredentials(IsolatedAsyncioTestCase):
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
             credential.validate_credentials_config()
+
+
+class TestCredentialsIssuer(IsolatedAsyncioTestCase):
+    def setUp(self):
+        # Setup a basic configuration that can be modified per test case
+        self.configuration = CredentialConfiguration(api_issuer="https://example.com")
+        self.credentials = Credentials(
+            method="client_credentials", configuration=self.configuration
+        )
+
+    def test_valid_issuer_https(self):
+        # Test a valid HTTPS URL
+        self.configuration.api_issuer = "issuer.fga.example	"
+        result = self.credentials._parse_issuer(self.configuration.api_issuer)
+        self.assertEqual(result, "https://issuer.fga.example/oauth/token")
+
+    def test_valid_issuer_with_oauth_endpoint_https(self):
+        # Test a valid HTTPS URL
+        self.configuration.api_issuer = "https://example.com/oauth/token"
+        result = self.credentials._parse_issuer(self.configuration.api_issuer)
+        self.assertEqual(result, "https://example.com/oauth/token")
+
+    def test_valid_issuer_with_some_endpoint_https(self):
+        # Test a valid HTTPS URL
+        self.configuration.api_issuer = "https://example.com/oauth/some/endpoint"
+        result = self.credentials._parse_issuer(self.configuration.api_issuer)
+        self.assertEqual(result, "https://example.com/oauth/some/endpoint")
+
+    def test_valid_issuer_http(self):
+        # Test a valid HTTP URL
+        self.configuration.api_issuer = "fga.example/some_endpoint"
+        result = self.credentials._parse_issuer(self.configuration.api_issuer)
+        self.assertEqual(result, "https://fga.example/some_endpoint")
+
+    def test_invalid_issuer_no_scheme(self):
+        # Test an issuer URL without a scheme
+        self.configuration.api_issuer = "https://issuer.fga.example:8080/some_endpoint	"
+        result = self.credentials._parse_issuer(self.configuration.api_issuer)
+        self.assertEqual(result, "https://issuer.fga.example:8080/some_endpoint")
+
+    def test_invalid_issuer_bad_scheme(self):
+        # Test an issuer with an unsupported scheme
+        self.configuration.api_issuer = "ftp://example.com"
+        with self.assertRaises(ApiValueError):
+            self.credentials._parse_issuer(self.configuration.api_issuer)
+
+    def test_invalid_issuer_with_port(self):
+        # Test an issuer with an unsupported scheme
+        self.configuration.api_issuer = "https://issuer.fga.example:8080 "
+        result = self.credentials._parse_issuer(self.configuration.api_issuer)
+        self.assertEqual(result, "https://issuer.fga.example:8080/oauth/token")
+
+
+if __name__ == "__main__":
+    unittest.main()

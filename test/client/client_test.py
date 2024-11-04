@@ -2314,12 +2314,16 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Check whether a user is authorized to access an object
         """
 
+        def mock_check_requests(*args, **kwargs):
+            body = kwargs.get("body")
+            tuple_key = body.get("tuple_key")
+            if tuple_key["relation"] == "owner":
+                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+            return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+
         # First, mock the response
-        mock_request.side_effect = [
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-            mock_response('{"allowed": false, "resolution": "1234"}', 200),
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-        ]
+        mock_request.side_effect = mock_check_requests
+
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
