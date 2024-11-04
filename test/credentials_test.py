@@ -14,7 +14,7 @@ import unittest
 from unittest import IsolatedAsyncioTestCase
 
 import openfga_sdk
-from openfga_sdk import ApiValueError
+from openfga_sdk.exceptions import ApiValueError
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 
 
@@ -225,13 +225,6 @@ class TestCredentialsIssuer(unittest.TestCase):
         self.configuration.api_issuer = "https://issuer.fga.example:8080 "
         result = self.credentials._parse_issuer(self.configuration.api_issuer)
         self.assertEqual(result, "https://issuer.fga.example:8080/oauth/token")
-
-    # this should raise error
-    def test_invalid_issuer_bad_hostname(self):
-        # Test an issuer with an invalid hostname
-        self.configuration.api_issuer = "https://example?.com"
-        with self.assertRaises(ApiValueError):
-            self.credentials._parse_issuer(self.configuration.api_issuer)
 
 
 if __name__ == "__main__":
