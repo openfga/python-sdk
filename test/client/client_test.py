@@ -2523,20 +2523,18 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         {"type": "user"},
                         {"type": "team", "relation": "member"},
                     ],
-                    "contextual_tuples": {
-                        "tuple_keys": [
-                            {
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                                "relation": "editor",
-                                "object": "folder:product",
-                            },
-                            {
-                                "user": "folder:product",
-                                "relation": "parent",
-                                "object": "document:roadmap",
-                            },
-                        ]
-                    },
+                    "contextual_tuples": [
+                        {
+                            "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            "relation": "editor",
+                            "object": "folder:product",
+                        },
+                        {
+                            "user": "folder:product",
+                            "relation": "parent",
+                            "object": "document:roadmap",
+                        },
+                    ],
                     "context": {},
                     "consistency": "MINIMIZE_LATENCY",
                 },

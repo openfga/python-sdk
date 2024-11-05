@@ -733,9 +733,7 @@ class OpenFgaClient:
         )
 
         if body.contextual_tuples:
-            req_body.contextual_tuples = ContextualTupleKeys(
-                tuple_keys=convert_tuple_keys(body.contextual_tuples)
-            )
+            req_body.contextual_tuples = convert_tuple_keys(body.contextual_tuples)
 
         api_response = self._api.list_users(body=req_body, **kwargs)
 
