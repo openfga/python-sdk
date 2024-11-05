@@ -616,6 +616,36 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
+    async def test_read_latest_authorization_model_with_no_models(self, mock_request):
+        """Test case for read_latest_authorization_model when no models are in the store
+
+        Return the latest authorization models configured for the store
+        """
+        response_body = """
+{
+  "authorization_models": []
+}
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        # Enter a context with an instance of the API client
+        async with OpenFgaClient(configuration) as api_client:
+
+            # Return a particular version of an authorization model
+            api_response = await api_client.read_latest_authorization_model(options={})
+            self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
+            self.assertIsNone(api_response.authorization_model)
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
+                headers=ANY,
+                query_params=[("page_size", 1)],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
     async def test_read_changes(self, mock_request):
         """Test case for read_changes
 
@@ -2460,7 +2490,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 relation="can_read",
                 user_filters=[
                     UserTypeFilter(type="user"),
-                    UserTypeFilter(type="team", relation="member"),
                 ],
                 context={},
                 contextual_tuples=[
@@ -2521,7 +2550,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "relation": "can_read",
                     "user_filters": [
                         {"type": "user"},
-                        {"type": "team", "relation": "member"},
                     ],
                     "contextual_tuples": [
                         {

@@ -321,7 +321,12 @@ class OpenFgaClient:
         )
         options["page_size"] = 1
         api_response = await self.read_authorization_models(options)
-        return ReadAuthorizationModelResponse(api_response.authorization_models[0])
+        model = (
+            api_response.authorization_models[0]
+            if len(api_response.authorization_models) > 0
+            else None
+        )
+        return ReadAuthorizationModelResponse(model)
 
     #######################
     # Relationship Tuples
