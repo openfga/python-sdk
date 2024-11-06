@@ -29,6 +29,7 @@ from openfga_sdk.models.aborted_message_response import AbortedMessageResponse
 from openfga_sdk.models.any import Any
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.assertion_tuple_key import AssertionTupleKey
+from openfga_sdk.models.auth_error_code import AuthErrorCode
 from openfga_sdk.models.authorization_model import AuthorizationModel
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.check_request_tuple_key import CheckRequestTupleKey
@@ -47,6 +48,7 @@ from openfga_sdk.models.expand_request import ExpandRequest
 from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
 from openfga_sdk.models.expand_response import ExpandResponse
 from openfga_sdk.models.fga_object import FgaObject
+from openfga_sdk.models.forbidden_response import ForbiddenResponse
 from openfga_sdk.models.get_store_response import GetStoreResponse
 from openfga_sdk.models.internal_error_code import InternalErrorCode
 from openfga_sdk.models.internal_error_message_response import (
