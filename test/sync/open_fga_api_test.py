@@ -484,7 +484,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "user": "folder:product",
                     "relation": "parent",
-                    "object": "document:roadmap",
+                    "object": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                 },
             ]
 
@@ -538,7 +538,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                         {
                             "user": "folder:product",
                             "relation": "parent",
-                            "object": "document:roadmap",
+                            "object": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                         },
                     ],
                 },
