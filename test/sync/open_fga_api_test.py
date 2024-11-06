@@ -472,7 +472,6 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             request.relation = "can_read"
             request.user_filters = [
                 {"type": "user"},
-                {"type": "team", "relation": "member"},
             ]
             request.context = {}
             request.contextual_tuples = [
@@ -526,7 +525,6 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                     "relation": "can_read",
                     "user_filters": [
                         {"type": "user"},
-                        {"type": "team", "relation": "member"},
                     ],
                     "context": {},
                     "contextual_tuples": [
