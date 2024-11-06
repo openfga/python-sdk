@@ -90,6 +90,14 @@ class WriteAuthorizationModelRequest:
             and type_definitions is None
         ):
             raise ValueError("Invalid value for `type_definitions`, must not be `None`")
+        if (
+            self.local_vars_configuration.client_side_validation
+            and type_definitions is not None
+            and len(type_definitions) < 1
+        ):
+            raise ValueError(
+                "Invalid value for `type_definitions`, number of items must be greater than or equal to `1`"
+            )
 
         self._type_definitions = type_definitions
 

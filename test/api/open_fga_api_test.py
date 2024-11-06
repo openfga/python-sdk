@@ -467,7 +467,6 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 relation="can_read",
                 user_filters=[
                     {"type": "user"},
-                    {"type": "team", "relation": "member"},
                 ],
                 context={},
                 contextual_tuples=[
@@ -522,7 +521,6 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                     "relation": "can_read",
                     "user_filters": [
                         {"type": "user"},
-                        {"type": "team", "relation": "member"},
                     ],
                     "context": {},
                     "contextual_tuples": [

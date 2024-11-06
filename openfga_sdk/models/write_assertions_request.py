@@ -68,6 +68,14 @@ class WriteAssertionsRequest:
         """
         if self.local_vars_configuration.client_side_validation and assertions is None:
             raise ValueError("Invalid value for `assertions`, must not be `None`")
+        if (
+            self.local_vars_configuration.client_side_validation
+            and assertions is not None
+            and len(assertions) > 100
+        ):
+            raise ValueError(
+                "Invalid value for `assertions`, number of items must be less than or equal to `100`"
+            )
 
         self._assertions = assertions
 
