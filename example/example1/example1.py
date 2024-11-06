@@ -180,7 +180,7 @@ async def main():
                 ClientTuple(
                     user="user:anne",
                     relation="writer",
-                    object="document:roadmap",
+                    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                     condition=RelationshipCondition(
                         name="ViewCountLessThan200",
                         context=dict(
@@ -246,7 +246,9 @@ async def main():
         try:
             response = await fga_client.check(
                 ClientCheckRequest(
-                    user="user:anne", relation="viewer", object="document:roadmap"
+                    user="user:anne",
+                    relation="viewer",
+                    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                 )
             )
             print(f"Allowed: {response.allowed}")
@@ -260,7 +262,7 @@ async def main():
             ClientCheckRequest(
                 user="user:anne",
                 relation="viewer",
-                object="document:roadmap",
+                object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                 context=dict(ViewCount=100),
             )
         )
@@ -286,7 +288,7 @@ async def main():
             ClientListRelationsRequest(
                 user="user:anne",
                 relations=["viewer", "writer"],
-                object="document:roadmap",
+                object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
             )
         )
         print(f"Relations: {response}")
@@ -298,7 +300,7 @@ async def main():
             ClientListRelationsRequest(
                 user="user:anne",
                 relations=["viewer", "writer"],
-                object="document:roadmap",
+                object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                 context=dict(ViewCount=100),
             )
         )
@@ -331,7 +333,7 @@ async def main():
                 ClientAssertion(
                     user="user:anne",
                     relation="viewer",
-                    object="document:roadmap",
+                    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                     expectation=False,
                 ),
             ]
