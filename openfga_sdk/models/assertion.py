@@ -33,11 +33,28 @@ class Assertion:
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    openapi_types = {"tuple_key": "AssertionTupleKey", "expectation": "bool"}
+    openapi_types = {
+        "tuple_key": "AssertionTupleKey",
+        "expectation": "bool",
+        "contextual_tuples": "list[TupleKey]",
+        "context": "object",
+    }
 
-    attribute_map = {"tuple_key": "tuple_key", "expectation": "expectation"}
+    attribute_map = {
+        "tuple_key": "tuple_key",
+        "expectation": "expectation",
+        "contextual_tuples": "contextual_tuples",
+        "context": "context",
+    }
 
-    def __init__(self, tuple_key=None, expectation=None, local_vars_configuration=None):
+    def __init__(
+        self,
+        tuple_key=None,
+        expectation=None,
+        contextual_tuples=None,
+        context=None,
+        local_vars_configuration=None,
+    ):
         """Assertion - a model defined in OpenAPI"""
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
@@ -45,10 +62,16 @@ class Assertion:
 
         self._tuple_key = None
         self._expectation = None
+        self._contextual_tuples = None
+        self._context = None
         self.discriminator = None
 
         self.tuple_key = tuple_key
         self.expectation = expectation
+        if contextual_tuples is not None:
+            self.contextual_tuples = contextual_tuples
+        if context is not None:
+            self.context = context
 
     @property
     def tuple_key(self):
@@ -95,6 +118,58 @@ class Assertion:
             raise ValueError("Invalid value for `expectation`, must not be `None`")
 
         self._expectation = expectation
+
+    @property
+    def contextual_tuples(self):
+        """Gets the contextual_tuples of this Assertion.
+
+
+        :return: The contextual_tuples of this Assertion.
+        :rtype: list[TupleKey]
+        """
+        return self._contextual_tuples
+
+    @contextual_tuples.setter
+    def contextual_tuples(self, contextual_tuples):
+        """Sets the contextual_tuples of this Assertion.
+
+
+        :param contextual_tuples: The contextual_tuples of this Assertion.
+        :type contextual_tuples: list[TupleKey]
+        """
+        if (
+            self.local_vars_configuration.client_side_validation
+            and contextual_tuples is not None
+            and len(contextual_tuples) > 20
+        ):
+            raise ValueError(
+                "Invalid value for `contextual_tuples`, number of items must be less than or equal to `20`"
+            )
+
+        self._contextual_tuples = contextual_tuples
+
+    @property
+    def context(self):
+        """Gets the context of this Assertion.
+
+        Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
+
+        :return: The context of this Assertion.
+        :rtype: object
+        """
+        return self._context
+
+    @context.setter
+    def context(self, context):
+        """Sets the context of this Assertion.
+
+        Additional request context that will be used to evaluate any ABAC conditions encountered in the query evaluation.
+
+        :param context: The context of this Assertion.
+        :type context: object
+        """
+
+        self._context = context
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""
