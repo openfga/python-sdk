@@ -766,7 +766,7 @@ No authorization required
 
 Read assertions for an authorization model ID
 
-The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false. 
+The ReadAssertions API will return, for a given authorization model id, all the assertions stored for it. 
 
 ### Example
 
@@ -1187,7 +1187,7 @@ No authorization required
 
 Upsert assertions for an authorization model ID
 
-The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, and the expectation of whether a call to the Check API of that tuple key will return true or false. 
+The WriteAssertions API will upsert new assertions for an authorization model id, or overwrite the existing ones. An assertion is an object that contains a tuple key, the expectation of whether a call to the Check API of that tuple key will return true or false, and optionally a list of contextual tuples.
 
 ### Example
 
