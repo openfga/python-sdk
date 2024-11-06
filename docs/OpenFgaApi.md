@@ -98,6 +98,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -179,6 +180,7 @@ No authorization required
 **201** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -259,6 +261,7 @@ No authorization required
 **204** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -342,6 +345,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -423,6 +427,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -506,6 +511,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -588,6 +594,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -671,6 +678,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -754,6 +762,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -837,6 +846,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -920,6 +930,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -1005,6 +1016,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -1092,6 +1104,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -1175,6 +1188,7 @@ No authorization required
 **200** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -1259,6 +1273,7 @@ No authorization required
 **204** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |
@@ -1342,6 +1357,7 @@ No authorization required
 **201** | A successful response. |  -  |
 **400** | Request failed due to invalid input. |  -  |
 **401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
 **404** | Request failed due to incorrect path. |  -  |
 **409** | Request was aborted due a transaction conflict. |  -  |
 **422** | Request timed out due to excessive request throttling. |  -  |

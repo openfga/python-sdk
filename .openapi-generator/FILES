@@ -19,6 +19,7 @@ docs/AbortedMessageResponse.md
 docs/Any.md
 docs/Assertion.md
 docs/AssertionTupleKey.md
+docs/AuthErrorCode.md
 docs/AuthorizationModel.md
 docs/CheckRequest.md
 docs/CheckRequestTupleKey.md
@@ -37,6 +38,7 @@ docs/ExpandRequest.md
 docs/ExpandRequestTupleKey.md
 docs/ExpandResponse.md
 docs/FgaObject.md
+docs/ForbiddenResponse.md
 docs/GetStoreResponse.md
 docs/InternalErrorCode.md
 docs/InternalErrorMessageResponse.md
@@ -140,6 +142,7 @@ openfga_sdk/models/aborted_message_response.py
 openfga_sdk/models/any.py
 openfga_sdk/models/assertion.py
 openfga_sdk/models/assertion_tuple_key.py
+openfga_sdk/models/auth_error_code.py
 openfga_sdk/models/authorization_model.py
 openfga_sdk/models/check_request.py
 openfga_sdk/models/check_request_tuple_key.py
@@ -158,6 +161,7 @@ openfga_sdk/models/expand_request.py
 openfga_sdk/models/expand_request_tuple_key.py
 openfga_sdk/models/expand_response.py
 openfga_sdk/models/fga_object.py
+openfga_sdk/models/forbidden_response.py
 openfga_sdk/models/get_store_response.py
 openfga_sdk/models/internal_error_code.py
 openfga_sdk/models/internal_error_message_response.py
