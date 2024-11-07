@@ -16,6 +16,7 @@ from openfga_sdk import (
     TypeDefinition,
     Userset,
     Usersets,
+    UserTypeFilter,
     WriteAuthorizationModelRequest,
 )
 from openfga_sdk.client.models import (
@@ -306,16 +307,17 @@ async def main():
         # ListUsers
         print("Listing user who have access to object")
 
-        response = await fga_client.list_objects(
+        response = await fga_client.list_users(
             ClientListUsersRequest(
                 relation="viewer",
                 object=FgaObject(type="document", id="roadmap"),
                 user_filters=[
-                    FgaObject(type="user"),
+                    UserTypeFilter(type="user"),
                 ],
+                context=dict(ViewCount=100),
             )
         )
-        print(f"Users: {response.objects}")
+        print(f"Users: {response.users}")
 
         # WriteAssertions
         await fga_client.write_assertions(

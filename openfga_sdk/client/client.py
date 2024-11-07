@@ -321,7 +321,12 @@ class OpenFgaClient:
         )
         options["page_size"] = 1
         api_response = await self.read_authorization_models(options)
-        return ReadAuthorizationModelResponse(api_response.authorization_models[0])
+        model = (
+            api_response.authorization_models[0]
+            if len(api_response.authorization_models) > 0
+            else None
+        )
+        return ReadAuthorizationModelResponse(model)
 
     #######################
     # Relationship Tuples
@@ -744,9 +749,7 @@ class OpenFgaClient:
         )
 
         if body.contextual_tuples:
-            req_body.contextual_tuples = ContextualTupleKeys(
-                tuple_keys=convert_tuple_keys(body.contextual_tuples)
-            )
+            req_body.contextual_tuples = convert_tuple_keys(body.contextual_tuples)
 
         api_response = await self._api.list_users(body=req_body, **kwargs)
 
