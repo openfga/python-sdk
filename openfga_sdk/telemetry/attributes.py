@@ -1,6 +1,6 @@
 import time
 import urllib
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from aiohttp import ClientResponse
 from urllib3 import HTTPResponse
@@ -89,7 +89,7 @@ class TelemetryAttributes:
 
     @staticmethod
     def get(
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> list[TelemetryAttribute] | TelemetryAttribute | None:
         if name is None:
             return TelemetryAttributes._attributes
@@ -234,11 +234,11 @@ class TelemetryAttributes:
 
     @staticmethod
     def fromResponse(
-        response: Optional[
-            HTTPResponse | RESTResponse | ClientResponse | ApiException
-        ] = None,
-        credentials: Optional[Credentials] = None,
-        attributes: Optional[dict[TelemetryAttribute, str | int]] = None,
+        response: (
+            HTTPResponse | RESTResponse | ClientResponse | ApiException | None
+        ) = None,
+        credentials: Credentials | None = None,
+        attributes: dict[TelemetryAttribute, str | int] | None = None,
     ) -> dict[TelemetryAttribute, str | int]:
         response_model_id = None
         response_query_duration = None
@@ -295,8 +295,8 @@ class TelemetryAttributes:
     @staticmethod
     def coalesceAttributeValue(
         attribute: TelemetryAttribute,
-        value: Optional[int | float] = None,
-        attributes: Optional[dict[TelemetryAttribute, str | int]] = None,
+        value: int | float | None = None,
+        attributes: dict[TelemetryAttribute, str | int] | None = None,
     ) -> int | float | None:
         if value is None:
             if attribute in attributes:

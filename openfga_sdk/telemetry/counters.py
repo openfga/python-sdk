@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class TelemetryCounter(NamedTuple):
@@ -25,7 +25,7 @@ class TelemetryCounters:
 
     @staticmethod
     def get(
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> list[TelemetryCounter] | TelemetryCounter | None:
         if name is None:
             return TelemetryCounters._counters

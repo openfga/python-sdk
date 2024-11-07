@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class TelemetryHistogram(NamedTuple):
@@ -24,7 +24,7 @@ class TelemetryHistograms:
 
     @staticmethod
     def get(
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> list[TelemetryHistogram] | TelemetryHistogram | None:
         if name is None:
             return TelemetryHistograms._histograms

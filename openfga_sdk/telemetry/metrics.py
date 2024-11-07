@@ -1,5 +1,3 @@
-from typing import Optional
-
 from opentelemetry.metrics import Counter, Histogram, Meter, get_meter
 
 from openfga_sdk.telemetry.attributes import (
@@ -21,9 +19,9 @@ class TelemetryMetrics:
 
     def __init__(
         self,
-        meter: Optional[Meter] = None,
-        counters: Optional[dict[str, Counter]] = None,
-        histograms: Optional[dict[str, Histogram]] = None,
+        meter: Meter | None = None,
+        counters: dict[str, Counter] | None = None,
+        histograms: dict[str, Histogram] | None = None,
     ):
         self._meter = meter
         self._counters = counters or {}

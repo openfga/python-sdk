@@ -15,7 +15,6 @@ import http
 import logging
 import sys
 import urllib
-from typing import Optional
 
 import urllib3
 
@@ -193,7 +192,7 @@ class Configuration:
         server_operation_variables=None,
         ssl_ca_cert=None,
         api_url=None,  # TODO: restructure when removing api_scheme/api_host
-        telemetry: Optional[
+        telemetry: (
             dict[
                 TelemetryConfigurationType | str,
                 TelemetryMetricsConfiguration
@@ -205,7 +204,8 @@ class Configuration:
                 ]
                 | None,
             ]
-        ] = None,
+            | None
+        ) = None,
     ):
         """Constructor"""
         self._url = api_url

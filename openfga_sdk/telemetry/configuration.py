@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
 from openfga_sdk.telemetry.counters import TelemetryCounter, TelemetryCounters
@@ -16,22 +16,22 @@ class TelemetryMetricConfiguration:
 
     def __init__(
         self,
-        config: Optional[dict[TelemetryAttribute, bool]] = None,
-        fga_client_request_client_id: Optional[bool] = None,
-        fga_client_request_method: Optional[bool] = None,
-        fga_client_request_model_id: Optional[bool] = None,
-        fga_client_request_store_id: Optional[bool] = None,
-        fga_client_response_model_id: Optional[bool] = None,
-        fga_client_user: Optional[bool] = None,
-        http_client_request_duration: Optional[bool] = None,
-        http_host: Optional[bool] = None,
-        http_request_method: Optional[bool] = None,
-        http_request_resend_count: Optional[bool] = None,
-        http_response_status_code: Optional[bool] = None,
-        http_server_request_duration: Optional[bool] = None,
-        url_scheme: Optional[bool] = None,
-        url_full: Optional[bool] = None,
-        user_agent_original: Optional[bool] = None,
+        config: dict[TelemetryAttribute, bool] | None = None,
+        fga_client_request_client_id: bool | None = None,
+        fga_client_request_method: bool | None = None,
+        fga_client_request_model_id: bool | None = None,
+        fga_client_request_store_id: bool | None = None,
+        fga_client_response_model_id: bool | None = None,
+        fga_client_user: bool | None = None,
+        http_client_request_duration: bool | None = None,
+        http_host: bool | None = None,
+        http_request_method: bool | None = None,
+        http_request_resend_count: bool | None = None,
+        http_response_status_code: bool | None = None,
+        http_server_request_duration: bool | None = None,
+        url_scheme: bool | None = None,
+        url_full: bool | None = None,
+        user_agent_original: bool | None = None,
     ):
         """
         Initialize a new instance of the `TelemetryMetricConfiguration` class.
@@ -468,8 +468,8 @@ class TelemetryMetricConfiguration:
 
     def configure(
         self,
-        config: Optional[dict[TelemetryAttribute | str, bool]] = None,
-        clear: Optional[bool] = False,
+        config: dict[TelemetryAttribute | str, bool] | None = None,
+        clear: bool | None = False,
     ) -> None:
         """
         Configure the telemetry metric.
@@ -509,7 +509,7 @@ class TelemetryMetricConfiguration:
             self._valid = None
 
     def getAttributes(
-        self, filter_enabled: Optional[bool] = True
+        self, filter_enabled: bool | None = True
     ) -> dict[TelemetryAttribute, bool]:
         """
         Returns a list of supported attributes. If `filter_enabled` is `True`, only enabled attributes are returned.
@@ -530,7 +530,7 @@ class TelemetryMetricConfiguration:
 
         return attributes
 
-    def isEnabled(self, attribute: Optional[TelemetryAttribute] = None) -> bool:
+    def isEnabled(self, attribute: TelemetryAttribute | None = None) -> bool:
         """
         Check if this metric is enabled for telemetry, based on whether any attributes are enabled.
 
@@ -547,7 +547,7 @@ class TelemetryMetricConfiguration:
 
         return False
 
-    def isValid(self, raise_exception: Optional[bool] = False) -> bool:
+    def isValid(self, raise_exception: bool = False) -> bool:
         """
         Validate the telemetry metric configuration.
 
@@ -604,16 +604,17 @@ class TelemetryMetricsConfiguration:
 
     def __init__(
         self,
-        config: Optional[
+        config: (
             dict[
                 TelemetryHistogram | TelemetryCounter,
                 TelemetryMetricConfiguration | None,
             ]
-        ] = None,
-        fga_client_credentials_request: Optional[TelemetryMetricConfiguration] = None,
-        fga_client_request_duration: Optional[TelemetryMetricConfiguration] = None,
-        fga_client_query_duration: Optional[TelemetryMetricConfiguration] = None,
-        fga_client_request: Optional[TelemetryMetricConfiguration] = None,
+            | None
+        ) = None,
+        fga_client_credentials_request: TelemetryMetricConfiguration | None = None,
+        fga_client_request_duration: TelemetryMetricConfiguration | None = None,
+        fga_client_query_duration: TelemetryMetricConfiguration | None = None,
+        fga_client_request: TelemetryMetricConfiguration | None = None,
     ):
         """
         Initialize a new instance of the `TelemetryMetricsConfiguration` class.
@@ -749,13 +750,14 @@ class TelemetryMetricsConfiguration:
 
     def configure(
         self,
-        config: Optional[
+        config: (
             dict[
                 TelemetryHistogram | TelemetryCounter | str,
                 TelemetryMetricConfiguration | dict[TelemetryAttribute, bool] | None,
             ]
-        ] = None,
-        clear: Optional[bool] = False,
+            | None
+        ) = None,
+        clear: bool = False,
     ) -> None:
         """
         Configure metrics reporting for telemetry.
@@ -801,7 +803,7 @@ class TelemetryMetricsConfiguration:
         self._valid = None
 
     def getMetrics(
-        self, filter_enabled: Optional[bool] = True
+        self, filter_enabled: bool = True
     ) -> dict[
         TelemetryHistogram | TelemetryCounter, TelemetryMetricConfiguration | None
     ]:
@@ -825,7 +827,7 @@ class TelemetryMetricsConfiguration:
         return metrics
 
     def isEnabled(
-        self, metric: Optional[TelemetryCounter | TelemetryHistogram] = None
+        self, metric: TelemetryCounter | TelemetryHistogram | None = None
     ) -> bool:
         """
         Check if a metric is enabled for telemetry.
@@ -847,7 +849,7 @@ class TelemetryMetricsConfiguration:
 
         return False
 
-    def isValid(self, raise_exception: Optional[bool] = False) -> bool:
+    def isValid(self, raise_exception: bool = False) -> bool:
         """
         Validate the telemetry metrics configuration.
 
@@ -903,7 +905,7 @@ class TelemetryConfigurations:
 
     @staticmethod
     def get(
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> list[TelemetryConfigurationType] | TelemetryConfigurationType | None:
         if name is None:
             return TelemetryConfigurations._configurations
@@ -921,8 +923,8 @@ class TelemetryConfiguration:
 
     def __init__(
         self,
-        config: Optional[dict[str, TelemetryMetricsConfiguration | None]] = None,
-        metrics: Optional[TelemetryMetricsConfiguration] = None,
+        config: dict[str, TelemetryMetricsConfiguration | None] | None = None,
+        metrics: TelemetryMetricsConfiguration | None = None,
     ):
         """
         Initialize a new instance of the `TelemetryConfiguration` class.
@@ -974,7 +976,7 @@ class TelemetryConfiguration:
 
     def configure(
         self,
-        config: Optional[
+        config: (
             dict[
                 TelemetryConfigurationType | str,
                 TelemetryMetricsConfiguration
@@ -986,8 +988,9 @@ class TelemetryConfiguration:
                 ]
                 | None,
             ]
-        ] = None,
-        clear: Optional[bool] = False,
+            | None
+        ) = None,
+        clear: bool = False,
     ) -> None:
         """
         Configure telemetry reporting.
@@ -1029,7 +1032,7 @@ class TelemetryConfiguration:
         self._valid = None
 
     def getConfigurations(
-        self, filter_enabled: Optional[bool] = True
+        self, filter_enabled: bool = True
     ) -> dict[TelemetryConfigurationType, TelemetryMetricsConfiguration | None]:
         """
         Returns a list of supported reporting contexts. If `filter_enabled` is `True`, only enabled contexts are returned.
@@ -1051,7 +1054,7 @@ class TelemetryConfiguration:
         return contexts
 
     def isEnabled(
-        self, configuration: Optional[TelemetryConfigurationType] = None
+        self, configuration: TelemetryConfigurationType | None = None
     ) -> bool:
         """
         Check if telemetry is enabled.
@@ -1071,7 +1074,7 @@ class TelemetryConfiguration:
 
         return False
 
-    def isValid(self, raise_exception: Optional[bool] = False) -> bool:
+    def isValid(self, raise_exception: bool = False) -> bool:
         """
         Validate the telemetry configuration.
 
