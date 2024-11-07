@@ -268,6 +268,19 @@ async def main():
         )
         print(f"Allowed: {response.allowed}")
 
+        # Perform a batch check
+        print("Perofmring a batch check")
+
+        response = await fga_client.batch_check([
+            ClientCheckRequest(
+                user="user:anne",
+                relation="viewer",
+                object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                context=dict(ViewCount=100),
+            )
+        ])
+        print(f"Allowed: {response[0].allowed}")
+
         # List objects with context
         print("Listing objects for access with context")
 

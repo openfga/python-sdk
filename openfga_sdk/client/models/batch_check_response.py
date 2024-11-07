@@ -14,9 +14,9 @@ from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.models.check_response import CheckResponse
 
 
-class BatchCheckResponse:
+class ClientBatchCheckResponse:
     """
-    BatchCheckResponse encapsulates the response for a single batch check
+    ClientBatchCheckResponse encapsulates the response for a single batch check
     """
 
     def __init__(

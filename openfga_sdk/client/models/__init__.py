@@ -11,7 +11,7 @@
 """
 
 from openfga_sdk.client.models.assertion import ClientAssertion
-from openfga_sdk.client.models.batch_check_response import BatchCheckResponse
+from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
 from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
