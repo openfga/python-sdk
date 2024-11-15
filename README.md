@@ -502,7 +502,7 @@ Reads the relationship tuples stored in the database. It does not evaluate nor e
 body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 )
 
 response = await fga_client.read(body)
@@ -518,7 +518,7 @@ response = await fga_client.read(body)
 # Find all relationship tuples where a certain user has a relationship as any relation to a certain document
 body = ReadRequestTupleKey(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 )
 
 response = await fga_client.read(body)
@@ -551,7 +551,7 @@ response = await fga_client.read(body)
 
 # Find all relationship tuples where any user has a relationship as any relation with a particular document
 body = ReadRequestTupleKey(
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 )
 
 response = await fga_client.read(body)
@@ -597,7 +597,7 @@ body = ClientWriteRequest(
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
-            object="document:roadmap",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
             condition=RelationshipCondition(
               name='ViewCountLessThan200',
               context=dict(
@@ -609,14 +609,14 @@ body = ClientWriteRequest(
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
-            object="document:budget",
+            object="document:0192ab2d-d36e-7cb3-a4a8-5d1d67a300c5",
         ),
     ],
     deletes=[
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="writer",
-            object="document:roadmap",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         ),
     ],
 )
@@ -651,12 +651,12 @@ body = ClientWriteRequest(
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
-            object="document:roadmap",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         ),
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="viewer",
-            object="document:budget",
+            object="document:0192ab2d-d36e-7cb3-a4a8-5d1d67a300c5",
             condition=RelationshipCondition(
               name='ViewCountLessThan200',
               context=dict(
@@ -670,7 +670,7 @@ body = ClientWriteRequest(
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="writer",
-            object="document:roadmap",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         ),
     ],
 )
@@ -700,7 +700,7 @@ options = {
 body = ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="writer",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     context=dict(
         ViewCount=100
     ),
@@ -731,12 +731,12 @@ options = {
 body = [ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="editor",
-            object="document:roadmap",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         ),
     ],
     context=dict(
@@ -745,22 +745,22 @@ body = [ClientCheckRequest(
 ), ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="admin",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="editor",
-            object="document:roadmap",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         ),
     ]
 ), ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="creator",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 ), ClientCheckRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="deleter",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 )]
 
 response = await fga_client.batch_check(body, options)
@@ -769,11 +769,11 @@ response = await fga_client.batch_check(body, options)
 #   request: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "viewer",
-#     object: "document:roadmap",
+#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 #     contextual_tuples: [{
 #       user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #       relation: "editor",
-#       object: "document:roadmap"
+#       object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"
 #     }],
 #    context=dict(
 #        ViewCount=100
@@ -784,11 +784,11 @@ response = await fga_client.batch_check(body, options)
 #   request: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "admin",
-#     object: "document:roadmap",
+#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 #     contextual_tuples: [{
 #       user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #       relation: "editor",
-#       object: "document:roadmap"
+#       object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"
 #     }]
 #   }
 # }, {
@@ -796,7 +796,7 @@ response = await fga_client.batch_check(body, options)
 #   request: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "creator",
-#     object: "document:roadmap",
+#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 #   },
 #   error: <FgaError ...>
 # }, {
@@ -804,7 +804,7 @@ response = await fga_client.batch_check(body, options)
 #   request: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "deleter",
-#     object: "document:roadmap",
+#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 #   }},
 # ]
 ```
@@ -828,11 +828,11 @@ options = {
 }
 body = ClientExpandRequest(
     relation="viewer",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 )
 
 response = await fga_client.expand(body. options)
-# response = ExpandResponse({"tree": UsersetTree({"root": Node({"name": "document:roadmap#viewer", "leaf": Leaf({"users": Users({"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b", "user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]})})})})})
+# response = ExpandResponse({"tree": UsersetTree({"root": Node({"name": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a#viewer", "leaf": Leaf({"users": Users({"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b", "user:f52a4f7a-054d-47ff-bb6e-3ac81269988f"]})})})})})
 ```
 
 #### List Objects
@@ -860,7 +860,7 @@ body = ClientListObjectsRequest(
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="writer",
-            object="document:budget",
+            object="document:0192ab2d-d36e-7cb3-a4a8-5d1d67a300c5",
         ),
     ],
     context=dict(
@@ -869,7 +869,7 @@ body = ClientListObjectsRequest(
 )
 
 response = await fga_client.list_objects(body)
-# response.objects = ["document:roadmap"]
+# response.objects = ["document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a"]
 ```
 
 #### List Relations
@@ -889,13 +889,13 @@ options = {
 }
 body = ClientListRelationsRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     relations=["can_view", "can_edit", "can_delete", "can_rename"],
     contextual_tuples=[  # optional
         ClientTuple(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="writer",
-            object="document:budget",
+            object="document:0192ab2d-d36e-7cb3-a4a8-5d1d67a300c5",
         ),
     ],
     context=dict(
@@ -946,7 +946,7 @@ async with OpenFgaClient(configuration) as api_client:
             ClientTuple(
                 user="folder:product",
                 relation="parent",
-                object="document:roadmap",
+                object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
             ),
         ],
     )
@@ -999,7 +999,7 @@ options = {
 body = [ClientAssertion(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
-    object="document:roadmap",
+    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
     expectation=True,
 )]
 
@@ -1064,6 +1064,7 @@ Class | Method | HTTP request | Description
  - [Any](https://github.com/openfga/python-sdk/blob/main/docs/Any.md)
  - [Assertion](https://github.com/openfga/python-sdk/blob/main/docs/Assertion.md)
  - [AssertionTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/AssertionTupleKey.md)
+ - [AuthErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/AuthErrorCode.md)
  - [AuthorizationModel](https://github.com/openfga/python-sdk/blob/main/docs/AuthorizationModel.md)
  - [CheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequest.md)
  - [CheckRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequestTupleKey.md)
@@ -1082,6 +1083,7 @@ Class | Method | HTTP request | Description
  - [ExpandRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/ExpandRequestTupleKey.md)
  - [ExpandResponse](https://github.com/openfga/python-sdk/blob/main/docs/ExpandResponse.md)
  - [FgaObject](https://github.com/openfga/python-sdk/blob/main/docs/FgaObject.md)
+ - [ForbiddenResponse](https://github.com/openfga/python-sdk/blob/main/docs/ForbiddenResponse.md)
  - [GetStoreResponse](https://github.com/openfga/python-sdk/blob/main/docs/GetStoreResponse.md)
  - [InternalErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/InternalErrorCode.md)
  - [InternalErrorMessageResponse](https://github.com/openfga/python-sdk/blob/main/docs/InternalErrorMessageResponse.md)

@@ -68,6 +68,14 @@ class ContextualTupleKeys:
         """
         if self.local_vars_configuration.client_side_validation and tuple_keys is None:
             raise ValueError("Invalid value for `tuple_keys`, must not be `None`")
+        if (
+            self.local_vars_configuration.client_side_validation
+            and tuple_keys is not None
+            and len(tuple_keys) > 100
+        ):
+            raise ValueError(
+                "Invalid value for `tuple_keys`, number of items must be less than or equal to `100`"
+            )
 
         self._tuple_keys = tuple_keys
 

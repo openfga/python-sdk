@@ -467,7 +467,6 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 relation="can_read",
                 user_filters=[
                     {"type": "user"},
-                    {"type": "team", "relation": "member"},
                 ],
                 context={},
                 contextual_tuples=[
@@ -479,7 +478,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                     {
                         "user": "folder:product",
                         "relation": "parent",
-                        "object": "document:roadmap",
+                        "object": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                     },
                 ],
             )
@@ -522,7 +521,6 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                     "relation": "can_read",
                     "user_filters": [
                         {"type": "user"},
-                        {"type": "team", "relation": "member"},
                     ],
                     "context": {},
                     "contextual_tuples": [
@@ -534,7 +532,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                         {
                             "user": "folder:product",
                             "relation": "parent",
-                            "object": "document:roadmap",
+                            "object": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                         },
                     ],
                 },
