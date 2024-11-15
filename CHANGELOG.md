@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.0...HEAD)
+
+## v0.8.0
+
+### [0.8.0](https://github.com/openfga/python-sdk/compare/v0.7.2...v0.8.0) (2024-11-15)
+
+- feat: allow configuring the token endpoint (#137)
+- feat: add per-HTTP request counter metric (#135)
+- refactor: remove SDK version for OpenTelemetry meter name (#134)
+- fix: only send SDK method header from SDK wrapper methods (#142)
+- fix: unable to pass `retry_params` (#144)
+- fix: list users should send contextual tuples as a list (#147)
+- fix: handle no models existing in `read_latest_authorization_model` (#147)
+
 ## v0.7.2
 
 ### [0.7.2](https://github.com/openfga/python-sdk/compare/v0.7.1...v0.7.2) (2024-09-22)
