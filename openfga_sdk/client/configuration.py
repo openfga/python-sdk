@@ -30,6 +30,7 @@ class ClientConfiguration(Configuration):
         authorization_model_id=None,
         ssl_ca_cert=None,
         api_url=None,  # TODO: restructure when removing api_scheme/api_host
+        timeout_millisec: int | None = None,
     ):
         super().__init__(
             api_scheme,
@@ -39,6 +40,7 @@ class ClientConfiguration(Configuration):
             retry_params,
             ssl_ca_cert=ssl_ca_cert,
             api_url=api_url,
+            timeout_millisec=timeout_millisec,
         )
         self._authorization_model_id = authorization_model_id
 

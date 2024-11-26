@@ -169,6 +169,7 @@ class Configuration:
     :param ssl_ca_cert: str - the path to a file of concatenated CA certificates
       in PEM format
     :param api_url: str - the URL of the FGA server
+    :param timeout_millisec: int | None - the default timeout in milliseconds for requests
     """
 
     _default = None
@@ -206,6 +207,7 @@ class Configuration:
             ]
             | None
         ) = None,
+        timeout_millisec: int | None = None,
     ):
         """Constructor"""
         self._url = api_url
@@ -218,6 +220,8 @@ class Configuration:
         else:
             # use the default parameters
             self._retry_params = RetryParams()
+
+        self._timeout_millisec = timeout_millisec or 5000 * 60
         """Default Base url
         """
         self.server_index = 0
@@ -647,6 +651,18 @@ class Configuration:
         if self._credentials is not None:
             self._credentials.validate_credentials_config()
 
+        if self._timeout_millisec is not None:
+            if not isinstance(self._timeout_millisec, int):
+                raise FgaValidationException(
+                    f"timeout_millisec unexpected type {self._timeout_millisec}"
+                )
+
+            ten_minutes = 10000 * 60
+            if self._timeout_millisec < 0 or self._timeout_millisec > ten_minutes:
+                raise FgaValidationException(
+                    f"timeout_millisec not within reasonable range (0,60000), {self._timeout_millisec}"
+                )
+
     @property
     def api_scheme(self):
         """Return connection is https or http."""
@@ -717,6 +733,20 @@ class Configuration:
         Update retry parameters
         """
         self._retry_params = value
+
+    @property
+    def timeout_millisec(self):
+        """
+        Return timeout milliseconds
+        """
+        return self._timeout_millisec
+
+    @timeout_millisec.setter
+    def timeout_millisec(self, value):
+        """
+        Update timeout milliseconds
+        """
+        self._timeout_millisec = value
 
     @property
     def disabled_client_side_validations(self):
