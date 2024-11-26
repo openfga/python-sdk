@@ -72,6 +72,7 @@ class RESTClientObject:
 
         self.proxy = configuration.proxy
         self.proxy_headers = configuration.proxy_headers
+        self._timeout_millisec = configuration.timeout_millisec
 
         # https pool manager
         self.pool_manager = aiohttp.ClientSession(connector=connector, trust_env=True)
@@ -117,7 +118,7 @@ class RESTClientObject:
 
         post_params = post_params or {}
         headers = headers or {}
-        timeout = _request_timeout or 5 * 60
+        timeout = _request_timeout or self._timeout_millisec / 1000
 
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"

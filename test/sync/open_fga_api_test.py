@@ -1148,6 +1148,17 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         self.assertEqual(configuration.api_url, "http://localhost:8080")
         configuration.is_valid()  # Should not throw and complain about scheme being invalid
 
+    def test_timeout_millisec(self):
+        """
+        Ensure that timeout_millisec is set and validated
+        """
+        configuration = Configuration(
+            api_url="http://localhost:8080",
+            timeout_millisec=10000,
+        )
+        self.assertEqual(configuration.timeout_millisec, 10000)
+        configuration.is_valid()
+
     async def test_bad_configuration_read_authorization_model(self):
         """
         Test whether FgaValidationException is raised for API (reading authorization models)

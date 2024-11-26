@@ -136,6 +136,7 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         }
         default_config.ssl_ca_cert = "/path/to/ca_cert.pem"
         default_config.api_url = "https://fga.example/api"
+        default_config.timeout_millisec = 10000
         Configuration.set_default(default_config)
 
         assert Configuration._default.api_scheme == "https"
@@ -183,6 +184,7 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         }
         assert Configuration._default.ssl_ca_cert == "/path/to/ca_cert.pem"
         assert Configuration._default.api_url == "https://fga.example/api"
+        assert Configuration._default.timeout_millisec == 10000
 
     def test_configuration_get_default_copy(self, configuration):
         default_config = Configuration()
@@ -212,6 +214,7 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         }
         default_config.ssl_ca_cert = "/path/to/ca_cert.pem"
         default_config.api_url = "https://fga.example/api"
+        default_config.timeout_millisec = 10000
         Configuration.set_default(default_config)
 
         copied_config = Configuration.get_default_copy()
@@ -229,6 +232,7 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
             assert copied_config.credentials._api_audience == "audience123"
             assert copied_config.credentials._api_issuer == "issuer123"
             assert copied_config.credentials._api_token == "token123"
+        assert Configuration._default.timeout_millisec == 10000
 
 
 class TestConfigurationValidityChecks:
@@ -361,6 +365,7 @@ class TestConfigurationMiscellaneous:
             },
             ssl_ca_cert="/path/to/ca_cert.pem",
             api_url="https://fga.example/api",
+            timeout_millisec=10000,
         )
 
         # Perform deep copy
@@ -394,3 +399,4 @@ class TestConfigurationMiscellaneous:
         )
         assert copied_config.ssl_ca_cert == config.ssl_ca_cert
         assert copied_config.api_url == config.api_url
+        assert copied_config.timeout_millisec == config.timeout_millisec

@@ -81,6 +81,8 @@ class RESTClientObject:
             else:
                 maxsize = 4
 
+        self._timeout_millisec = configuration.timeout_millisec
+
         # https pool manager
         if configuration.proxy:
             self.pool_manager = urllib3.ProxyManager(
@@ -148,7 +150,7 @@ class RESTClientObject:
         post_params = post_params or {}
         headers = headers or {}
 
-        timeout = None
+        timeout = urllib3.Timeout(total=self._timeout_millisec / 1000)
         if _request_timeout:
             if isinstance(_request_timeout, (float, int)):
                 timeout = urllib3.Timeout(total=_request_timeout)
