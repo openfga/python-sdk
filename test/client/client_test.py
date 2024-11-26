@@ -17,7 +17,7 @@ from unittest.mock import ANY, patch
 
 import urllib3
 
-from openfga_sdk import rest
+from openfga_sdk import rest, CheckError
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.models.assertion import ClientAssertion
@@ -2139,7 +2139,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 },
                 "2": {
                     "error": {
-                        "code": "validation_error",
+                        "inputError": "validation_error",
                         "message": "Generic validation error"
                     }
                 }
@@ -2151,7 +2151,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 {
     "result": {
         "3": {
-            "allowed": true
+            "allowed": false
         }
     }
 }"""
@@ -2172,11 +2172,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_v4("3"),
         ]
 
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response(first_response_body, 200),
-            mock_response(second_response_body, 200),
-        ]
         body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
@@ -2213,7 +2208,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertIsInstance(api_response[1].error, ValidationException)
             self.assertIsInstance(
                 api_response[1].error, ValidationException
-            )  # TODO: do we need to map into exception types?
+            )
             self.assertEqual(api_response[2].error, None)
             self.assertFalse(api_response[2].allowed)
             self.assertEqual(api_response[2].request, body3)

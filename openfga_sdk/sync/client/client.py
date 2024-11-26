@@ -13,6 +13,7 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
+from openfga_sdk import CheckError
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
@@ -33,9 +34,16 @@ from openfga_sdk.client.models.write_single_response import (
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
 from openfga_sdk.exceptions import (
+    ValidationException,
     AuthenticationError,
     FgaValidationException,
-    UnauthorizedException,
+    UnauthorizedException, ServiceException,
+)
+from openfga_sdk.models.validation_error_message_response import (
+    ValidationErrorMessageResponse,
+)
+from openfga_sdk.models.internal_error_message_response import (
+    InternalErrorMessageResponse,
 )
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.batch_check_item import BatchCheckItem
@@ -75,6 +83,17 @@ def _chuck_array(array, max_size):
         for i in range((len(array) + max_size - 1) // max_size)
     ]
 
+def _map_error(error: CheckError):
+    if (error is not None and error.input_error is not None):
+        e = ValidationException(status=400, reason="Bad Request")
+        r = ValidationErrorMessageResponse(code=error.input_error, message=error.message)
+        e.parsed_exception = r
+        return e
+    elif (error is not None and error.internal_error is not None):
+        e = ServiceException(status=500, reason="Internal Server Error")
+        r = InternalErrorMessageResponse(code=error.internal_error, message=error.message)
+        return e
+    return error
 
 def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str):
     """
@@ -576,8 +595,10 @@ class OpenFgaClient:
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
         try:
             api_response = self.check(body, options)
+            # API does not send "allowed" when there is an error. For compatibility, set it to false.
+            allowed = api_response.allowed if api_response.error is None else False
             return ClientBatchCheckResponse(
-                allowed=api_response.allowed,
+                allowed=allowed,
                 request=body,
                 response=api_response,
                 error=None,
@@ -629,12 +650,14 @@ class OpenFgaClient:
             results: list[ClientBatchCheckResponse] = []
             for c_id, result in api_response.result.items():
                 check = checks_map[c_id]
+                allowed = result.allowed if result.error is None else False
                 results.append(
                     ClientBatchCheckResponse(
-                        allowed=result.allowed,
+                        allowed=allowed,
                         request=check,
                         response=None,
-                        error=result.error,
+                        error=_map_error(result.error),
+                        # error=result.error,
                     )
                 )
             return results
@@ -687,7 +710,7 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
-        # This needs to be updated to support checking if BatchCheck is available, and if not fallback to us _single_batch_check
+        # TODO - may need to fallback/switch to use _single_batch_check if configured
 
         batches = [
             body[i * max_batch_size : (i + 1) * max_batch_size]

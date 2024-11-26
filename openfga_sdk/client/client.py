@@ -22,6 +22,7 @@ from openfga_sdk.client.models.check_request import (
     ClientCheckRequest,
     construct_check_request,
 )
+from openfga_sdk.models.check_error import CheckError
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
@@ -38,6 +39,7 @@ from openfga_sdk.exceptions import (
     AuthenticationError,
     FgaValidationException,
     UnauthorizedException,
+    ValidationException,
 )
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.batch_check_item import BatchCheckItem
@@ -47,6 +49,9 @@ from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.expand_request import ExpandRequest
 from openfga_sdk.models.expand_request_tuple_key import ExpandRequestTupleKey
+from openfga_sdk.models.internal_error_message_response import (
+    InternalErrorMessageResponse,
+)
 from openfga_sdk.models.list_objects_request import ListObjectsRequest
 from openfga_sdk.models.list_users_request import ListUsersRequest
 from openfga_sdk.models.read_authorization_model_response import (
@@ -55,6 +60,9 @@ from openfga_sdk.models.read_authorization_model_response import (
 from openfga_sdk.models.read_request import ReadRequest
 from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 from openfga_sdk.models.tuple_key import TupleKey
+from openfga_sdk.models.validation_error_message_response import (
+    ValidationErrorMessageResponse,
+)
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
 from openfga_sdk.models.write_authorization_model_request import (
     WriteAuthorizationModelRequest,
@@ -75,6 +83,21 @@ def _chuck_array(array, max_size):
         for i in range((len(array) + max_size - 1) // max_size)
     ]
 
+def _map_error(error: CheckError):
+    """
+    Helper function to convert check error from batch-check endpoint into exceptions, for
+    backwards compatibility purposes.
+    """
+    if (error is not None and error.input_error is not None):
+        e = ValidationException(status=400, reason="Bad Request")
+        r = ValidationErrorMessageResponse(code=error.input_error, message=error.message)
+        e.parsed_exception = r
+        return e
+    elif (error is not None and error.internal_error is not None):
+        e = ServiceException(status=500, reason="Internal Server Error")
+        r = InternalErrorMessageResponse(code=error.internal_error, message=error.message)
+        return e
+    return error
 
 def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str):
     """
@@ -587,8 +610,9 @@ class OpenFgaClient:
         await semaphore.acquire()
         try:
             api_response = await self.check(body, options)
+            allowed = api_response.allowed if api_response.error is None else False
             return ClientBatchCheckResponse(
-                allowed=api_response.allowed,
+                allowed=allowed,
                 request=body,
                 response=api_response,
                 error=None,
@@ -644,12 +668,14 @@ class OpenFgaClient:
             results: list[ClientBatchCheckResponse] = []
             for c_id, result in api_response.result.items():
                 check = checks_map[c_id]
+                allowed = result.allowed if result.error is None else False
                 results.append(
                     ClientBatchCheckResponse(
-                        allowed=result.allowed,
+                        allowed=allowed,
                         request=check,
                         response=None,
-                        error=result.error,
+                        # error=result.error,
+                        error=_map_error(result.error),
                     )
                 )
             return results
@@ -703,7 +729,7 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
-        # This needs to be updated to support checking if BatchCheck is available, and if not fallback to us _single_batch_check
+        # TODO - may need to use _single_batch_check if configured
 
         batches = [
             body[i * max_batch_size : (i + 1) * max_batch_size]

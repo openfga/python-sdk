@@ -2131,24 +2131,52 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             api_client.close()
             api_client.close()
 
+    @patch.object(uuid, "uuid4")
     @patch.object(rest.RESTClientObject, "request")
-    def test_batch_check_multiple_request_fail(self, mock_request):
+    def test_batch_check_multiple_request_fail(self, mock_request, mock_uuid):
         """Test case for check with multiple request with one request failed
 
         Check whether a user is authorized to access an object
         """
-        response_body = """
-{
-  "code": "validation_error",
-  "message": "Generic validation error"
-}
+
+        first_response_body = """
+                {
+                    "result": {
+                        "1": {
+                          "allowed": true
+                        },
+                        "2": {
+                            "error": {
+                                "inputError": "validation_error",
+                                "message": "Generic validation error"
+                            }
+                        }
+                    }
+                }
         """
 
+        second_response_body = """
+        {
+            "result": {
+                "3": {
+                    "allowed": false
+                }
+            }
+        }"""
         # First, mock the response
         mock_request.side_effect = [
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-            ValidationException(http_resp=http_mock_response(response_body, 400)),
-            mock_response('{"allowed": false, "resolution": "1234"}', 200),
+            mock_response(first_response_body, 200),
+            mock_response(second_response_body, 200),
+        ]
+
+        def mock_v4(val: str):
+            return val
+
+        mock_uuid.side_effect = [
+            mock_v4("abc123"),
+            mock_v4("1"),
+            mock_v4("2"),
+            mock_v4("3"),
         ]
         body1 = ClientCheckRequest(
             object="document:2021-budget",
@@ -2173,6 +2201,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "max_parallel_requests": 2,
+                    "max_batch_size": 2,
                 },
             )
             self.assertIsInstance(api_response, list)
@@ -2192,16 +2221,29 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             # Make sure the API was called with the right data
             mock_request.assert_any_call(
                 "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
                 headers=ANY,
                 query_params=[],
                 post_params=[],
                 body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
+                    "checks": [
+                        {
+                            "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "1",
+                        },
+                        {
+                            "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                            },
+                            "correlation_id": "2",
+                        },
+                    ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
                 _preload_content=ANY,
@@ -2209,33 +2251,21 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             mock_request.assert_any_call(
                 "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
                 headers=ANY,
                 query_params=[],
                 post_params=[],
                 body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    },
+                    "checks": [
+                        {
+                            "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+                            },
+                            "correlation_id": "3",
+                        }
+                    ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
                 _preload_content=ANY,
@@ -2401,22 +2431,51 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             api_client.close()
 
+    @patch.object(uuid, "uuid4")
     @patch.object(rest.RESTClientObject, "request")
-    def test_list_relations(self, mock_request):
+    def test_list_relations(self, mock_request, mock_uuid):
         """Test case for list relations
 
         Check whether a user is authorized to access an object
         """
 
-        def mock_check_requests(*args, **kwargs):
-            body = kwargs.get("body")
-            tuple_key = body.get("tuple_key")
-            if tuple_key["relation"] == "owner":
-                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
-            return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+        # def mock_check_requests(*args, **kwargs):
+        #     body = kwargs.get("body")
+        #     tuple_key = body.get("tuple_key")
+        #     if tuple_key["relation"] == "owner":
+        #         return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+        #     return mock_response('{"allowed": true, "resolution": "1234"}', 200)
 
         # First, mock the response
-        mock_request.side_effect = mock_check_requests
+        response_body = """"
+        {
+            "result": {
+                "1": {
+                    "allowed": true,
+                },
+                "2": {
+                    "allowed": false,
+                },
+                "3": {
+                    "allowed": true,
+                },
+            },
+        }
+        """
+        # mock_request.side_effect = mock_check_requests
+        mock_request.side_effect = [
+            mock_response(response_body, 200)
+        ]
+
+        def mock_v4(val: str):
+            return val
+
+        mock_uuid.side_effect = [
+            mock_v4("abc123"),
+            mock_v4("1"),
+            mock_v4("2"),
+            mock_v4("3"),
+        ]
 
         configuration = self.configuration
         configuration.store_id = store_id
@@ -2437,58 +2496,86 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             # Make sure the API was called with the right data
             mock_request.assert_any_call(
                 "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
                 headers=ANY,
                 query_params=[],
                 post_params=[],
                 body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
+                    "checks": [
+                        {
+                            "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "1",
+                        },
+                        {
+                            "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "owner",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "2",
+                        },
+                        {
+                            "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "viewer",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "3",
+                        },
+                    ],
+
+
+                    # "tuple_key": {
+                    #     "object": "document:2021-budget",
+                    #     "relation": "reader",
+                    #     "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    # },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
                 _preload_content=ANY,
                 _request_timeout=None,
             )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "owner",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "viewer",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
+            # mock_request.assert_any_call(
+            #     "POST",
+            #     "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+            #     headers=ANY,
+            #     query_params=[],
+            #     post_params=[],
+            #     body={
+            #         "tuple_key": {
+            #             "object": "document:2021-budget",
+            #             "relation": "owner",
+            #             "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            #         },
+            #         "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            #         "consistency": "MINIMIZE_LATENCY",
+            #     },
+            #     _preload_content=ANY,
+            #     _request_timeout=None,
+            # )
+            # mock_request.assert_any_call(
+            #     "POST",
+            #     "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+            #     headers=ANY,
+            #     query_params=[],
+            #     post_params=[],
+            #     body={
+            #         "tuple_key": {
+            #             "object": "document:2021-budget",
+            #             "relation": "viewer",
+            #             "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            #         },
+            #         "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            #         "consistency": "MINIMIZE_LATENCY",
+            #     },
+            #     _preload_content=ANY,
+            #     _request_timeout=None,
+            # )
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
