@@ -1,6 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.0...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.1...HEAD)
+
+## v0.8.1
+
+### [0.8.1](https://github.com/openfga/python-sdk/compare/v0.8.0...v0.8.1) (2024-11-26)
+
+- feat: allow specifying a request timeout (#151) - thanks @Oscmage!
 
 ## v0.8.0
 
