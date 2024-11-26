@@ -349,48 +349,46 @@ Create a new authorization model.
 # Initialize the fga_client
 # fga_client = OpenFgaClient(configuration)
 
-body = WriteAuthorizationModelRequest(
-    schema_version="1.1",
-    type_definitions=[
-        TypeDefinition(
-            type="user"
+user_type = TypeDefinition(type="user")
+
+document_relations = dict(
+    writer=Userset(this=dict()),
+    viewer=Userset(
+        union=Usersets(
+            child=[
+                Userset(this=dict()),
+                Userset(computed_userset=ObjectRelation(
+                    object="",
+                    relation="writer",
+                )),
+            ],
         ),
-        TypeDefinition(
-            type="document",
-            relations=dict(
-                writer=Userset(
-                    this=dict(),
-                ),
-                viewer=Userset(
-                    union=Usersets(
-                        child=[
-                            Userset(this=dict()),
-                            Userset(computed_userset=ObjectRelation(
-                                object="",
-                                relation="writer",
-                            )),
-                        ],
-                    ),
-                ),
+    ),
+)
+
+document_metadata = Metadata(
+        relations=dict(
+            writer=RelationMetadata(
+                directly_related_user_types=[
+                    RelationReference(type="user"),
+                    RelationReference(type="user", condition="ViewCountLessThan200"),
+                ]
             ),
-            metadata=Metadata(
-                relations=dict(
-                    writer=RelationMetadata(
-                        directly_related_user_types=[
-                            RelationReference(type="user"),
-                            RelationReference(type="user", condition="ViewCountLessThan200"),
-                        ]
-                    ),
-                    viewer=RelationMetadata(
-                        directly_related_user_types=[
-                            RelationReference(type="user"),
-                        ]
-                    )
-                )
+            viewer=RelationMetadata(
+                directly_related_user_types=[
+                    RelationReference(type="user"),
+                ]
             )
         )
-    ],
-    conditions=dict(
+)
+
+document_type = TypeDefinition(
+    type="document",
+    relations=document_relations,
+    metadata=document_metadata
+)
+
+conditions = dict(
         ViewCountLessThan200=Condition(
             name="ViewCountLessThan200",
             expression="ViewCount < 200",
@@ -407,6 +405,14 @@ body = WriteAuthorizationModelRequest(
             )
         )
     )
+
+body = WriteAuthorizationModelRequest(
+    schema_version="1.1",
+    type_definitions=[
+        user_type,
+        document_type
+    ],
+    conditions=conditions
 )
 
 response = await fga_client.write_authorization_model(body)
