@@ -27,6 +27,8 @@ from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequ
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
+from openfga_sdk.client.models.server_batch_check_item import ServerBatchCheckItem
+from openfga_sdk.client.models.server_batch_check_request import ServerBatchCheckRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
@@ -1916,9 +1918,272 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             await api_client.close()
 
-    @patch.object(uuid, "uuid4")
     @patch.object(rest.RESTClientObject, "request")
-    async def test_batch_check_single_request(self, mock_request, mock_uuid):
+    async def test_batch_check_single_request(self, mock_request):
+        """Test case for check with single request
+
+        Check whether a user is authorized to access an object
+        """
+
+        # First, mock the response
+        response_body = '{"allowed": true, "resolution": "1234"}'
+        mock_request.side_effect = [
+            mock_response(response_body, 200),
+        ]
+        body = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            api_response = await api_client.batch_check(
+                body=[body],
+                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+            )
+            self.assertIsInstance(api_response, list)
+            self.assertEqual(len(api_response), 1)
+            self.assertEqual(api_response[0].error, None)
+            self.assertTrue(api_response[0].allowed)
+            self.assertEqual(api_response[0].request, body)
+            # Make sure the API was called with the right data
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_batch_check_multiple_request(self, mock_request):
+        """Test case for check with multiple request
+
+        Check whether a user is authorized to access an object
+        """
+
+        # First, mock the response
+        mock_request.side_effect = [
+            mock_response('{"allowed": true, "resolution": "1234"}', 200),
+            mock_response('{"allowed": false, "resolution": "1234"}', 200),
+            mock_response('{"allowed": true, "resolution": "1234"}', 200),
+        ]
+        body1 = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+        body2 = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+        )
+        body3 = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+        )
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            api_response = await api_client.batch_check(
+                body=[body1, body2, body3],
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "max_parallel_requests": 2,
+                },
+            )
+            self.assertIsInstance(api_response, list)
+            self.assertEqual(len(api_response), 3)
+            self.assertEqual(api_response[0].error, None)
+            self.assertTrue(api_response[0].allowed)
+            self.assertEqual(api_response[0].request, body1)
+            self.assertEqual(api_response[1].error, None)
+            self.assertFalse(api_response[1].allowed)
+            self.assertEqual(api_response[1].request, body2)
+            self.assertEqual(api_response[2].error, None)
+            self.assertTrue(api_response[2].allowed)
+            self.assertEqual(api_response[2].request, body3)
+            # Make sure the API was called with the right data
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_batch_check_multiple_request_fail(self, mock_request):
+        """Test case for check with multiple request with one request failed
+
+        Check whether a user is authorized to access an object
+        """
+        response_body = """
+{
+  "code": "validation_error",
+  "message": "Generic validation error"
+}
+        """
+
+        # First, mock the response
+        mock_request.side_effect = [
+            mock_response('{"allowed": true, "resolution": "1234"}', 200),
+            ValidationException(http_resp=http_mock_response(response_body, 400)),
+            mock_response('{"allowed": false, "resolution": "1234"}', 200),
+        ]
+        body1 = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+        body2 = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+        )
+        body3 = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+        )
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            api_response = await api_client.batch_check(
+                body=[body1, body2, body3],
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "max_parallel_requests": 2,
+                },
+            )
+            self.assertIsInstance(api_response, list)
+            self.assertEqual(len(api_response), 3)
+            self.assertEqual(api_response[0].error, None)
+            self.assertTrue(api_response[0].allowed)
+            self.assertEqual(api_response[0].request, body1)
+            self.assertFalse(api_response[1].allowed)
+            self.assertEqual(api_response[1].request, body2)
+            self.assertIsInstance(api_response[1].error, ValidationException)
+            self.assertIsInstance(
+                api_response[1].error.parsed_exception, ValidationErrorMessageResponse
+            )
+            self.assertEqual(api_response[2].error, None)
+            self.assertFalse(api_response[2].allowed)
+            self.assertEqual(api_response[2].request, body3)
+            # Make sure the API was called with the right data
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            mock_request.assert_any_call(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+                    },
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_server_batch_check_single_request(self, mock_request):
         """Test case for check with single request
 
         Check whether a user is authorized to access an object
@@ -1938,31 +2203,26 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response(response_body, 200),
         ]
 
-        def mock_v4(val: str):
-            return val
-
-        mock_uuid.side_effect = [
-            mock_v4("abc123"),
-            mock_v4("1"),
-        ]
-
-        body = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        body = ServerBatchCheckRequest(
+            checks=[
+                ServerBatchCheckItem(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    correlation_id='1'
+                ),
+            ]
         )
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.batch_check(
-                body=[body],
+            api_response = await api_client.server_batch_check(
+                body=body,
                 options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
             )
-            self.assertIsInstance(api_response, list)
-            self.assertEqual(len(api_response), 1)
-            self.assertEqual(api_response[0].error, None)
-            self.assertTrue(api_response[0].allowed)
-            self.assertEqual(api_response[0].request, body)
+            self.assertEqual(len(api_response.result.items()), 1)
+            self.assertEqual(api_response.result['1'].error, None)
+            self.assertTrue(api_response.result['1'].allowed)
             # Make sure the API was called with the right data
             mock_request.assert_any_call(
                 "POST",
@@ -1988,9 +2248,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             await api_client.close()
 
-    @patch.object(uuid, "uuid4")
     @patch.object(rest.RESTClientObject, "request")
-    async def test_batch_check_multiple_request(self, mock_request, mock_uuid):
+    async def test_server_batch_check_multiple_request(self, mock_request):
         """Test case for check with multiple request
 
         Check whether a user is authorized to access an object
@@ -2023,195 +2282,47 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response(second_response_body, 200),
         ]
 
-        def mock_v4(val: str):
-            return val
+        body = ServerBatchCheckRequest(
+            checks=[
+                ServerBatchCheckItem(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    correlation_id='1'
+                ),
+                ServerBatchCheckItem(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                    correlation_id='2'
+                ),
+                ServerBatchCheckItem(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+                    correlation_id='3'
+                )
+            ]
+        )
 
-        mock_uuid.side_effect = [
-            mock_v4("abc123"),
-            mock_v4("1"),
-            mock_v4("2"),
-            mock_v4("3"),
-        ]
-        body1 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        )
-        body2 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-        )
-        body3 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-        )
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.batch_check(
-                body=[body1, body2, body3],
+            api_response = await api_client.server_batch_check(
+                body=body,
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "max_parallel_requests": 2,
+                    "max_parallel_requests": 1,
                     "max_batch_size": 2,
                 },
             )
-            self.assertIsInstance(api_response, list)
-            self.assertEqual(len(api_response), 3)
-            self.assertEqual(api_response[0].error, None)
-            self.assertTrue(api_response[0].allowed)
-            self.assertEqual(api_response[0].request, body1)
-            self.assertEqual(api_response[1].error, None)
-            self.assertFalse(api_response[1].allowed)
-            self.assertEqual(api_response[1].request, body2)
-            self.assertEqual(api_response[2].error, None)
-            self.assertTrue(api_response[2].allowed)
-            self.assertEqual(api_response[2].request, body3)
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            "correlation_id": "1",
-                        },
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                            "correlation_id": "2",
-                        },
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            },
-                            "correlation_id": "3",
-                        }
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            await api_client.close()
-
-    @patch.object(uuid, "uuid4")
-    @patch.object(rest.RESTClientObject, "request")
-    async def test_batch_check_multiple_request_fail(self, mock_request, mock_uuid):
-        """Test case for check with multiple request with one request failed
-
-        Check whether a user is authorized to access an object
-        """
-        first_response_body = """
-        {
-            "result": {
-                "1": {
-                  "allowed": true
-                },
-                "2": {
-                    "error": {
-                        "inputError": "validation_error",
-                        "message": "Generic validation error"
-                    }
-                }
-            }
-        }
-"""
-
-        second_response_body = """
-{
-    "result": {
-        "3": {
-            "allowed": false
-        }
-    }
-}"""
-
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response(first_response_body, 200),
-            mock_response(second_response_body, 200),
-        ]
-
-        def mock_v4(val: str):
-            return val
-
-        mock_uuid.side_effect = [
-            mock_v4("abc123"),
-            mock_v4("1"),
-            mock_v4("2"),
-            mock_v4("3"),
-        ]
-
-        body1 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        )
-        body2 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-        )
-        body3 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.batch_check(
-                body=[body1, body2, body3],
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "max_parallel_requests": 2,
-                    "max_batch_size": 2,
-                },
-            )
-            self.assertIsInstance(api_response, list)
-            self.assertEqual(len(api_response), 3)
-            self.assertEqual(api_response[0].error, None)
-            self.assertTrue(api_response[0].allowed)
-            self.assertEqual(api_response[0].request, body1)
-            self.assertFalse(api_response[1].allowed)
-            self.assertEqual(api_response[1].request, body2)
-            self.assertIsInstance(api_response[1].error, ValidationException)
-            self.assertIsInstance(
-                api_response[1].error, ValidationException
-            )
-            self.assertEqual(api_response[2].error, None)
-            self.assertFalse(api_response[2].allowed)
-            self.assertEqual(api_response[2].request, body3)
+            self.assertEqual(len(api_response.result.items()), 3)
+            self.assertEqual(api_response.result['1'].error, None)
+            self.assertTrue(api_response.result['1'].allowed)
+            self.assertEqual(api_response.result['2'].error, None)
+            self.assertFalse(api_response.result['2'].allowed)
+            self.assertEqual(api_response.result['3'].error, None)
+            self.assertTrue(api_response.result['3'].allowed)
             # Make sure the API was called with the right data
             mock_request.assert_any_call(
                 "POST",

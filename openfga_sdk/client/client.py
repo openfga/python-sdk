@@ -22,6 +22,7 @@ from openfga_sdk.client.models.check_request import (
     ClientCheckRequest,
     construct_check_request,
 )
+from openfga_sdk.client.models.server_batch_check_request import ServerBatchCheckRequest
 from openfga_sdk.models.check_error import CheckError
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
@@ -45,6 +46,7 @@ from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.batch_check_item import BatchCheckItem
 from openfga_sdk.models.batch_check_request import BatchCheckRequest
 from openfga_sdk.models.check_request import CheckRequest
+from openfga_sdk.models.check_request_tuple_key import CheckRequestTupleKey
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
 from openfga_sdk.models.expand_request import ExpandRequest
@@ -551,7 +553,7 @@ class OpenFgaClient:
         self, body: list[ClientTuple], options: dict[str, str] = None
     ):
         """
-        Convenient method for deleteing tuples
+        Convenient method for deleting tuples
         :param body - the list of tuples we want to delete
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
@@ -606,13 +608,11 @@ class OpenFgaClient:
         :param body - ClientCheckRequest defining check request
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         """
-        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
         await semaphore.acquire()
         try:
             api_response = await self.check(body, options)
-            allowed = api_response.allowed if api_response.error is None else False
             return ClientBatchCheckResponse(
-                allowed=allowed,
+                allowed=api_response.allowed,
                 request=body,
                 response=api_response,
                 error=None,
@@ -626,9 +626,45 @@ class OpenFgaClient:
         finally:
             semaphore.release()
 
-    async def _batch_check(
+    async def batch_check(
+        self, body: list[ClientCheckRequest], options: dict[str, str | int] = None
+    ):
+        """
+        Run a set of checks
+        :param body - list of ClientCheckRequest defining check request
+        :param authorization_model_id(options) - Overrides the authorization model id in the configuration
+        :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
+        :param header(options) - Custom headers to send alongside the request
+        :param retryParams(options) - Override the retry parameters for this request
+        :param retryParams.maxRetry(options) - Override the max number of retries on each API request
+        :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        """
+        options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "BatchCheck")
+        options = set_heading_if_not_set(
+            options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
+        )
+
+        max_parallel_requests = 10
+        if options is not None and "max_parallel_requests" in options:
+            if (
+                isinstance(options["max_parallel_requests"], str)
+                and options["max_parallel_requests"].isdigit()
+            ):
+                max_parallel_requests = int(options["max_parallel_requests"])
+            elif isinstance(options["max_parallel_requests"], int):
+                max_parallel_requests = options["max_parallel_requests"]
+
+        sem = asyncio.Semaphore(max_parallel_requests)
+        batch_check_coros = [
+            self._single_batch_check(request, sem, options) for request in body
+        ]
+        batch_check_response = await asyncio.gather(*batch_check_coros)
+
+        return batch_check_response
+
+    async def _server_batch_check(
         self,
-        body: list[ClientCheckRequest],
+        body: ServerBatchCheckRequest,
         semaphore: asyncio.Semaphore,
         options: dict[str, str] = None,
     ):
@@ -641,62 +677,22 @@ class OpenFgaClient:
         await semaphore.acquire()
         try:
             kwargs = options_to_kwargs(options)
-
-            # map is used to allow a quicker lookup of the original check when converting back
-            checks_map = {}
-            checks: list[BatchCheckItem] = []
-            for check in body:
-                correlation_id = str(uuid.uuid4())  # Support passing it?
-                check_item = BatchCheckItem(
-                    tuple_key=TupleKey(
-                        user=check.user, relation=check.relation, object=check.object
-                    ),
-                    context=check.context,
-                    contextual_tuples=check.contextual_tuples,
-                    correlation_id=correlation_id,
-                )
-                checks.append(check_item)
-                checks_map[correlation_id] = check
-
             req_body = BatchCheckRequest(
                 authorization_model_id=self._get_authorization_model_id(options),
                 consistency=self._get_consistency(options),
-                checks=checks,
+                checks=body.checks,
             )
             api_response = await self._api.batch_check(body=req_body, **kwargs)
-
-            results: list[ClientBatchCheckResponse] = []
-            for c_id, result in api_response.result.items():
-                check = checks_map[c_id]
-                allowed = result.allowed if result.error is None else False
-                results.append(
-                    ClientBatchCheckResponse(
-                        allowed=allowed,
-                        request=check,
-                        response=None,
-                        # error=result.error,
-                        error=_map_error(result.error),
-                    )
-                )
-            return results
-
-        except (AuthenticationError, UnauthorizedException) as err:
-            raise err
+            return api_response
+        # Does this cover all error cases? If one fails with a 4xx/5xx then all should?
         except Exception as err:
-            # I don't know what's right here, I don't think we can have an error like this anymore?
-            return [
-                ClientBatchCheckResponse(
-                    allowed=False, request=body, response=None, error=err
-                )
-            ]
+            raise err
         finally:
             semaphore.release()
 
-    async def batch_check(
-        self, body: list[ClientCheckRequest], options: dict[str, str | int] = None
-    ):
+    async def server_batch_check(self, body: ServerBatchCheckRequest, options):
         """
-        Run a set of checks
+        Run a batchcheck request
         :param body - list of ClientCheckRequest defining check request
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
@@ -729,22 +725,60 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
-        # TODO - may need to use _single_batch_check if configured
+        # batches = [
+        #     body.checks[i * max_batch_size : (i + 1) * max_batch_size]
+        #     for i in range((len(body.checks) + max_batch_size - 1) // max_batch_size)
+        # ]
 
-        batches = [
-            body[i * max_batch_size : (i + 1) * max_batch_size]
-            for i in range((len(body) + max_batch_size - 1) // max_batch_size)
-        ]
+        batches = []
+        checks = []
+        for check in body.checks:
+            if len(checks) < max_batch_size:
+                checks.append(BatchCheckItem(
+                    tuple_key=CheckRequestTupleKey(
+                        user=check.user,
+                        relation=check.relation,
+                        object=check.object
+                    ),
+                    context=check.context,
+                    contextual_tuples=check.contextual_tuples,
+                    correlation_id=check.correlation_id
+                ))
+            else:
+                batches.append(BatchCheckRequest(
+                    checks=checks,
+                    authorization_model_id=self._get_authorization_model_id(options),
+                    consistency=self._get_consistency(options),
+                ))
+                checks = [BatchCheckItem(
+                    tuple_key=CheckRequestTupleKey(
+                        user=check.user,
+                        relation=check.relation,
+                        object=check.object
+                    ),
+                    context=check.context,
+                    contextual_tuples=check.contextual_tuples,
+                    correlation_id=check.correlation_id
+                )]
+        batches.append(BatchCheckRequest(
+            checks=checks,
+            authorization_model_id=self._get_authorization_model_id(options),
+            consistency=self._get_consistency(options),
+        ))
 
         sem = asyncio.Semaphore(max_parallel_requests)
         batch_check_coros = [
-            self._batch_check(request, sem, options) for request in batches
+            self._server_batch_check(request, sem, options) for request in batches
         ]
-        batch_check_response = await asyncio.gather(*batch_check_coros)
+        batch_check_responses = await asyncio.gather(*batch_check_coros)
 
-        # flatten our arrays of responses into a single array
-        responses = [item for items in batch_check_response for item in items]
-        return responses
+        # Merge all of the results into a single response
+        response = batch_check_responses.pop()
+        if len(batch_check_responses) > 0:
+            for resp in batch_check_responses:
+                response.result = {**response.result, **resp.result}
+
+        return response
 
     async def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):
         """

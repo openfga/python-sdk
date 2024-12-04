@@ -21,3 +21,5 @@ from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_response import ClientWriteResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.models.server_batch_check_item import ServerBatchCheckItem
+from openfga_sdk.client.models.server_batch_check_request import ServerBatchCheckRequest
