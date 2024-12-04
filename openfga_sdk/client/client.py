@@ -22,6 +22,7 @@ from openfga_sdk.client.models.check_request import (
     ClientCheckRequest,
     construct_check_request,
 )
+from openfga_sdk.client.models.server_batch_check_item import ServerBatchCheckItem
 from openfga_sdk.client.models.server_batch_check_request import ServerBatchCheckRequest
 from openfga_sdk.models.check_error import CheckError
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
@@ -690,7 +691,7 @@ class OpenFgaClient:
         finally:
             semaphore.release()
 
-    async def server_batch_check(self, body: ServerBatchCheckRequest, options):
+    async def server_batch_check(self, body: ServerBatchCheckRequest, options = None):
         """
         Run a batchcheck request
         :param body - list of ClientCheckRequest defining check request
@@ -724,11 +725,6 @@ class OpenFgaClient:
                 max_batch_size = int(options["max_batch_size"])
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
-
-        # batches = [
-        #     body.checks[i * max_batch_size : (i + 1) * max_batch_size]
-        #     for i in range((len(body.checks) + max_batch_size - 1) // max_batch_size)
-        # ]
 
         batches = []
         checks = []
@@ -852,21 +848,28 @@ class OpenFgaClient:
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
 
-        request_body = [
-            construct_check_request(
+        checks = []
+        for relation in body.relations:
+            checks.append(ServerBatchCheckItem(
                 user=body.user,
-                relation=i,
+                relation=relation,
                 object=body.object,
                 contextual_tuples=body.contextual_tuples,
                 context=body.context,
-            )
-            for i in body.relations
-        ]
-        result = await self.batch_check(request_body, options)
+                correlation_id=relation
+            ))
+
+        bc_req = ServerBatchCheckRequest(
+            checks=checks
+        )
+        result = await self.server_batch_check(bc_req, options)
+        relations = []
         # need to filter with the allowed response
-        result_iterator = filter(_check_allowed, result)
-        result_list = list(result_iterator)
-        return [i.request.relation for i in result_list]
+        for k, v in result.result.items():
+            if v.allowed is True:
+                relations.append(k)
+
+        return relations
 
     async def list_users(
         self, body: ClientListUsersRequest, options: dict[str, str] = None

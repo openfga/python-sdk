@@ -2542,16 +2542,32 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         Check whether a user is authorized to access an object
         """
+        response_body = """
+{
+  "result": {
+    "reader": {
+        "allowed": true
+    },
+    "owner": {
+        "allowed": false
+    },
+    "viewer": {
+        "allowed": true
+    }
+  }
+}
+"""
 
-        def mock_check_requests(*args, **kwargs):
-            body = kwargs.get("body")
-            tuple_key = body.get("tuple_key")
-            if tuple_key["relation"] == "owner":
-                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
-            return mock_response('{"allowed": true, "resolution": "1234"}', 200)
-
+        # def mock_check_requests(*args, **kwargs):
+        #     body = kwargs.get("body")
+        #     tuple_key = body.get("tuple_key")
+        #     if tuple_key["relation"] == "owner":
+        #         return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+        #     return mock_response('{"allowed": true, "resolution": "1234"}', 200)
         # First, mock the response
-        mock_request.side_effect = mock_check_requests
+        mock_request.side_effect = [
+            mock_response(response_body, 200)
+        ]
 
         configuration = self.configuration
         configuration.store_id = store_id
@@ -2572,52 +2588,37 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             # Make sure the API was called with the right data
             mock_request.assert_any_call(
                 "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
                 headers=ANY,
                 query_params=[],
                 post_params=[],
                 body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "owner",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "viewer",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
+                    "checks": [
+                        {
+                             "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "reader"
+                        },
+                         {
+                             "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "owner",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "owner"
+                        },
+                         {
+                             "tuple_key": {
+                                "object": "document:2021-budget",
+                                "relation": "viewer",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                            "correlation_id": "viewer"
+                        }
+                    ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
