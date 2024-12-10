@@ -1,5 +1,6 @@
 import asyncio
 import os
+import uuid
 
 from openfga_sdk import (
     ClientConfiguration,
@@ -21,6 +22,8 @@ from openfga_sdk import (
 )
 from openfga_sdk.client.models import (
     ClientAssertion,
+    ClientBatchCheckItem,
+    ClientBatchCheckRequest,
     ClientCheckRequest,
     ClientListObjectsRequest,
     ClientListRelationsRequest,
@@ -267,6 +270,32 @@ async def main():
             )
         )
         print(f"Allowed: {response.allowed}")
+
+        # Performing a BatchCheck
+        print("Checking for access via BatchCheck")
+
+        anne_cor_id = str(uuid.uuid4())
+        response = await fga_client.batch_check(
+            ClientBatchCheckRequest(
+                checks=[
+                    ClientBatchCheckItem(
+                        user="user:anne",
+                        relation="viewer",
+                        object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                        context=dict(ViewCount=100),
+                        correlation_id=anne_cor_id,
+                    ),
+                    ClientBatchCheckItem(
+                        user="user:bob",
+                        relation="viewer",
+                        object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+                        context=dict(ViewCount=100),
+                    ),
+                ]
+            )
+        )
+        print(f"Anne allowed: {response.result[0].allowed}")
+        print(f"Bob allowed: {response.result[1].allowed}")
 
         # List objects with context
         print("Listing objects for access with context")

@@ -11,9 +11,16 @@
 """
 
 from openfga_sdk.client.models.assertion import ClientAssertion
-from openfga_sdk.client.models.batch_check_response import BatchCheckResponse
+from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
+from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
+from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
+from openfga_sdk.client.models.batch_check_single_response import (
+    ClientBatchCheckSingleResponse,
+)
 from openfga_sdk.client.models.check_request import ClientCheckRequest
-from openfga_sdk.client.models.client_batch_check_response import ClientBatchCheckClientResponse
+from openfga_sdk.client.models.client_batch_check_response import (
+    ClientBatchCheckClientResponse,
+)
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
