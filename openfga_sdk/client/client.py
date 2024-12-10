@@ -22,6 +22,7 @@ from openfga_sdk.client.models.check_request import (
     ClientCheckRequest,
     construct_check_request,
 )
+from openfga_sdk.client.models.client_batch_check_response import ClientBatchCheckClientResponse
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
@@ -115,7 +116,7 @@ def options_to_transaction_info(options: dict[str, int | str] = None):
     return WriteTransactionOpts()
 
 
-def _check_allowed(response: BatchCheckResponse):
+def _check_allowed(response: ClientBatchCheckClientResponse):
     """
     Helper function to return whether the response is check is allowed
     """
@@ -571,7 +572,7 @@ class OpenFgaClient:
         api_response = await self._api.check(body=req_body, **kwargs)
         return api_response
 
-    async def _single_batch_check(
+    async def _single_client_batch_check(
         self,
         body: ClientCheckRequest,
         semaphore: asyncio.Semaphore,
@@ -585,7 +586,7 @@ class OpenFgaClient:
         await semaphore.acquire()
         try:
             api_response = await self.check(body, options)
-            return BatchCheckResponse(
+            return ClientBatchCheckClientResponse(
                 allowed=api_response.allowed,
                 request=body,
                 response=api_response,
@@ -594,13 +595,13 @@ class OpenFgaClient:
         except (AuthenticationError, UnauthorizedException) as err:
             raise err
         except Exception as err:
-            return BatchCheckResponse(
+            return ClientBatchCheckClientResponse(
                 allowed=False, request=body, response=None, error=err
             )
         finally:
             semaphore.release()
 
-    async def batch_check(
+    async def client_batch_check(
         self, body: list[ClientCheckRequest], options: dict[str, str | int] = None
     ):
         """
@@ -630,7 +631,7 @@ class OpenFgaClient:
 
         sem = asyncio.Semaphore(max_parallel_requests)
         batch_check_coros = [
-            self._single_batch_check(request, sem, options) for request in body
+            self._single_client_batch_check(request, sem, options) for request in body
         ]
         batch_check_response = await asyncio.gather(*batch_check_coros)
 
@@ -718,7 +719,7 @@ class OpenFgaClient:
             )
             for i in body.relations
         ]
-        result = await self.batch_check(request_body, options)
+        result = await self.client_batch_check(request_body, options)
         # need to filter with the allowed response
         result_iterator = filter(_check_allowed, result)
         result_list = list(result_iterator)
