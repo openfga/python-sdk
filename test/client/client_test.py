@@ -1935,7 +1935,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.batch_check(
+            api_response = await api_client.client_batch_check(
                 body=[body],
                 options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
             )
@@ -1995,7 +1995,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.batch_check(
+            api_response = await api_client.client_batch_check(
                 body=[body1, body2, body3],
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
@@ -2104,7 +2104,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.batch_check(
+            api_response = await api_client.client_batch_check(
                 body=[body1, body2, body3],
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
