@@ -2335,7 +2335,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.result[0].allowed)
             self.assertEqual(api_response.result[1].error, None)
             self.assertFalse(api_response.result[1].allowed)
-            self.assertEqual(api_response.result[2].error.message, "type 'doc' not found")
+            self.assertEqual(
+                api_response.result[2].error.message, "type 'doc' not found"
+            )
             self.assertFalse(api_response.result[2].allowed)
             # value generated from the uuid mock
             self.assertEqual(api_response.result[2].correlation_id, "fake-uuid")

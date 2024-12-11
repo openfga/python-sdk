@@ -1,6 +1,6 @@
 import time
 import urllib
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from aiohttp import ClientResponse
 from urllib3 import HTTPResponse
@@ -19,6 +19,9 @@ class TelemetryAttribute(NamedTuple):
 
 
 class TelemetryAttributes:
+    fga_client_request_batch_check_size: TelemetryAttribute = TelemetryAttribute(
+        name="fga-client.request.batch_check_size", format="int"
+    )
     fga_client_request_client_id: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.request.client_id",
     )
@@ -70,6 +73,7 @@ class TelemetryAttributes:
     )
 
     _attributes: list[TelemetryAttribute] = [
+        fga_client_request_batch_check_size,
         fga_client_request_client_id,
         fga_client_request_method,
         fga_client_request_model_id,
@@ -164,6 +168,23 @@ class TelemetryAttributes:
                 continue
 
         return response
+
+    @staticmethod
+    def fromBody(body: Any, attributes: dict[TelemetryAttribute, str | int] = None):
+        from openfga_sdk.models.batch_check_request import BatchCheckRequest
+
+        if attributes is None:
+            attributes = {}
+
+        if (
+            TelemetryAttributes.fga_client_request_batch_check_size not in attributes
+            and isinstance(body, BatchCheckRequest)
+        ):
+            attributes[TelemetryAttributes.fga_client_request_batch_check_size] = len(
+                body.checks
+            )
+
+        return attributes
 
     @staticmethod
     def fromRequest(

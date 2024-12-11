@@ -201,6 +201,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/batch-check".replace("{store_id}", store_id),
             "POST",
@@ -375,6 +380,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
             "POST",
@@ -536,6 +546,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores",
             "POST",
@@ -677,6 +692,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return await self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -852,6 +872,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/expand".replace("{store_id}", store_id),
             "POST",
@@ -1002,6 +1027,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return await self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -1178,6 +1208,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/list-objects".replace("{store_id}", store_id),
             "POST",
@@ -1336,6 +1371,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return await self.api_client.call_api(
             "/stores",
@@ -1512,6 +1552,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/list-users".replace("{store_id}", store_id),
             "POST",
@@ -1686,6 +1731,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/read".replace("{store_id}", store_id),
             "POST",
@@ -1856,6 +1906,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
                 "{store_id}", store_id
@@ -2024,6 +2079,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/authorization-models/{id}".replace(
                 "{store_id}", store_id
@@ -2190,6 +2250,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return await self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
@@ -2368,6 +2433,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/changes".replace("{store_id}", store_id),
             "GET",
@@ -2541,6 +2611,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return await self.api_client.call_api(
             "/stores/{store_id}/write".replace("{store_id}", store_id),
@@ -2729,6 +2804,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return await self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
                 "{store_id}", store_id
@@ -2905,6 +2985,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return await self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),

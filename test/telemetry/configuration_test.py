@@ -12,6 +12,7 @@ from openfga_sdk.telemetry.histograms import TelemetryHistograms
 def test_telemetry_metric_configuration_default_initialization():
     config = TelemetryMetricConfiguration()
 
+    assert config.fga_client_request_batch_check_size is False
     assert config.fga_client_request_client_id is False
     assert config.fga_client_request_method is False
     assert config.fga_client_request_model_id is False
@@ -292,8 +293,11 @@ def test_default_telemetry_metric_configuration():
     metric_config = TelemetryMetricConfiguration.getSdkDefaults()
 
     assert isinstance(metric_config, dict)
-    assert len(metric_config) == 15
+    assert len(metric_config) == 16
 
+    assert (
+        metric_config[TelemetryAttributes.fga_client_request_batch_check_size] is False
+    )
     assert metric_config[TelemetryAttributes.fga_client_request_client_id] is True
     assert metric_config[TelemetryAttributes.fga_client_request_method] is True
     assert metric_config[TelemetryAttributes.fga_client_request_model_id] is True
