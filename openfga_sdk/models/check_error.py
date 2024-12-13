@@ -40,8 +40,8 @@ class CheckError:
     }
 
     attribute_map = {
-        "input_error": "inputError",
-        "internal_error": "internalError",
+        "input_error": "input_error",
+        "internal_error": "internal_error",
         "message": "message",
     }
 

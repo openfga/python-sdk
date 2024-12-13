@@ -2276,7 +2276,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     "result": {
         "fake-uuid": {
             "error": {
-                "inputError": "validation_error",
+                "input_error": "validation_error",
                 "message": "type 'doc' not found"
             }
         }

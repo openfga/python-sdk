@@ -2229,7 +2229,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.result[0].allowed)
             self.assertEqual(api_response.result[0].correlation_id, "1")
             self.assertEqual(api_response.result[0].request, body.checks[0])
-
             # Make sure the API was called with the right data
             mock_request.assert_any_call(
                 "POST",
@@ -2280,7 +2279,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     "result": {
         "fake-uuid": {
             "error": {
-                "inputError": "validation_error",
+                "input_error": "validation_error",
                 "message": "type 'doc' not found"
             }
         }
