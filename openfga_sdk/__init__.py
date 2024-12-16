@@ -91,6 +91,12 @@ from openfga_sdk.models.relationship_condition import RelationshipCondition
 from openfga_sdk.models.source_info import SourceInfo
 from openfga_sdk.models.status import Status
 from openfga_sdk.models.store import Store
+from openfga_sdk.models.stream_result_of_streamed_list_objects_response import (
+    StreamResultOfStreamedListObjectsResponse,
+)
+from openfga_sdk.models.streamed_list_objects_response import (
+    StreamedListObjectsResponse,
+)
 from openfga_sdk.models.tuple import Tuple
 from openfga_sdk.models.tuple_change import TupleChange
 from openfga_sdk.models.tuple_key import TupleKey

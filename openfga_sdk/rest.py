@@ -16,6 +16,7 @@ import logging
 import re
 import ssl
 import urllib
+from typing import Any, List, Optional, Tuple
 
 import aiohttp
 
@@ -34,27 +35,54 @@ logger = logging.getLogger(__name__)
 
 
 class RESTResponse(io.IOBase):
+    """
+    Represents an HTTP response object.
+    """
 
-    def __init__(self, resp, data):
+    def __init__(self, resp: aiohttp.ClientResponse, data: bytes) -> None:
+        """
+        Initializes a RESTResponse with an aiohttp response and corresponding data.
+
+        :param resp: The aiohttp.ClientResponse object.
+        :param data: The raw byte data read from the response.
+        """
         self.aiohttp_response = resp
         self.status = resp.status
         self.reason = resp.reason
         self.data = data
 
-    def getheaders(self):
-        """Returns a CIMultiDictProxy of the response headers."""
+    def getheaders(self) -> aiohttp.typedefs.LooseHeaders:
+        """
+        Returns the response headers.
+        """
         return self.aiohttp_response.headers
 
-    def getheader(self, name, default=None):
-        """Returns a given response header."""
+    def getheader(self, name: str, default: Optional[str] = None) -> Optional[str]:
+        """
+        Returns a specific header value by name.
+
+        :param name: The name of the header.
+        :param default: The default value if header is not found.
+        :return: The header value, or default if not present.
+        """
         return self.aiohttp_response.headers.get(name, default)
 
 
 class RESTClientObject:
+    """
+    A client object that manages HTTP interactions.
+    """
 
-    def __init__(self, configuration, pools_size=4, maxsize=None):
+    def __init__(
+        self, configuration: Any, pools_size: int = 4, maxsize: Optional[int] = None
+    ) -> None:
+        """
+        Creates a new RESTClientObject.
 
-        # maxsize is number of requests to host that are allowed in parallel
+        :param configuration: A configuration object with necessary parameters.
+        :param pools_size: The size of the connection pool (unused, present for compatibility).
+        :param maxsize: Maximum number of connections to allow.
+        """
         if maxsize is None:
             maxsize = configuration.connection_pool_maxsize
 
@@ -69,44 +97,40 @@ class RESTClientObject:
             ssl_context.verify_mode = ssl.CERT_NONE
 
         connector = aiohttp.TCPConnector(limit=maxsize, ssl=ssl_context)
-
         self.proxy = configuration.proxy
         self.proxy_headers = configuration.proxy_headers
         self._timeout_millisec = configuration.timeout_millisec
-
-        # https pool manager
         self.pool_manager = aiohttp.ClientSession(connector=connector, trust_env=True)
 
-    async def close(self):
+    async def close(self) -> None:
+        """
+        Closes the underlying aiohttp.ClientSession.
+        """
         await self.pool_manager.close()
 
-    async def request(
+    async def build_request(
         self,
-        method,
-        url,
-        query_params=None,
-        headers=None,
-        body=None,
-        post_params=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        """Execute request
+        method: str,
+        url: str,
+        query_params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        body: Optional[Any] = None,
+        post_params: Optional[List[Tuple[str, Any]]] = None,
+        _preload_content: bool = True,
+        _request_timeout: Optional[float] = None,
+    ) -> dict:
+        """
+        Builds a dictionary of request arguments suitable for aiohttp.
 
-        :param method: http request method
-        :param url: http request url
-        :param query_params: query parameters in the url
-        :param headers: http request headers
-        :param body: request json body, for `application/json`
-        :param post_params: request post parameters,
-                            `application/x-www-form-urlencoded`
-                            and `multipart/form-data`
-        :param _preload_content: this is a non-applicable field for
-                                 the AiohttpClient.
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
+        :param method: The HTTP method.
+        :param url: The URL endpoint.
+        :param query_params: Optional query parameters.
+        :param headers: Optional request headers.
+        :param body: The request body, if any.
+        :param post_params: Form or multipart parameters, if any.
+        :param _preload_content: If True, content will be loaded immediately (not used here).
+        :param _request_timeout: Request timeout in seconds.
+        :return: A dictionary of request arguments.
         """
         method = method.upper()
         assert method in ["GET", "HEAD", "DELETE", "POST", "PUT", "PATCH", "OPTIONS"]
@@ -116,14 +140,19 @@ class RESTClientObject:
                 "body parameter cannot be used with post_params parameter."
             )
 
-        post_params = post_params or {}
+        post_params = post_params or []
         headers = headers or {}
-        timeout = _request_timeout or self._timeout_millisec / 1000
+        timeout = _request_timeout or (self._timeout_millisec / 1000)
 
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
 
-        args = {"method": method, "url": url, "timeout": timeout, "headers": headers}
+        args = {
+            "method": method,
+            "url": url,
+            "timeout": timeout,
+            "headers": headers,
+        }
 
         if self.proxy:
             args["proxy"] = self.proxy
@@ -133,7 +162,6 @@ class RESTClientObject:
         if query_params:
             args["url"] += "?" + urllib.parse.urlencode(query_params)
 
-        # For `POST`, `PUT`, `PATCH`, `OPTIONS`, `DELETE`
         if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
             if re.search("json", headers["Content-Type"], re.IGNORECASE):
                 if body is not None:
@@ -142,8 +170,6 @@ class RESTClientObject:
             elif headers["Content-Type"] == "application/x-www-form-urlencoded":
                 args["data"] = aiohttp.FormData(post_params)
             elif headers["Content-Type"] == "multipart/form-data":
-                # must del headers['Content-Type'], or the correct
-                # Content-Type which generated by aiohttp
                 del headers["Content-Type"]
                 data = aiohttp.FormData()
                 for param in post_params:
@@ -153,184 +179,221 @@ class RESTClientObject:
                     else:
                         data.add_field(k, v)
                 args["data"] = data
-
-            # Pass a `bytes` parameter directly in the body to support
-            # other content types than Json when `body` argument is provided
-            # in serialized form
             elif isinstance(body, bytes):
                 args["data"] = body
             else:
-                # Cannot generate the request from given parameters
-                msg = """Cannot prepare a request message for provided
-                         arguments. Please check that your arguments match
-                         declared content type."""
+                msg = (
+                    "Cannot prepare a request message for provided arguments. "
+                    "Please check that your arguments match declared content type."
+                )
                 raise ApiException(status=0, reason=msg)
 
-        r = await self.pool_manager.request(**args)
+        return args
+
+    async def handle_response_exception(
+        self, response: RESTResponse | aiohttp.ClientResponse
+    ) -> None:
+        """
+        Raises exceptions if response status indicates an error.
+
+        :param response: The response to check.
+        :raises ValidationException: If status is 400.
+        :raises UnauthorizedException: If status is 401.
+        :raises ForbiddenException: If status is 403.
+        :raises NotFoundException: If status is 404.
+        :raises RateLimitExceededError: If status is 429.
+        :raises ServiceException: If status is 5xx.
+        :raises ApiException: For other non-2xx statuses.
+        """
+        if 200 <= response.status <= 299:
+            return
+
+        match response.status:
+            case 400:
+                raise ValidationException(http_resp=response)
+            case 401:
+                raise UnauthorizedException(http_resp=response)
+            case 403:
+                raise ForbiddenException(http_resp=response)
+            case 404:
+                raise NotFoundException(http_resp=response)
+            case 429:
+                raise RateLimitExceededError(http_resp=response)
+            case _ if 500 <= response.status <= 599:
+                raise ServiceException(http_resp=response)
+            case _:
+                raise ApiException(http_resp=response)
+
+    def _accumulate_json_lines(
+        self, leftover: bytes, data: bytes, buffer: bytearray
+    ) -> Tuple[bytes, List[Any]]:
+        """
+        Processes a chunk of data and leftover bytes. Splits on newlines, decodes valid JSON,
+        and returns leftover bytes and a list of decoded JSON objects.
+
+        :param leftover: Any leftover bytes from previous chunks.
+        :param data: The new chunk of data.
+        :param buffer: The main bytearray buffer for all data.
+        :return: Updated leftover bytes and a list of decoded JSON objects.
+        """
+        objects: List[Any] = []
+        leftover += data
+        lines = leftover.split(
+            b"\n"
+        )  # Objects are received as one-per-line, so split at newlines
+        leftover = lines.pop()
+        buffer.extend(data)
+        for line in lines:
+            try:
+                decoded = json.loads(line.decode("utf-8"))
+                objects.append(decoded)
+            except json.JSONDecodeError as e:
+                logger.warning("Skipping invalid JSON segment: %s", e)
+        return leftover, objects
+
+    async def stream(
+        self,
+        method: str,
+        url: str,
+        query_params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        body: Optional[Any] = None,
+        post_params: Optional[List[Tuple[str, Any]]] = None,
+        _request_timeout: Optional[float] = None,
+    ):
+        """
+        Streams JSON objects from a specified endpoint, handling partial chunks
+        and leftover data at the end of the stream.
+
+        :param method: The HTTP method (GET, POST, etc.).
+        :param url: The endpoint URL.
+        :param query_params: Query parameters to be appended to the URL.
+        :param headers: Optional headers to include in the request.
+        :param body: Optional body for the request.
+        :param post_params: Optional form/multipart parameters.
+        :param _request_timeout: An optional request timeout in seconds.
+        :yields: Parsed JSON objects as Python data structures.
+        """
+
+        # Build our request payload
+        args = await self.build_request(
+            method,
+            url,
+            query_params=query_params,
+            headers=headers,
+            body=body,
+            post_params=post_params,
+            _preload_content=False,
+            _request_timeout=_request_timeout,
+        )
+
+        # Initialize buffers for data chunks
+        buffer = bytearray()
+        leftover = b""
+        response: Optional[aiohttp.ClientResponse] = None
+
+        try:
+            # Send request, collect response handler
+            async with self.pool_manager.request(**args) as resp:
+                response = resp
+                try:
+                    # Iterate over streamed/chunked response data
+                    async for data, _ in resp.content.iter_chunks():
+                        if data:
+                            # Process data chunk
+                            leftover, decoded_objects = self._accumulate_json_lines(
+                                leftover, data, buffer
+                            )
+
+                            # Yield any complete objects
+                            for obj in decoded_objects:
+                                yield obj
+
+                except Exception as e:
+                    logger.exception("Stream reading error: %s", e)
+
+        except Exception as conn_err:
+            logger.exception("Connection or request setup error: %s", conn_err)
+
+        # Handle any remaining data after stream ends
+        if response is not None:
+            # Check for any leftover data
+            if leftover:
+                try:
+                    # Attempt to decode and yield any remaining JSON object
+                    final_str = leftover.decode("utf-8")
+                    final_obj = json.loads(final_str)
+                    buffer.extend(leftover)
+                    yield final_obj
+
+                except json.JSONDecodeError:
+                    logger.debug("Incomplete leftover data at end of stream.")
+
+            # Decode the complete/buffered data for logging purposes
+            if isinstance(response, aiohttp.ClientResponse):
+                response.data = buffer.decode("utf-8")
+
+            # Handle any HTTP errors that may have occurred
+            await self.handle_response_exception(response)
+
+            # Release the response object (required!)
+            response.release()
+
+        # Release the connection back to the pool
+        await self.close()
+
+    async def request(
+        self,
+        method: str,
+        url: str,
+        query_params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        body: Optional[Any] = None,
+        post_params: Optional[List[Tuple[str, Any]]] = None,
+        _preload_content: bool = True,
+        _request_timeout: Optional[float] = None,
+    ) -> RESTResponse | aiohttp.ClientResponse:
+        """
+        Executes a request and returns the response object.
+
+        :param method: The HTTP method.
+        :param url: The endpoint URL.
+        :param query_params: Query parameters to be appended to the URL.
+        :param headers: Optional request headers.
+        :param body: A request body for JSON or other content types.
+        :param post_params: Form/multipart parameters for the request.
+        :param _preload_content: If True, the response body is read immediately.
+        :param _request_timeout: An optional request timeout in seconds.
+        :return: A RESTResponse if _preload_content is True, otherwise an aiohttp.ClientResponse.
+        """
+
+        # Build our request payload
+        args = await self.build_request(
+            method,
+            url,
+            query_params=query_params,
+            headers=headers,
+            body=body,
+            post_params=post_params,
+            _preload_content=_preload_content,
+            _request_timeout=_request_timeout,
+        )
+
+        # Send request, collect response handler
+        resp = await self.pool_manager.request(**args)
+
+        # If we want to preload the response, read it
         if _preload_content:
+            # Collect response data
+            data = await resp.read()
 
-            data = await r.read()
-            r = RESTResponse(r, data)
+            # Transform response JSON data into RESTResponse object
+            resp = RESTResponse(resp, data)
 
-            # log response body
-            logger.debug("response body: %s", r.data)
+            # Log the response body
+            logger.debug(f"response body: {resp.data}")
 
-            if not 200 <= r.status <= 299:
-                if r.status == 400:
-                    raise ValidationException(http_resp=r)
+        # Handle any errors that may have occurred
+        await self.handle_response_exception(resp)
 
-                if r.status == 401:
-                    raise UnauthorizedException(http_resp=r)
-
-                if r.status == 403:
-                    raise ForbiddenException(http_resp=r)
-
-                if r.status == 404:
-                    raise NotFoundException(http_resp=r)
-
-                if r.status == 429:
-                    raise RateLimitExceededError(http_resp=r)
-
-                if 500 <= r.status <= 599:
-                    raise ServiceException(http_resp=r)
-
-                raise ApiException(http_resp=r)
-
-        return r
-
-    async def GET(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "GET",
-            url,
-            headers=headers,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            query_params=query_params,
-        )
-
-    async def HEAD(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "HEAD",
-            url,
-            headers=headers,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            query_params=query_params,
-        )
-
-    async def OPTIONS(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "OPTIONS",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    async def DELETE(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "DELETE",
-            url,
-            headers=headers,
-            query_params=query_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    async def POST(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "POST",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    async def PUT(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "PUT",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    async def PATCH(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return await self.request(
-            "PATCH",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
+        return resp

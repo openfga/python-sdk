@@ -1,6 +1,12 @@
 import asyncio
 import os
+import sys
 import uuid
+
+from dotenv import load_dotenv
+
+sdk_path = os.path.realpath(os.path.join(os.path.abspath(__file__), "..", "..", ".."))
+sys.path.insert(0, sdk_path)
 
 from openfga_sdk import (
     ClientConfiguration,
@@ -38,6 +44,8 @@ from openfga_sdk.models.fga_object import FgaObject
 
 
 async def main():
+    load_dotenv()
+
     credentials = Credentials()
     if os.getenv("FGA_CLIENT_ID") is not None:
         credentials = Credentials(

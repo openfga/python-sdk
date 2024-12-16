@@ -167,6 +167,7 @@ class ApiClient:
         _retry_params=None,
         _oauth2_client=None,
         _telemetry_attributes: dict[TelemetryAttribute, str | int] = None,
+        _streaming: bool = False,
     ):
 
         self.configuration.is_valid()
@@ -281,6 +282,7 @@ class ApiClient:
                     body=body,
                     _preload_content=_preload_content,
                     _request_timeout=_request_timeout,
+                    _streaming=_streaming,
                 )
             except (RateLimitExceededError, ServiceException) as e:
                 if retry < max_retry and e.status != 501:
@@ -362,7 +364,7 @@ class ApiClient:
                 configuration=self.configuration.telemetry,
             )
 
-            if not _preload_content:
+            if not _preload_content or _streaming:
                 return return_data
 
             response_type = response_types_map.get(response_data.status, None)
@@ -508,6 +510,7 @@ class ApiClient:
         _retry_params=None,
         _oauth2_client=None,
         _telemetry_attributes: dict[TelemetryAttribute, str | int] = None,
+        _streaming: bool = False,
     ):
         """Makes the HTTP request (synchronous) and returns deserialized data.
 
@@ -569,6 +572,7 @@ class ApiClient:
                 _retry_params,
                 _oauth2_client,
                 _telemetry_attributes,
+                _streaming,
             )
 
         return self.pool.apply_async(
@@ -592,6 +596,7 @@ class ApiClient:
                 _retry_params,
                 _oauth2_client,
                 _telemetry_attributes,
+                _streaming,
             ),
         )
 
@@ -605,76 +610,35 @@ class ApiClient:
         body=None,
         _preload_content=True,
         _request_timeout=None,
+        _streaming: bool = False,
     ):
-        """Makes the HTTP request using RESTClient."""
-        if method == "GET":
-            return await self.rest_client.GET(
-                url,
-                query_params=query_params,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-                headers=headers,
-            )
-        elif method == "HEAD":
-            return await self.rest_client.HEAD(
-                url,
-                query_params=query_params,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-                headers=headers,
-            )
-        elif method == "OPTIONS":
-            return await self.rest_client.OPTIONS(
-                url,
-                query_params=query_params,
-                headers=headers,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-            )
-        elif method == "POST":
-            return await self.rest_client.POST(
-                url,
-                query_params=query_params,
-                headers=headers,
-                post_params=post_params,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-                body=body,
-            )
-        elif method == "PUT":
-            return await self.rest_client.PUT(
-                url,
-                query_params=query_params,
-                headers=headers,
-                post_params=post_params,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-                body=body,
-            )
-        elif method == "PATCH":
-            return await self.rest_client.PATCH(
-                url,
-                query_params=query_params,
-                headers=headers,
-                post_params=post_params,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-                body=body,
-            )
-        elif method == "DELETE":
-            return await self.rest_client.DELETE(
-                url,
-                query_params=query_params,
-                headers=headers,
-                _preload_content=_preload_content,
-                _request_timeout=_request_timeout,
-                body=body,
-            )
-        else:
+        if method not in ["GET", "HEAD", "OPTIONS", "POST", "PATCH", "PUT", "DELETE"]:
             raise ApiValueError(
                 "http method must be `GET`, `HEAD`, `OPTIONS`,"
                 " `POST`, `PATCH`, `PUT` or `DELETE`."
             )
+
+        if _streaming:
+            return self.rest_client.stream(
+                method,
+                url,
+                query_params=query_params,
+                headers=headers,
+                post_params=post_params,
+                body=body,
+                _request_timeout=_request_timeout,
+            )
+
+        return await self.rest_client.request(
+            method,
+            url,
+            query_params=query_params,
+            headers=headers,
+            post_params=post_params,
+            body=body,
+            _preload_content=_preload_content,
+            _request_timeout=_request_timeout,
+        )
 
     def parameters_to_tuples(self, params, collection_formats):
         """Get parameters as list of tuples, formatting collections.

@@ -37,12 +37,14 @@ class ExpandRequest:
         "tuple_key": "ExpandRequestTupleKey",
         "authorization_model_id": "str",
         "consistency": "ConsistencyPreference",
+        "contextual_tuples": "ContextualTupleKeys",
     }
 
     attribute_map = {
         "tuple_key": "tuple_key",
         "authorization_model_id": "authorization_model_id",
         "consistency": "consistency",
+        "contextual_tuples": "contextual_tuples",
     }
 
     def __init__(
@@ -50,6 +52,7 @@ class ExpandRequest:
         tuple_key=None,
         authorization_model_id=None,
         consistency=None,
+        contextual_tuples=None,
         local_vars_configuration=None,
     ):
         """ExpandRequest - a model defined in OpenAPI"""
@@ -60,6 +63,7 @@ class ExpandRequest:
         self._tuple_key = None
         self._authorization_model_id = None
         self._consistency = None
+        self._contextual_tuples = None
         self.discriminator = None
 
         self.tuple_key = tuple_key
@@ -67,6 +71,8 @@ class ExpandRequest:
             self.authorization_model_id = authorization_model_id
         if consistency is not None:
             self.consistency = consistency
+        if contextual_tuples is not None:
+            self.contextual_tuples = contextual_tuples
 
     @property
     def tuple_key(self):
@@ -132,6 +138,27 @@ class ExpandRequest:
         """
 
         self._consistency = consistency
+
+    @property
+    def contextual_tuples(self):
+        """Gets the contextual_tuples of this ExpandRequest.
+
+
+        :return: The contextual_tuples of this ExpandRequest.
+        :rtype: ContextualTupleKeys
+        """
+        return self._contextual_tuples
+
+    @contextual_tuples.setter
+    def contextual_tuples(self, contextual_tuples):
+        """Sets the contextual_tuples of this ExpandRequest.
+
+
+        :param contextual_tuples: The contextual_tuples of this ExpandRequest.
+        :type contextual_tuples: ContextualTupleKeys
+        """
+
+        self._contextual_tuples = contextual_tuples
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

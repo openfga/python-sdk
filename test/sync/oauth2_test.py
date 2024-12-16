@@ -88,8 +88,8 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
             }
         )
         mock_request.assert_called_once_with(
-            "POST",
-            "https://issuer.fga.example/oauth/token",
+            method="POST",
+            url="https://issuer.fga.example/oauth/token",
             headers=expected_header,
             query_params=None,
             body=None,

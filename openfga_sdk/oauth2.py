@@ -106,8 +106,15 @@ class OAuth2Client:
         )
 
         for attempt in range(max_retry + 1):
-            raw_response = await client.POST(
-                token_url, headers=headers, post_params=post_params
+            raw_response = await client.request(
+                method="POST",
+                url=token_url,
+                headers=headers,
+                query_params=None,
+                body=None,
+                _preload_content=True,
+                _request_timeout=None,
+                post_params=post_params,
             )
 
             if 500 <= raw_response.status <= 599 or raw_response.status == 429:

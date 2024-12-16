@@ -16,6 +16,7 @@ import logging
 import re
 import ssl
 import urllib
+from typing import Any, List, Optional, Tuple
 
 import urllib3
 
@@ -34,57 +35,88 @@ logger = logging.getLogger(__name__)
 
 
 class RESTResponse(io.IOBase):
+    """
+    Represents an HTTP response object in the non-async client.
+    """
 
-    def __init__(self, resp, data):
+    def __init__(self, resp: urllib3.HTTPResponse, data: bytes) -> None:
+        """
+        Initializes a RESTResponse with a urllib3.HTTPResponse and corresponding data.
+
+        :param resp: The urllib3.HTTPResponse object.
+        :param data: The raw byte data read from the response.
+        """
         self.urllib3_response = resp
         self.status = resp.status
         self.reason = resp.reason
         self.data = data
 
-    def getheaders(self):
-        """Returns a dictionary of the response headers."""
+    def getheaders(self) -> dict:
+        """
+        Returns a dictionary of the response headers.
+        """
         return self.urllib3_response.headers
 
-    def getheader(self, name, default=None):
-        """Returns a given response header."""
+    def getheader(self, name: str, default: Optional[str] = None) -> Optional[str]:
+        """
+        Returns a specific header value by name.
+
+        :param name: The name of the header.
+        :param default: The default value if header is not found.
+        :return: The header value, or default if not present.
+        """
         return self.urllib3_response.headers.get(name, default)
 
 
 class RESTClientObject:
+    """
+    A synchronous client object that manages HTTP interactions using urllib3.
+    """
 
-    def __init__(self, configuration, pools_size=4, maxsize=None):
-        # urllib3.PoolManager will pass all kw parameters to connectionpool
-        # https://github.com/shazow/urllib3/blob/f9409436f83aeb79fbaf090181cd81b784f1b8ce/urllib3/poolmanager.py#L75
-        # https://github.com/shazow/urllib3/blob/f9409436f83aeb79fbaf090181cd81b784f1b8ce/urllib3/connectionpool.py#L680
-        # maxsize is the number of requests to host that are allowed in parallel
-        # Custom SSL certificates and client certificates: http://urllib3.readthedocs.io/en/latest/advanced-usage.html
+    def __init__(
+        self, configuration: Any, pools_size: int = 4, maxsize: Optional[int] = None
+    ) -> None:
+        """
+        Creates a new RESTClientObject using urllib3.
 
-        # cert_reqs
-        if configuration.verify_ssl:
+        :param configuration: A configuration object with necessary parameters.
+        :param pools_size: The number of connection pools to use.
+        :param maxsize: The maximum number of connections per pool.
+        """
+        if hasattr(configuration, "verify_ssl") and configuration.verify_ssl:
             cert_reqs = ssl.CERT_REQUIRED
         else:
             cert_reqs = ssl.CERT_NONE
 
         addition_pool_args = {}
-        if configuration.assert_hostname is not None:
+
+        if (
+            hasattr(configuration, "assert_hostname")
+            and configuration.assert_hostname is not None
+        ):
             addition_pool_args["assert_hostname"] = configuration.assert_hostname
 
-        if configuration.retries is not None:
+        if hasattr(configuration, "retries") and configuration.retries is not None:
             addition_pool_args["retries"] = configuration.retries
 
-        if configuration.socket_options is not None:
+        if (
+            hasattr(configuration, "socket_options")
+            and configuration.socket_options is not None
+        ):
             addition_pool_args["socket_options"] = configuration.socket_options
 
         if maxsize is None:
-            if configuration.connection_pool_maxsize is not None:
+            if (
+                hasattr(configuration, "connection_pool_maxsize")
+                and configuration.connection_pool_maxsize is not None
+            ):
                 maxsize = configuration.connection_pool_maxsize
             else:
                 maxsize = 4
 
         self._timeout_millisec = configuration.timeout_millisec
 
-        # https pool manager
-        if configuration.proxy:
+        if hasattr(configuration, "proxy") and configuration.proxy is not None:
             self.pool_manager = urllib3.ProxyManager(
                 num_pools=pools_size,
                 maxsize=maxsize,
@@ -96,48 +128,48 @@ class RESTClientObject:
                 proxy_headers=configuration.proxy_headers,
                 **addition_pool_args,
             )
-        else:
-            self.pool_manager = urllib3.PoolManager(
-                num_pools=pools_size,
-                maxsize=maxsize,
-                cert_reqs=cert_reqs,
-                ca_certs=configuration.ssl_ca_cert,
-                cert_file=configuration.cert_file,
-                key_file=configuration.key_file,
-                **addition_pool_args,
-            )
 
-    def close(self):
+            return
+
+        self.pool_manager = urllib3.PoolManager(
+            num_pools=pools_size,
+            maxsize=maxsize,
+            cert_reqs=cert_reqs,
+            ca_certs=configuration.ssl_ca_cert,
+            cert_file=configuration.cert_file,
+            key_file=configuration.key_file,
+            **addition_pool_args,
+        )
+
+    def close(self) -> None:
+        """
+        Closes all pooled connections.
+        """
         self.pool_manager.clear()
 
-    def request(
+    def build_request(
         self,
-        method,
-        url,
-        query_params=None,
-        headers=None,
-        body=None,
-        post_params=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        """Perform requests.
+        method: str,
+        url: str,
+        query_params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        body: Optional[Any] = None,
+        post_params: Optional[dict] = None,
+        _preload_content: bool = True,
+        _request_timeout: Optional[float | tuple] = None,
+    ) -> dict:
+        """
+        Builds a dictionary of request arguments suitable for urllib3.
 
-        :param method: http request method
-        :param url: http request url
-        :param query_params: query parameters in the url
-        :param headers: http request headers
-        :param body: request json body, for `application/json`
-        :param post_params: request post parameters,
-                            `application/x-www-form-urlencoded`
-                            and `multipart/form-data`
-        :param _preload_content: if False, the urllib3.HTTPResponse object will
-                                 be returned without reading/decoding response
-                                 data. Default is True.
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
+        :param method: The HTTP method (GET, POST, etc.).
+        :param url: The URL endpoint.
+        :param query_params: Optional query parameters.
+        :param headers: Optional request headers.
+        :param body: The request body, if any.
+        :param post_params: Form or multipart parameters, if any.
+        :param _preload_content: If True, response data is read immediately (by urllib3).
+        :param _request_timeout: Timeout setting, in seconds or a (connect, read) tuple.
+        :return: A dictionary of request arguments for urllib3.
         """
         method = method.upper()
         assert method in ["GET", "HEAD", "DELETE", "POST", "PUT", "PATCH", "OPTIONS"]
@@ -147,257 +179,263 @@ class RESTClientObject:
                 "body parameter cannot be used with post_params parameter."
             )
 
-        post_params = post_params or {}
         headers = headers or {}
+        post_params = post_params or {}
+        timeout_val = _request_timeout or self._timeout_millisec
 
-        timeout = urllib3.Timeout(total=self._timeout_millisec / 1000)
-        if _request_timeout:
-            if isinstance(_request_timeout, (float, int)):
-                timeout = urllib3.Timeout(total=_request_timeout)
-            elif isinstance(_request_timeout, tuple) and len(_request_timeout) == 2:
-                timeout = urllib3.Timeout(
-                    connect=_request_timeout[0], read=_request_timeout[1]
-                )
+        if isinstance(timeout_val, (float, int)):
+            if timeout_val > 100:
+                timeout_val /= 1000
+            timeout = urllib3.Timeout(total=timeout_val)
+        elif isinstance(timeout_val, tuple) and len(timeout_val) == 2:
+            connect_t, read_t = timeout_val
+            if connect_t > 100:
+                connect_t /= 1000
+            if read_t > 100:
+                read_t /= 1000
+            timeout = urllib3.Timeout(connect=connect_t, read=read_t)
+        else:
+            timeout = urllib3.Timeout(total=None)  # fallback
 
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
 
-        try:
-            # For `POST`, `PUT`, `PATCH`, `OPTIONS`, `DELETE`
-            if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
-                if query_params:
-                    url += "?" + urllib.parse.urlencode(query_params)
-                if re.search("json", headers["Content-Type"], re.IGNORECASE):
-                    request_body = None
-                    if body is not None:
-                        request_body = json.dumps(body)
-                    r = self.pool_manager.request(
-                        method,
-                        url,
-                        body=request_body,
-                        preload_content=_preload_content,
-                        timeout=timeout,
-                        headers=headers,
-                    )
-                elif headers["Content-Type"] == "application/x-www-form-urlencoded":
-                    r = self.pool_manager.request(
-                        method,
-                        url,
-                        fields=post_params,
-                        encode_multipart=False,
-                        preload_content=_preload_content,
-                        timeout=timeout,
-                        headers=headers,
-                    )
-                elif headers["Content-Type"] == "multipart/form-data":
-                    # must del headers['Content-Type'], or the correct
-                    # Content-Type which generated by urllib3 will be
-                    # overwritten.
-                    del headers["Content-Type"]
-                    r = self.pool_manager.request(
-                        method,
-                        url,
-                        fields=post_params,
-                        encode_multipart=True,
-                        preload_content=_preload_content,
-                        timeout=timeout,
-                        headers=headers,
-                    )
-                # Pass a `string` parameter directly in the body to support
-                # other content types than Json when `body` argument is
-                # provided in serialized form
-                elif isinstance(body, str) or isinstance(body, bytes):
-                    request_body = body
-                    r = self.pool_manager.request(
-                        method,
-                        url,
-                        body=request_body,
-                        preload_content=_preload_content,
-                        timeout=timeout,
-                        headers=headers,
-                    )
-                else:
-                    # Cannot generate the request from given parameters
-                    msg = """Cannot prepare a request message for provided
-                             arguments. Please check that your arguments match
-                             declared content type."""
-                    raise ApiException(status=0, reason=msg)
-            # For `GET`, `HEAD`
+        args = {
+            "method": method,
+            "url": url,
+            "timeout": timeout,
+            "headers": headers,
+            "preload_content": _preload_content,
+        }
+
+        if query_params:
+            encoded_qs = urllib.parse.urlencode(query_params)
+            args["url"] = f"{url}?{encoded_qs}"
+
+        # Handle body/post_params for methods that send payloads
+        if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
+            if re.search("json", headers["Content-Type"], re.IGNORECASE):
+                if body is not None:
+                    body = json.dumps(body)
+                args["body"] = body
+
+            elif headers["Content-Type"] == "application/x-www-form-urlencoded":
+                args["fields"] = post_params
+                args["encode_multipart"] = False
+
+            elif headers["Content-Type"] == "multipart/form-data":
+                del headers["Content-Type"]
+                args["fields"] = post_params
+                args["encode_multipart"] = True
+
+            elif isinstance(body, (str, bytes)):
+                args["body"] = body
             else:
-                r = self.pool_manager.request(
-                    method,
-                    url,
-                    fields=query_params,
-                    preload_content=_preload_content,
-                    timeout=timeout,
-                    headers=headers,
+                msg = (
+                    "Cannot prepare a request message for provided arguments. "
+                    "Please check that your arguments match declared content type."
                 )
-        except urllib3.exceptions.SSLError as e:
-            msg = f"{type(e).__name__}\n{str(e)}"
-            raise ApiException(status=0, reason=msg)
+                raise ApiException(status=0, reason=msg)
+        else:
+            # For GET, HEAD, etc., we can pass query_params as fields if needed
+            # but we've already appended them to the URL above
+            pass
 
+        return args
+
+    def handle_response_exception(
+        self, response: RESTResponse | urllib3.HTTPResponse
+    ) -> None:
+        """
+        Raises exceptions if response status indicates an error.
+
+        :param response: The response to check (could be RESTResponse or raw urllib3.HTTPResponse).
+        """
+        if 200 <= response.status <= 299:
+            return
+
+        match response.status:
+            case 400:
+                raise ValidationException(http_resp=response)
+            case 401:
+                raise UnauthorizedException(http_resp=response)
+            case 403:
+                raise ForbiddenException(http_resp=response)
+            case 404:
+                raise NotFoundException(http_resp=response)
+            case 429:
+                raise RateLimitExceededError(http_resp=response)
+            case _ if 500 <= response.status <= 599:
+                raise ServiceException(http_resp=response)
+            case _:
+                raise ApiException(http_resp=response)
+
+    def _accumulate_json_lines(
+        self, leftover: bytes, data: bytes, buffer: bytearray
+    ) -> Tuple[bytes, List[Any]]:
+        """
+        Processes a chunk of data plus any leftover bytes from a previous iteration.
+        Splits on newlines, decodes valid JSON lines, and returns updated leftover bytes
+        plus a list of decoded JSON objects.
+
+        :param leftover: Any leftover bytes from previous chunks.
+        :param data: The new chunk of data.
+        :param buffer: The main bytearray buffer for all data in this request.
+        :return: A tuple of (updated leftover bytes, list of decoded objects).
+        """
+        objects: List[Any] = []
+        leftover += data
+        lines = leftover.split(
+            b"\n"
+        )  # Objects are received as one-per-line, so split at newlines
+        leftover = lines.pop()
+        buffer.extend(data)
+
+        for line in lines:
+            line_str = line.decode("utf-8")
+            try:
+                decoded = json.loads(line_str)
+                objects.append(decoded)
+            except json.JSONDecodeError as e:
+                logger.warning("Skipping invalid JSON segment: %s", e)
+
+        return leftover, objects
+
+    def stream(
+        self,
+        method: str,
+        url: str,
+        query_params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        body: Optional[Any] = None,
+        post_params: Optional[dict] = None,
+        _request_timeout: Optional[float | tuple] = None,
+    ):
+        """
+        Streams JSON objects from a specified endpoint, reassembling partial chunks
+        and yielding one decoded object at a time.
+
+        :param method: The HTTP method (GET, POST, etc.).
+        :param url: The endpoint URL.
+        :param query_params: Query parameters to be appended to the URL.
+        :param headers: Optional headers to include in the request.
+        :param body: Optional body for the request.
+        :param post_params: Optional form/multipart parameters.
+        :param _request_timeout: An optional request timeout in seconds or (connect, read) tuple.
+        :yields: Parsed JSON objects as Python data structures.
+        """
+
+        # Build our request payload
+        args = self.build_request(
+            method,
+            url,
+            query_params=query_params,
+            headers=headers,
+            body=body,
+            post_params=post_params,
+            _preload_content=False,
+            _request_timeout=_request_timeout,
+        )
+
+        # Initialize buffers for data chunks
+        buffer = bytearray()
+        leftover = b""
+
+        # Send request, collect response handler
+        response = self.pool_manager.request(**args)
+
+        try:
+            # Iterate over streamed/chunked response data
+            for chunk in response.stream(1024):
+                # Process data chunk
+                leftover, decoded_objects = self._accumulate_json_lines(
+                    leftover, chunk, buffer
+                )
+
+                # Yield any complete objects
+                for obj in decoded_objects:
+                    yield obj
+
+        except Exception as e:
+            logger.exception("Stream error: %s", e)
+
+        # Handle any remaining data after stream ends
+        if response is not None:
+            # Check for any leftover data
+            if leftover:
+                try:
+                    # Attempt to decode and yield any remaining JSON object
+                    final_str = leftover.decode("utf-8")
+                    final_obj = json.loads(final_str)
+                    buffer.extend(leftover)
+                    yield final_obj
+
+                except json.JSONDecodeError:
+                    logger.debug("Incomplete leftover data at end of stream.")
+
+            # Handle any HTTP errors that may have occurred
+            self.handle_response_exception(response)
+
+            # Release the response object (required!)
+            response.release_conn()
+
+        # Release the connection back to the pool
+        self.close()
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        query_params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        body: Optional[Any] = None,
+        post_params: Optional[dict] = None,
+        _preload_content: bool = True,
+        _request_timeout: Optional[float | tuple] = None,
+    ) -> RESTResponse | urllib3.HTTPResponse:
+        """
+        Executes a request and returns the response object.
+
+        :param method: The HTTP method.
+        :param url: The endpoint URL.
+        :param query_params: Query parameters to be appended to the URL.
+        :param headers: Optional request headers.
+        :param body: A request body for JSON or other content types.
+        :param post_params: Form/multipart parameters for the request.
+        :param _preload_content: If True, the response body is read immediately
+                                 and wrapped in a RESTResponse. Otherwise,
+                                 an un-consumed urllib3.HTTPResponse is returned.
+        :param _request_timeout: Timeout in seconds or a (connect, read) tuple.
+        :return: A RESTResponse if _preload_content=True, otherwise a raw HTTPResponse.
+        """
+
+        # Build our request payload
+        args = self.build_request(
+            method,
+            url,
+            query_params=query_params,
+            headers=headers,
+            body=body,
+            post_params=post_params,
+            _preload_content=_preload_content,
+            _request_timeout=_request_timeout,
+        )
+
+        # Send request, collect response handler
+        resp = self.pool_manager.request(**args)
+
+        # If we want to preload the response, read it
         if _preload_content:
-            r = RESTResponse(r, r.data)
+            # Collect response data and transform response (JSON) into RESTResponse object
+            resp = RESTResponse(resp, resp.data)
 
-            # log response body
-            logger.debug("response body: %s", r.data)
+            # Log the response body
+            logger.debug("response body: %s", resp.data)
 
-        if not 200 <= r.status <= 299:
-            if r.status == 400:
-                raise ValidationException(http_resp=r)
+        # Handle any errors that may have occurred
+        self.handle_response_exception(resp)
 
-            if r.status == 401:
-                raise UnauthorizedException(http_resp=r)
+        # Release the connection back to the pool
+        self.close()
 
-            if r.status == 403:
-                raise ForbiddenException(http_resp=r)
-
-            if r.status == 404:
-                raise NotFoundException(http_resp=r)
-
-            if r.status == 429:
-                raise RateLimitExceededError(http_resp=r)
-
-            if 500 <= r.status <= 599:
-                raise ServiceException(http_resp=r)
-
-            raise ApiException(http_resp=r)
-
-        return r
-
-    def GET(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "GET",
-            url,
-            headers=headers,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            query_params=query_params,
-        )
-
-    def HEAD(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "HEAD",
-            url,
-            headers=headers,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            query_params=query_params,
-        )
-
-    def OPTIONS(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "OPTIONS",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    def DELETE(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "DELETE",
-            url,
-            headers=headers,
-            query_params=query_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    def POST(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "POST",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    def PUT(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "PUT",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
-
-    def PATCH(
-        self,
-        url,
-        headers=None,
-        query_params=None,
-        post_params=None,
-        body=None,
-        _preload_content=True,
-        _request_timeout=None,
-    ):
-        return self.request(
-            "PATCH",
-            url,
-            headers=headers,
-            query_params=query_params,
-            post_params=post_params,
-            _preload_content=_preload_content,
-            _request_timeout=_request_timeout,
-            body=body,
-        )
+        return resp
