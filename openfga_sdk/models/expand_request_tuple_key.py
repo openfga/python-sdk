@@ -70,14 +70,6 @@ class ExpandRequestTupleKey:
         """
         if self.local_vars_configuration.client_side_validation and relation is None:
             raise ValueError("Invalid value for `relation`, must not be `None`")
-        if (
-            self.local_vars_configuration.client_side_validation
-            and relation is not None
-            and len(relation) > 50
-        ):
-            raise ValueError(
-                "Invalid value for `relation`, length must be less than or equal to `50`"
-            )
 
         self._relation = relation
 
@@ -101,14 +93,6 @@ class ExpandRequestTupleKey:
         """
         if self.local_vars_configuration.client_side_validation and object is None:
             raise ValueError("Invalid value for `object`, must not be `None`")
-        if (
-            self.local_vars_configuration.client_side_validation
-            and object is not None
-            and len(object) > 256
-        ):
-            raise ValueError(
-                "Invalid value for `object`, length must be less than or equal to `256`"
-            )
 
         self._object = object
 

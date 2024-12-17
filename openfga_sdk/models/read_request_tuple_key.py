@@ -75,14 +75,6 @@ class ReadRequestTupleKey:
         :param user: The user of this ReadRequestTupleKey.
         :type user: str
         """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and user is not None
-            and len(user) > 512
-        ):
-            raise ValueError(
-                "Invalid value for `user`, length must be less than or equal to `512`"
-            )
 
         self._user = user
 
@@ -104,14 +96,6 @@ class ReadRequestTupleKey:
         :param relation: The relation of this ReadRequestTupleKey.
         :type relation: str
         """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and relation is not None
-            and len(relation) > 50
-        ):
-            raise ValueError(
-                "Invalid value for `relation`, length must be less than or equal to `50`"
-            )
 
         self._relation = relation
 
@@ -133,14 +117,6 @@ class ReadRequestTupleKey:
         :param object: The object of this ReadRequestTupleKey.
         :type object: str
         """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and object is not None
-            and len(object) > 256
-        ):
-            raise ValueError(
-                "Invalid value for `object`, length must be less than or equal to `256`"
-            )
 
         self._object = object
 

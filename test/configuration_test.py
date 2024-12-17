@@ -126,7 +126,6 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         default_config.username = "user"
         default_config.password = "pass"
         default_config.discard_unknown_keys = True
-        default_config.disabled_client_side_validations = "maxLength,minLength"
         default_config.server_index = 1
         default_config.server_variables = {"variable1": "value1", "variable2": "value2"}
         default_config.server_operation_index = {"operation1": 1, "operation2": 2}
@@ -165,10 +164,6 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         assert Configuration._default.username == "user"
         assert Configuration._default.password == "pass"
         assert Configuration._default.discard_unknown_keys is True
-        assert Configuration._default.disabled_client_side_validations == {
-            "maxLength",
-            "minLength",
-        }
         assert Configuration._default.server_index == 1
         assert Configuration._default.server_variables == {
             "variable1": "value1",
@@ -204,7 +199,6 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         default_config.username = "user"
         default_config.password = "pass"
         default_config.discard_unknown_keys = True
-        default_config.disabled_client_side_validations = "maxLength,minLength"
         default_config.server_index = 1
         default_config.server_variables = {"variable1": "value1", "variable2": "value2"}
         default_config.server_operation_index = {"operation1": 1, "operation2": 2}
@@ -269,20 +263,6 @@ class TestConfigurationLogging:
         assert configuration.logger_file is None
         configuration.logger_file = "debug.log"
         assert configuration.logger_file == "debug.log"
-
-    def test_configuration_disabled_client_side_validations(self, configuration):
-        assert configuration.disabled_client_side_validations == {}
-        configuration.disabled_client_side_validations = "maxLength,minLength"
-        assert configuration.disabled_client_side_validations == {
-            "maxLength",
-            "minLength",
-        }
-
-    def test_configuration_disabled_client_side_validations_invalid_keyword(
-        self, configuration
-    ):
-        with pytest.raises(FgaValidationException):
-            configuration.disabled_client_side_validations = "invalidKeyword"
 
 
 class TestConfigurationHostSettings:
@@ -355,7 +335,6 @@ class TestConfigurationMiscellaneous:
             username="user",
             password="pass",
             discard_unknown_keys=True,
-            disabled_client_side_validations="maxLength,minLength",
             server_index=1,
             server_variables={"variable1": "value1", "variable2": "value2"},
             server_operation_index={"operation1": 1, "operation2": 2},
@@ -386,10 +365,6 @@ class TestConfigurationMiscellaneous:
         assert copied_config.username == config.username
         assert copied_config.password == config.password
         assert copied_config.discard_unknown_keys == config.discard_unknown_keys
-        assert (
-            copied_config.disabled_client_side_validations
-            == config.disabled_client_side_validations
-        )
         assert copied_config.server_index == config.server_index
         assert copied_config.server_variables == config.server_variables
         assert copied_config.server_operation_index == config.server_operation_index

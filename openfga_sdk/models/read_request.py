@@ -114,22 +114,6 @@ class ReadRequest:
         :param page_size: The page_size of this ReadRequest.
         :type page_size: int
         """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and page_size is not None
-            and page_size > 100
-        ):
-            raise ValueError(
-                "Invalid value for `page_size`, must be a value less than or equal to `100`"
-            )
-        if (
-            self.local_vars_configuration.client_side_validation
-            and page_size is not None
-            and page_size < 1
-        ):
-            raise ValueError(
-                "Invalid value for `page_size`, must be a value greater than or equal to `1`"
-            )
 
         self._page_size = page_size
 

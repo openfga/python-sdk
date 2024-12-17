@@ -73,14 +73,6 @@ class RelationshipCondition:
         """
         if self.local_vars_configuration.client_side_validation and name is None:
             raise ValueError("Invalid value for `name`, must not be `None`")
-        if (
-            self.local_vars_configuration.client_side_validation
-            and name is not None
-            and len(name) > 256
-        ):
-            raise ValueError(
-                "Invalid value for `name`, length must be less than or equal to `256`"
-            )
 
         self._name = name
 
