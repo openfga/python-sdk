@@ -2,6 +2,9 @@
 
 ## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.1...HEAD)
 
+- feat: remove client-side validation - thanks @GMorris-professional (#155)
+- fix: change default max retry limit to 3 from 15 - thanks @ovindu-a (#155)
+
 ## v0.8.1
 
 ### [0.8.1](https://github.com/openfga/python-sdk/compare/v0.8.0...v0.8.1) (2024-11-26)
