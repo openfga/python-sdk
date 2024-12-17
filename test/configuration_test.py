@@ -81,7 +81,7 @@ def test_configuration_credentials(configuration):
 
 
 def test_configuration_retry_params_default_values(configuration):
-    assert configuration.retry_params.max_retry == 15
+    assert configuration.retry_params.max_retry == 3
     assert configuration.retry_params.min_wait_in_ms == 100
 
 
