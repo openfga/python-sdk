@@ -182,22 +182,6 @@ class ListUsersRequest:
             and user_filters is None
         ):
             raise ValueError("Invalid value for `user_filters`, must not be `None`")
-        if (
-            self.local_vars_configuration.client_side_validation
-            and user_filters is not None
-            and len(user_filters) > 1
-        ):
-            raise ValueError(
-                "Invalid value for `user_filters`, number of items must be less than or equal to `1`"
-            )
-        if (
-            self.local_vars_configuration.client_side_validation
-            and user_filters is not None
-            and len(user_filters) < 1
-        ):
-            raise ValueError(
-                "Invalid value for `user_filters`, number of items must be greater than or equal to `1`"
-            )
 
         self._user_filters = user_filters
 
@@ -219,14 +203,6 @@ class ListUsersRequest:
         :param contextual_tuples: The contextual_tuples of this ListUsersRequest.
         :type contextual_tuples: list[TupleKey]
         """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and contextual_tuples is not None
-            and len(contextual_tuples) > 100
-        ):
-            raise ValueError(
-                "Invalid value for `contextual_tuples`, number of items must be less than or equal to `100`"
-            )
 
         self._contextual_tuples = contextual_tuples
 

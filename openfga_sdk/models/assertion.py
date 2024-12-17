@@ -137,14 +137,6 @@ class Assertion:
         :param contextual_tuples: The contextual_tuples of this Assertion.
         :type contextual_tuples: list[TupleKey]
         """
-        if (
-            self.local_vars_configuration.client_side_validation
-            and contextual_tuples is not None
-            and len(contextual_tuples) > 20
-        ):
-            raise ValueError(
-                "Invalid value for `contextual_tuples`, number of items must be less than or equal to `20`"
-            )
 
         self._contextual_tuples = contextual_tuples
 

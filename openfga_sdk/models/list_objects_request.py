@@ -177,22 +177,6 @@ class ListObjectsRequest:
         """
         if self.local_vars_configuration.client_side_validation and user is None:
             raise ValueError("Invalid value for `user`, must not be `None`")
-        if (
-            self.local_vars_configuration.client_side_validation
-            and user is not None
-            and len(user) > 512
-        ):
-            raise ValueError(
-                "Invalid value for `user`, length must be less than or equal to `512`"
-            )
-        if (
-            self.local_vars_configuration.client_side_validation
-            and user is not None
-            and len(user) < 1
-        ):
-            raise ValueError(
-                "Invalid value for `user`, length must be greater than or equal to `1`"
-            )
 
         self._user = user
 
