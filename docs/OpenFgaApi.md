@@ -1066,10 +1066,11 @@ async with openfga_sdk.ApiClient(configuration) as api_client:
     type = 'type_example' # str |  (optional)
     page_size = 56 # int |  (optional)
     continuation_token = 'continuation_token_example' # str |  (optional)
+    start_time = '2013-10-20T19:20:30+01:00' # datetime | Start date and time of changes to read. Format: ISO 8601 timestamp (e.g., 2022-01-01T00:00:00Z) If a continuation_token is provided along side start_time, the continuation_token will take precedence over start_time. (optional)
 
     try:
         # Return a list of all the tuple changes
-        api_response = await api_instance.api_instance.read_changes(type=type, page_size=page_size, continuation_token=continuation_token)
+        api_response = await api_instance.api_instance.read_changes(type=type, page_size=page_size, continuation_token=continuation_token, start_time=start_time)
         pprint(api_response)
     except ApiException as e:
         print("Exception when calling OpenFgaApi->read_changes: %s\n" % e)
@@ -1084,6 +1085,7 @@ Name | Type | Description  | Notes
  **type** | **str**|  | [optional]
  **page_size** | **int**|  | [optional]
  **continuation_token** | **str**|  | [optional]
+ **start_time** | **datetime**| Start date and time of changes to read. Format: ISO 8601 timestamp (e.g., 2022-01-01T00:00:00Z) If a continuation_token is provided along side start_time, the continuation_token will take precedence over start_time. | [optional]
 
 ### Return type
 

@@ -2047,6 +2047,8 @@ class OpenFgaApi:
         :type page_size: int, optional
         :param continuation_token:(optional)
         :type continuation_token: str, optional
+        :param start_time: Start date and time of changes to read. Format: ISO 8601 timestamp (e.g., 2022-01-01T00:00:00Z) If a continuation_token is provided along side start_time, the continuation_token will take precedence over start_time.(optional)
+        :type start_time: datetime, optional
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -2078,6 +2080,8 @@ class OpenFgaApi:
         :type page_size: int, optional
         :param continuation_token:(optional)
         :type continuation_token: str, optional
+        :param start_time: Start date and time of changes to read. Format: ISO 8601 timestamp (e.g., 2022-01-01T00:00:00Z) If a continuation_token is provided along side start_time, the continuation_token will take precedence over start_time.(optional)
+        :type start_time: datetime, optional
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _return_http_data_only: response data without head status code
@@ -2105,7 +2109,7 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["type", "page_size", "continuation_token"]
+        all_params = ["type", "page_size", "continuation_token", "start_time"]
         all_params.extend(
             [
                 "async_req",
@@ -2149,6 +2153,8 @@ class OpenFgaApi:
             query_params.append(
                 ("continuation_token", local_var_params["continuation_token"])
             )
+        if local_var_params.get("start_time") is not None:
+            query_params.append(("start_time", local_var_params["start_time"]))
 
         header_params = dict(local_var_params.get("_headers", {}))
 

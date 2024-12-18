@@ -90,6 +90,7 @@ class ErrorCode:
     INVALID_AUTHORIZATION_MODEL = "invalid_authorization_model"
     UNSUPPORTED_SCHEMA_VERSION = "unsupported_schema_version"
     CANCELLED = "cancelled"
+    INVALID_START_TIME = "invalid_start_time"
 
     allowable_values = [
         NO_ERROR,
@@ -141,6 +142,7 @@ class ErrorCode:
         INVALID_AUTHORIZATION_MODEL,
         UNSUPPORTED_SCHEMA_VERSION,
         CANCELLED,
+        INVALID_START_TIME,
     ]
 
     """

@@ -787,7 +787,10 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
 
             # Return a particular version of an authorization model
             api_response = api_instance.read_changes(
-                page_size=1, continuation_token="abcdefg", type="document"
+                page_size=1,
+                continuation_token="abcdefg",
+                start_time="2022-01-01T00:00:00+00:00",
+                type="document",
             )
             self.assertIsInstance(api_response, ReadChangesResponse)
             changes = TupleChange(
@@ -812,6 +815,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                     ("type", "document"),
                     ("page_size", 1),
                     ("continuation_token", "abcdefg"),
+                    ("start_time", "2022-01-01T00:00:00+00:00"),
                 ],
                 _preload_content=ANY,
                 _request_timeout=None,

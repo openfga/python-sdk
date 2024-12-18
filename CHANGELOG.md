@@ -3,6 +3,7 @@
 ## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.1...HEAD)
 
 - feat: remove client-side validation - thanks @GMorris-professional (#155)
+- feat: add support for `start_time` parameter in `ReadChanges` endpoint (#156)
 - fix: change default max retry limit to 3 from 15 - thanks @ovindu-a (#155)
 
 ## v0.8.1
