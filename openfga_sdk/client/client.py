@@ -707,7 +707,7 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
-        check_to_id: dict[str, ClientBatchCheckItem] = {}
+        id_to_check: dict[str, ClientBatchCheckItem] = {}
 
         def track_and_transform(checks):
             transformed = []
@@ -715,10 +715,12 @@ class OpenFgaClient:
                 if check.correlation_id is None:
                     check.correlation_id = str(uuid.uuid4())
 
-                if check.correlation_id in check_to_id:
-                    raise FgaValidationException("Duplicate correlation_id provided")
+                if check.correlation_id in id_to_check:
+                    raise FgaValidationException(
+                        f"Duplicate correlation_id ({check.correlation_id}) provided"
+                    )
 
-                check_to_id[check.correlation_id] = check
+                id_to_check[check.correlation_id] = check
 
                 transformed.append(construct_batch_item(check))
             return transformed
@@ -734,7 +736,7 @@ class OpenFgaClient:
         sem = asyncio.Semaphore(max_parallel_requests)
 
         def map_response(id, result):
-            check = check_to_id[id]
+            check = id_to_check[id]
             return ClientBatchCheckSingleResponse(
                 allowed=result.allowed,
                 request=check,

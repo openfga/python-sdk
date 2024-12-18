@@ -2415,11 +2415,14 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(FgaValidationException):
+            with self.assertRaises(FgaValidationException) as error:
                 await api_client.batch_check(
                     body=body,
                     options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
                 )
+            self.assertEqual(
+                "Duplicate correlation_id (1) provided", str(error.exception)
+            )
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
