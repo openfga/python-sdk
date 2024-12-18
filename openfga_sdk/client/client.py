@@ -347,6 +347,7 @@ class OpenFgaClient:
         """
         kwargs = options_to_kwargs(options)
         kwargs["type"] = body.type
+        kwargs["start_time"] = body.start_time
         api_response = await self._api.read_changes(
             **kwargs,
         )

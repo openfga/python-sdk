@@ -16,8 +16,9 @@ class ClientReadChangesRequest:
     ClientReadChangesRequest encapsulates the parameters required to read changes
     """
 
-    def __init__(self, type: str):
+    def __init__(self, type: str, start_time: str = None):
         self._type = type
+        self._startTime = start_time
 
     @property
     def type(self):
@@ -25,3 +26,10 @@ class ClientReadChangesRequest:
         Return type
         """
         return self._type
+
+    @property
+    def start_time(self):
+        """
+        Return startTime
+        """
+        return self._startTime

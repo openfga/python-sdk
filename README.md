@@ -485,7 +485,7 @@ options = {
     "page_size": "25",
     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
-body = ClientReadChangesRequest(type="document")
+body = ClientReadChangesRequest(type="document", start_time="2022-01-01T00:00:00Z")
 
 response = await fga_client.read_changes(body, options)
 # response.continuation_token = ...
