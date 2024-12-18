@@ -724,9 +724,11 @@ If 429s or 5xxs are encountered, the underlying check will retry up to 3 times b
 
 ```python
 # from openfga_sdk import OpenFgaClient
-# from openfga_sdk.client import ClientCheckRequest
-# from openfga_sdk.client.models import ClientTuple
-
+# from openfga_sdk.client.models import (
+#   ClientTuple,
+#   ClientBatchCheckItem,
+#   ClientBatchCheckRequest,
+# )
 # Initialize the fga_client
 # fga_client = OpenFgaClient(configuration)
 
@@ -734,7 +736,7 @@ options = {
     # You can rely on the model id set in the configuration or override it for this specific request
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
-body = [ClientCheckRequest(
+checks = [ClientBatchCheckItem(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="viewer",
     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -748,7 +750,7 @@ body = [ClientCheckRequest(
     context=dict(
         ViewCount=100
     )
-), ClientCheckRequest(
+), ClientBatchCheckItem(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="admin",
     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -759,20 +761,21 @@ body = [ClientCheckRequest(
             object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
         ),
     ]
-), ClientCheckRequest(
+), ClientBatchCheckItem(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="creator",
     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-), ClientCheckRequest(
+), ClientBatchCheckItem(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
     relation="deleter",
     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 )]
 
-response = await fga_client.batch_check(body, options)
-# response.responses = [{
+response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), options)
+# response.result = [{
 #   allowed: false,
-#   request: {
+#   correlation_id: "de3630c2-f9be-4ee5-9441-cb1fbd82ce75",
+#   tuple: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "viewer",
 #     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -787,7 +790,8 @@ response = await fga_client.batch_check(body, options)
 #   }
 # }, {
 #   allowed: false,
-#   request: {
+#   correlation_id: "6d7c7129-9607-480e-bfd0-17c16e46b9ec",
+#   tuple: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "admin",
 #     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
@@ -799,14 +803,19 @@ response = await fga_client.batch_check(body, options)
 #   }
 # }, {
 #   allowed: false,
-#   request: {
+#   correlation_id: "210899b9-6bc3-4491-bdd1-d3d79780aa31",
+#   tuple: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "creator",
 #     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
 #   },
-#   error: <FgaError ...>
+#   error: {
+#       input_error: "validation_error",
+#       message: "relation 'document#creator' not found"
+#   }
 # }, {
 #   allowed: true,
+#   correlation_id: "55cc1946-9fc3-4710-bd40-8fe2687ed8da",
 #   request: {
 #     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
 #     relation: "deleter",
@@ -1043,6 +1052,7 @@ async def main():
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*OpenFgaApi* | [**batch_check**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#batch_check) | **POST** /stores/{store_id}/batch-check | Send a list of &#x60;check&#x60; operations in a single request
 *OpenFgaApi* | [**check**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#check) | **POST** /stores/{store_id}/check | Check whether a user is authorized to access an object
 *OpenFgaApi* | [**create_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#create_store) | **POST** /stores | Create a store
 *OpenFgaApi* | [**delete_store**](https://github.com/openfga/python-sdk/blob/main/docs/OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
@@ -1072,6 +1082,11 @@ Class | Method | HTTP request | Description
  - [AssertionTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/AssertionTupleKey.md)
  - [AuthErrorCode](https://github.com/openfga/python-sdk/blob/main/docs/AuthErrorCode.md)
  - [AuthorizationModel](https://github.com/openfga/python-sdk/blob/main/docs/AuthorizationModel.md)
+ - [BatchCheckItem](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckItem.md)
+ - [BatchCheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckRequest.md)
+ - [BatchCheckResponse](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckResponse.md)
+ - [BatchCheckSingleResult](https://github.com/openfga/python-sdk/blob/main/docs/BatchCheckSingleResult.md)
+ - [CheckError](https://github.com/openfga/python-sdk/blob/main/docs/CheckError.md)
  - [CheckRequest](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequest.md)
  - [CheckRequestTupleKey](https://github.com/openfga/python-sdk/blob/main/docs/CheckRequestTupleKey.md)
  - [CheckResponse](https://github.com/openfga/python-sdk/blob/main/docs/CheckResponse.md)

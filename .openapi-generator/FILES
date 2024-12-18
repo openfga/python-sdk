@@ -19,6 +19,11 @@ docs/Assertion.md
 docs/AssertionTupleKey.md
 docs/AuthErrorCode.md
 docs/AuthorizationModel.md
+docs/BatchCheckItem.md
+docs/BatchCheckRequest.md
+docs/BatchCheckResponse.md
+docs/BatchCheckSingleResult.md
+docs/CheckError.md
 docs/CheckRequest.md
 docs/CheckRequestTupleKey.md
 docs/CheckResponse.md
@@ -119,8 +124,12 @@ openfga_sdk/client/client.py
 openfga_sdk/client/configuration.py
 openfga_sdk/client/models/__init__.py
 openfga_sdk/client/models/assertion.py
+openfga_sdk/client/models/batch_check_item.py
+openfga_sdk/client/models/batch_check_request.py
 openfga_sdk/client/models/batch_check_response.py
+openfga_sdk/client/models/batch_check_single_response.py
 openfga_sdk/client/models/check_request.py
+openfga_sdk/client/models/client_batch_check_response.py
 openfga_sdk/client/models/expand_request.py
 openfga_sdk/client/models/list_objects_request.py
 openfga_sdk/client/models/list_relations_request.py
@@ -142,6 +151,11 @@ openfga_sdk/models/assertion.py
 openfga_sdk/models/assertion_tuple_key.py
 openfga_sdk/models/auth_error_code.py
 openfga_sdk/models/authorization_model.py
+openfga_sdk/models/batch_check_item.py
+openfga_sdk/models/batch_check_request.py
+openfga_sdk/models/batch_check_response.py
+openfga_sdk/models/batch_check_single_result.py
+openfga_sdk/models/check_error.py
 openfga_sdk/models/check_request.py
 openfga_sdk/models/check_request_tuple_key.py
 openfga_sdk/models/check_response.py

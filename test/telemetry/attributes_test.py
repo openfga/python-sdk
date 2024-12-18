@@ -5,6 +5,8 @@ import pytest
 from urllib3 import HTTPResponse
 
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
+from openfga_sdk.models.batch_check_request import BatchCheckRequest
+from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.rest import RESTResponse
 from openfga_sdk.telemetry.attributes import (
     TelemetryAttributes,
@@ -20,14 +22,19 @@ def test_prepare_with_valid_attributes(telemetry_attributes):
     attributes = {
         telemetry_attributes.fga_client_request_client_id: "client_123",
         telemetry_attributes.http_request_method: "GET",
+        telemetry_attributes.fga_client_request_batch_check_size: 3,
     }
-    filter_attributes = [telemetry_attributes.fga_client_request_client_id]
+    filter_attributes = [
+        telemetry_attributes.fga_client_request_client_id,
+        telemetry_attributes.fga_client_request_batch_check_size,
+    ]
 
     prepared = telemetry_attributes.prepare(attributes, filter=filter_attributes)
 
     # Assert that only filtered attributes are returned
     assert prepared == {
         "fga-client.request.client_id": "client_123",
+        "fga-client.request.batch_check_size": 3,
     }
 
 
@@ -145,3 +152,20 @@ def test_from_response_with_rest_response(telemetry_attributes):
     assert attributes[TelemetryAttributes.fga_client_response_model_id] == "model_404"
     assert attributes[TelemetryAttributes.http_server_request_duration] == "100"
     assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_456"
+
+
+def test_from_body_with_batch_check(telemetry_attributes):
+    body = MagicMock(spec=BatchCheckRequest)
+    body.checks = ["1", "2", "3"]
+
+    attributes = telemetry_attributes.fromBody(body=body)
+
+    assert attributes[TelemetryAttributes.fga_client_request_batch_check_size] == 3
+
+
+def test_from_body_with_other_body(telemetry_attributes):
+    body = MagicMock(spec=CheckRequest)
+
+    attributes = telemetry_attributes.fromBody(body=body)
+
+    assert attributes == {}

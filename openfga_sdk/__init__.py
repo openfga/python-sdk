@@ -31,6 +31,11 @@ from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.assertion_tuple_key import AssertionTupleKey
 from openfga_sdk.models.auth_error_code import AuthErrorCode
 from openfga_sdk.models.authorization_model import AuthorizationModel
+from openfga_sdk.models.batch_check_item import BatchCheckItem
+from openfga_sdk.models.batch_check_request import BatchCheckRequest
+from openfga_sdk.models.batch_check_response import BatchCheckResponse
+from openfga_sdk.models.batch_check_single_result import BatchCheckSingleResult
+from openfga_sdk.models.check_error import CheckError
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.check_request_tuple_key import CheckRequestTupleKey
 from openfga_sdk.models.check_response import CheckResponse

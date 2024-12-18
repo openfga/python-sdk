@@ -15,10 +15,21 @@ from concurrent.futures import ThreadPoolExecutor
 
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
-from openfga_sdk.client.models.batch_check_response import BatchCheckResponse
+from openfga_sdk.client.models.batch_check_item import (
+    ClientBatchCheckItem,
+    construct_batch_item,
+)
+from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
+from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
+from openfga_sdk.client.models.batch_check_single_response import (
+    ClientBatchCheckSingleResponse,
+)
 from openfga_sdk.client.models.check_request import (
     ClientCheckRequest,
     construct_check_request,
+)
+from openfga_sdk.client.models.client_batch_check_response import (
+    ClientBatchCheckClientResponse,
 )
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
@@ -38,6 +49,7 @@ from openfga_sdk.exceptions import (
     UnauthorizedException,
 )
 from openfga_sdk.models.assertion import Assertion
+from openfga_sdk.models.batch_check_request import BatchCheckRequest
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
@@ -115,7 +127,7 @@ def options_to_transaction_info(options: dict[str, int | str] = None):
     return WriteTransactionOpts()
 
 
-def _check_allowed(response: BatchCheckResponse):
+def _check_allowed(response: ClientBatchCheckClientResponse):
     """
     Helper function to return whether the response is check is allowed
     """
@@ -564,7 +576,7 @@ class OpenFgaClient:
         api_response = self._api.check(body=req_body, **kwargs)
         return api_response
 
-    def _single_batch_check(
+    def _single_client_batch_check(
         self, body: ClientCheckRequest, options: dict[str, str] = None
     ):
         """
@@ -574,7 +586,7 @@ class OpenFgaClient:
         """
         try:
             api_response = self.check(body, options)
-            return BatchCheckResponse(
+            return ClientBatchCheckClientResponse(
                 allowed=api_response.allowed,
                 request=body,
                 response=api_response,
@@ -583,11 +595,11 @@ class OpenFgaClient:
         except (AuthenticationError, UnauthorizedException) as err:
             raise err
         except Exception as err:
-            return BatchCheckResponse(
+            return ClientBatchCheckClientResponse(
                 allowed=False, request=body, response=None, error=err
             )
 
-    def batch_check(
+    def client_batch_check(
         self, body: list[ClientCheckRequest], options: dict[str, str | int] = None
     ):
         """
@@ -619,13 +631,126 @@ class OpenFgaClient:
         batch_check_response = []
 
         def single_batch_check(request):
-            return self._single_batch_check(request, options)
+            return self._single_client_batch_check(request, options)
 
         with ThreadPoolExecutor(max_workers=max_parallel_requests) as executor:
             for response in executor.map(single_batch_check, body):
                 batch_check_response.append(response)
 
         return batch_check_response
+
+    def _single_batch_check(
+        self,
+        body: BatchCheckRequest,
+        options: dict[str, str] = None,
+    ):
+        """
+        Run a single BatchCheck request
+        :param body - list[ClientCheckRequest] defining check request
+        :param authorization_model_id(options) - Overrides the authorization model id in the configuration
+        """
+        try:
+            kwargs = options_to_kwargs(options)
+            api_response = self._api.batch_check(body, **kwargs)
+            return api_response
+        # Does this cover all error cases? If one fails with a 4xx/5xx then all should?
+        except Exception as err:
+            raise err
+
+    def batch_check(self, body: ClientBatchCheckRequest, options=None):
+        """
+        Run a batchcheck request
+        :param body - BatchCheck request
+        :param authorization_model_id(options) - Overrides the authorization model id in the configuration
+        :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
+        :param max_batch_size(options) - Max number of checks to include in a request. Defaults to 50
+        :param header(options) - Custom headers to send alongside the request
+        :param retryParams(options) - Override the retry parameters for this request
+        :param retryParams.maxRetry(options) - Override the max number of retries on each API request
+        :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        """
+        options = set_heading_if_not_set(
+            options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
+        )
+
+        max_parallel_requests = 10
+        if options is not None and "max_parallel_requests" in options:
+            if (
+                isinstance(options["max_parallel_requests"], str)
+                and options["max_parallel_requests"].isdigit()
+            ):
+                max_parallel_requests = int(options["max_parallel_requests"])
+            elif isinstance(options["max_parallel_requests"], int):
+                max_parallel_requests = options["max_parallel_requests"]
+
+        max_batch_size = 50
+        if options is not None and "max_batch_size" in options:
+            if (
+                isinstance(options["max_batch_size"], str)
+                and options["max_batch_size"].isdigit()
+            ):
+                max_batch_size = int(options["max_batch_size"])
+            elif isinstance(options["max_batch_size"], int):
+                max_batch_size = options["max_batch_size"]
+
+        id_to_check: dict[str, ClientBatchCheckItem] = {}
+
+        def track_and_transform(checks):
+            transformed = []
+            for check in checks:
+                if check.correlation_id is None:
+                    check.correlation_id = str(uuid.uuid4())
+
+                if check.correlation_id in id_to_check:
+                    raise FgaValidationException(
+                        f"Duplicate correlation_id ({check.correlation_id}) provided"
+                    )
+
+                id_to_check[check.correlation_id] = check
+
+                transformed.append(construct_batch_item(check))
+            return transformed
+
+        checks = [
+            track_and_transform(
+                body.checks[i * max_batch_size : (i + 1) * max_batch_size]
+            )
+            for i in range((len(body.checks) + max_batch_size - 1) // max_batch_size)
+        ]
+
+        def map_response(id, result):
+            check = id_to_check[id]
+            return ClientBatchCheckSingleResponse(
+                allowed=result.allowed,
+                request=check,
+                correlation_id=id,
+                error=result.error,
+            )
+
+        def single_batch_check(checks):
+            res = self._single_batch_check(
+                BatchCheckRequest(
+                    checks=checks,
+                    authorization_model_id=self._get_authorization_model_id(options),
+                    consistency=self._get_consistency(options),
+                ),
+                options,
+            )
+
+            return res
+
+        result = []
+
+        with ThreadPoolExecutor(max_workers=max_parallel_requests) as executor:
+            for response in executor.map(single_batch_check, checks):
+                result.extend(
+                    [
+                        map_response(c_id, c_result)
+                        for c_id, c_result in response.result.items()
+                    ]
+                )
+
+        return ClientBatchCheckResponse(result)
 
     def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):
         """
@@ -709,7 +834,7 @@ class OpenFgaClient:
             )
             for i in body.relations
         ]
-        result = self.batch_check(request_body, options)
+        result = self.client_batch_check(request_body, options)
         # need to filter with the allowed response
         result_iterator = filter(_check_allowed, result)
         result_list = list(result_iterator)

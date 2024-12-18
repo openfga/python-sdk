@@ -46,6 +46,186 @@ class OpenFgaApi:
     def close(self):
         self.api_client.close()
 
+    def batch_check(self, body, **kwargs):
+        """Send a list of `check` operations in a single request
+
+        The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.  An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\\w\\d-]{1,36}$`  For more details on how `Check` functions, see the docs for `/check`.  ### Examples #### A BatchCheckRequest ```json {   \"checks\": [      {        \"tuple_key\": {          \"object\": \"document:2021-budget\"          \"relation\": \"reader\",          \"user\": \"user:anne\",        },        \"contextual_tuples\": {...}        \"context\": {}        \"correlation_id\": \"01JA8PM3QM7VBPGB8KMPK8SBD5\"      },      {        \"tuple_key\": {          \"object\": \"document:2021-budget\"          \"relation\": \"reader\",          \"user\": \"user:bob\",        },        \"contextual_tuples\": {...}        \"context\": {}        \"correlation_id\": \"01JA8PMM6A90NV5ET0F28CYSZQ\"      }    ] } ```  Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request: ```json {    \"result\": {      \"01JA8PMM6A90NV5ET0F28CYSZQ\": {        \"allowed\": false,         \"error\": {\"message\": \"\"}      },      \"01JA8PM3QM7VBPGB8KMPK8SBD5\": {        \"allowed\": true,         \"error\": {\"message\": \"\"}      } } ```
+
+        >>> thread = api.batch_check(body)
+
+        :param body: (required)
+        :type body: BatchCheckRequest
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :type _preload_content: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: BatchCheckResponse
+        """
+        kwargs["_return_http_data_only"] = True
+        return self.batch_check_with_http_info(body, **kwargs)
+
+    def batch_check_with_http_info(self, body, **kwargs):
+        """Send a list of `check` operations in a single request
+
+        The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.  An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\\w\\d-]{1,36}$`  For more details on how `Check` functions, see the docs for `/check`.  ### Examples #### A BatchCheckRequest ```json {   \"checks\": [      {        \"tuple_key\": {          \"object\": \"document:2021-budget\"          \"relation\": \"reader\",          \"user\": \"user:anne\",        },        \"contextual_tuples\": {...}        \"context\": {}        \"correlation_id\": \"01JA8PM3QM7VBPGB8KMPK8SBD5\"      },      {        \"tuple_key\": {          \"object\": \"document:2021-budget\"          \"relation\": \"reader\",          \"user\": \"user:bob\",        },        \"contextual_tuples\": {...}        \"context\": {}        \"correlation_id\": \"01JA8PMM6A90NV5ET0F28CYSZQ\"      }    ] } ```  Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request: ```json {    \"result\": {      \"01JA8PMM6A90NV5ET0F28CYSZQ\": {        \"allowed\": false,         \"error\": {\"message\": \"\"}      },      \"01JA8PM3QM7VBPGB8KMPK8SBD5\": {        \"allowed\": true,         \"error\": {\"message\": \"\"}      } } ```
+
+        >>> thread = api.batch_check_with_http_info(body)
+
+        :param body: (required)
+        :type body: BatchCheckRequest
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _return_http_data_only: response data without head status code
+                                       and headers
+        :type _return_http_data_only: bool, optional
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :type _preload_content: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(BatchCheckResponse, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        local_var_params = locals()
+
+        all_params = ["body"]
+        all_params.extend(
+            [
+                "async_req",
+                "_return_http_data_only",
+                "_preload_content",
+                "_request_timeout",
+                "_request_auth",
+                "_content_type",
+                "_headers",
+                "_retry_params",
+            ]
+        )
+
+        for key, val in local_var_params["kwargs"].items():
+            if key not in all_params:
+                raise FgaValidationException(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method batch_check" % key
+                )
+            local_var_params[key] = val
+        del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
+        if (
+            self.api_client.client_side_validation
+            and local_var_params.get("body") is None
+        ):
+            raise ApiValueError(
+                "Missing the required parameter `body` when calling `batch_check`"
+            )
+
+        collection_formats = {}
+
+        path_params = {}
+
+        store_id = None
+
+        if self.api_client._get_store_id() is None:
+            raise ApiValueError(
+                "Store ID expected in api_client's configuration when calling `batch_check`"
+            )
+        store_id = self.api_client._get_store_id()
+
+        query_params = []
+
+        header_params = dict(local_var_params.get("_headers", {}))
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if "body" in local_var_params:
+            body_params = local_var_params["body"]
+        # HTTP header `Accept`
+        header_params["Accept"] = self.api_client.select_header_accept(
+            ["application/json"]
+        )
+
+        # HTTP header `Content-Type`
+        content_types_list = local_var_params.get(
+            "_content_type",
+            self.api_client.select_header_content_type(
+                ["application/json"], "POST", body_params
+            ),
+        )
+        if content_types_list:
+            header_params["Content-Type"] = content_types_list
+
+        # Authentication setting
+        auth_settings = []
+
+        response_types_map = {
+            200: "BatchCheckResponse",
+            400: "ValidationErrorMessageResponse",
+            401: "UnauthenticatedResponse",
+            403: "ForbiddenResponse",
+            404: "PathUnknownErrorMessageResponse",
+            409: "AbortedMessageResponse",
+            422: "UnprocessableContentMessageResponse",
+            500: "InternalErrorMessageResponse",
+        }
+
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "batch_check",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
+        }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
+        return self.api_client.call_api(
+            "/stores/{store_id}/batch-check".replace("{store_id}", store_id),
+            "POST",
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_types_map=response_types_map,
+            auth_settings=auth_settings,
+            async_req=local_var_params.get("async_req"),
+            _return_http_data_only=local_var_params.get("_return_http_data_only"),
+            _preload_content=local_var_params.get("_preload_content", True),
+            _request_timeout=local_var_params.get("_request_timeout"),
+            _retry_params=local_var_params.get("_retry_params"),
+            collection_formats=collection_formats,
+            _request_auth=local_var_params.get("_request_auth"),
+            _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
+        )
+
     def check(self, body, **kwargs):
         """Check whether a user is authorized to access an object
 
@@ -197,6 +377,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}/check".replace("{store_id}", store_id),
@@ -359,6 +544,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores",
             "POST",
@@ -500,6 +690,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -675,6 +870,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/expand".replace("{store_id}", store_id),
             "POST",
@@ -825,6 +1025,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}".replace("{store_id}", store_id),
@@ -1001,6 +1206,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/list-objects".replace("{store_id}", store_id),
             "POST",
@@ -1159,6 +1369,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores",
@@ -1335,6 +1550,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/list-users".replace("{store_id}", store_id),
             "POST",
@@ -1509,6 +1729,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/read".replace("{store_id}", store_id),
             "POST",
@@ -1676,6 +1901,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
@@ -1845,6 +2075,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models/{id}".replace(
                 "{store_id}", store_id
@@ -2011,6 +2246,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),
@@ -2189,6 +2429,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/changes".replace("{store_id}", store_id),
             "GET",
@@ -2362,6 +2607,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}/write".replace("{store_id}", store_id),
@@ -2548,6 +2798,11 @@ class OpenFgaApi:
             ),
         }
 
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
         return self.api_client.call_api(
             "/stores/{store_id}/assertions/{authorization_model_id}".replace(
                 "{store_id}", store_id
@@ -2724,6 +2979,11 @@ class OpenFgaApi:
                 "authorization_model_id", ""
             ),
         }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
 
         return self.api_client.call_api(
             "/stores/{store_id}/authorization-models".replace("{store_id}", store_id),

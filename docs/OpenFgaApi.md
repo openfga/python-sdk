@@ -4,6 +4,7 @@ All URIs are relative to *api.fga.example*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**batch_check**](OpenFgaApi.md#batch_check) | **POST** /stores/{store_id}/batch-check | Send a list of &#x60;check&#x60; operations in a single request
 [**check**](OpenFgaApi.md#check) | **POST** /stores/{store_id}/check | Check whether a user is authorized to access an object
 [**create_store**](OpenFgaApi.md#create_store) | **POST** /stores | Create a store
 [**delete_store**](OpenFgaApi.md#delete_store) | **DELETE** /stores/{store_id} | Delete a store
@@ -21,6 +22,90 @@ Method | HTTP request | Description
 [**write_assertions**](OpenFgaApi.md#write_assertions) | **PUT** /stores/{store_id}/assertions/{authorization_model_id} | Upsert assertions for an authorization model ID
 [**write_authorization_model**](OpenFgaApi.md#write_authorization_model) | **POST** /stores/{store_id}/authorization-models | Create a new authorization model
 
+
+# **batch_check**
+> BatchCheckResponse batch_check(body)
+
+Send a list of `check` operations in a single request
+
+The `BatchCheck` API functions nearly identically to `Check`, but instead of checking a single user-object relationship BatchCheck accepts a list of relationships to check and returns a map containing `BatchCheckItem` response for each check it received.  An associated `correlation_id` is required for each check in the batch. This ID is used to correlate a check to the appropriate response. It is a string consisting of only alphanumeric characters or hyphens with a maximum length of 36 characters. This `correlation_id` is used to map the result of each check to the item which was checked, so it must be unique for each item in the batch. We recommend using a UUID or ULID as the `correlation_id`, but you can use whatever unique identifier you need as long  as it matches this regex pattern: `^[\\w\\d-]{1,36}$`  For more details on how `Check` functions, see the docs for `/check`.  ### Examples #### A BatchCheckRequest ```json {   \"checks\": [      {        \"tuple_key\": {          \"object\": \"document:2021-budget\"          \"relation\": \"reader\",          \"user\": \"user:anne\",        },        \"contextual_tuples\": {...}        \"context\": {}        \"correlation_id\": \"01JA8PM3QM7VBPGB8KMPK8SBD5\"      },      {        \"tuple_key\": {          \"object\": \"document:2021-budget\"          \"relation\": \"reader\",          \"user\": \"user:bob\",        },        \"contextual_tuples\": {...}        \"context\": {}        \"correlation_id\": \"01JA8PMM6A90NV5ET0F28CYSZQ\"      }    ] } ```  Below is a possible response to the above request. Note that the result map's keys are the `correlation_id` values from the checked items in the request: ```json {    \"result\": {      \"01JA8PMM6A90NV5ET0F28CYSZQ\": {        \"allowed\": false,         \"error\": {\"message\": \"\"}      },      \"01JA8PM3QM7VBPGB8KMPK8SBD5\": {        \"allowed\": true,         \"error\": {\"message\": \"\"}      } } ``` 
+
+### Example
+
+```python
+import time
+import openfga_sdk
+from openfga_sdk.rest import ApiException
+from pprint import pprint
+# To configure the configuration
+# host is mandatory
+# api_scheme is optional and default to https
+# store_id is mandatory
+# See configuration.py for a list of all supported configuration parameters.
+configuration = openfga_sdk.Configuration(
+    scheme = "https",
+    api_host = "api.fga.example",
+    store_id = 'YOUR_STORE_ID',
+)
+
+
+# When authenticating via the API TOKEN method
+credentials = Credentials(method='api_token', configuration=CredentialConfiguration(api_token='TOKEN1'))
+configuration = openfga_sdk.Configuration(
+    scheme = "https",
+    api_host = "api.fga.example",
+    store_id = 'YOUR_STORE_ID',
+    credentials = credentials
+)
+
+# Enter a context with an instance of the API client
+async with openfga_sdk.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = openfga_sdk.OpenFgaApi(api_client)
+    body = openfga_sdk.BatchCheckRequest() # BatchCheckRequest | 
+
+    try:
+        # Send a list of `check` operations in a single request
+        api_response = await api_instance.api_instance.batch_check(body)
+        pprint(api_response)
+    except ApiException as e:
+        print("Exception when calling OpenFgaApi->batch_check: %s\n" % e)
+    await api_client.close()
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **body** | [**BatchCheckRequest**](BatchCheckRequest.md)|  |
+
+### Return type
+
+[**BatchCheckResponse**](BatchCheckResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | A successful response. |  -  |
+**400** | Request failed due to invalid input. |  -  |
+**401** | Not authenticated. |  -  |
+**403** | Forbidden. |  -  |
+**404** | Request failed due to incorrect path. |  -  |
+**409** | Request was aborted due a transaction conflict. |  -  |
+**422** | Request timed out due to excessive request throttling. |  -  |
+**500** | Request failed due to internal server error. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **check**
 > CheckResponse check(body)

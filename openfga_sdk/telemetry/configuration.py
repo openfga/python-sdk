@@ -32,6 +32,7 @@ class TelemetryMetricConfiguration:
         url_scheme: bool | None = None,
         url_full: bool | None = None,
         user_agent_original: bool | None = None,
+        fga_client_request_batch_check_size: bool | None = None,
     ):
         """
         Initialize a new instance of the `TelemetryMetricConfiguration` class.
@@ -52,12 +53,18 @@ class TelemetryMetricConfiguration:
         :param url_scheme: The `url.scheme` attribute includes the scheme of the request URL.
         :param url_full: The `url.full` attribute includes the full URL of the request.
         :param user_agent_original: The `user_agent.original` attribute includes the original user agent string of the request.
+        :param fga_client_request_batch_check_size: The `fga-client.request.batch_check_size` attribute includes the size of the `checks` list in a `BatchCheck` request.
         """
 
         self.configure(
             config=config,
             clear=True,
         )
+
+        if fga_client_request_batch_check_size is not None:
+            self._state[TelemetryAttributes.fga_client_request_batch_check_size] = (
+                fga_client_request_batch_check_size
+            )
 
         if fga_client_request_client_id is not None:
             self._state[TelemetryAttributes.fga_client_request_client_id] = (
@@ -123,6 +130,25 @@ class TelemetryMetricConfiguration:
             self._state[TelemetryAttributes.user_agent_original] = user_agent_original
 
         self._valid = None  # Reset the validation state
+
+    @property
+    def fga_client_request_batch_check_size(self) -> bool:
+        """
+        Get the configuration for the `fga_client_request_batch_check_size` attribute.
+
+        :return: The configuration for the `fga_client_request_batch_check_size` attribute.
+        """
+        return self._state[TelemetryAttributes.fga_client_request_batch_check_size]
+
+    @fga_client_request_batch_check_size.setter
+    def fga_client_request_batch_check_size(self, value: bool):
+        """
+        Set the configuration for the `fga_client_request_batch_check_size` attribute.
+
+        :param value: The configuration for the `fga_client_request_batch_check_size` attribute.
+        """
+        self._valid = None  # Reset the validation state
+        self._state[TelemetryAttributes.fga_client_request_batch_check_size] = value
 
     @property
     def fga_client_request_client_id(self) -> bool:
@@ -446,6 +472,7 @@ class TelemetryMetricConfiguration:
 
         # Reset the configuration to the default state
         self._state = {
+            TelemetryAttributes.fga_client_request_batch_check_size: False,
             TelemetryAttributes.fga_client_request_client_id: False,
             TelemetryAttributes.fga_client_request_method: False,
             TelemetryAttributes.fga_client_request_model_id: False,
@@ -578,6 +605,7 @@ class TelemetryMetricConfiguration:
         :return: The default SDK configuration for the telemetry metric.
         """
         return {
+            TelemetryAttributes.fga_client_request_batch_check_size: False,
             TelemetryAttributes.fga_client_request_client_id: True,
             TelemetryAttributes.fga_client_request_method: True,
             TelemetryAttributes.fga_client_request_model_id: True,

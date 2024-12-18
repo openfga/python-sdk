@@ -3,8 +3,16 @@
 ## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.1...HEAD)
 
 - feat: remove client-side validation - thanks @GMorris-professional (#155)
-- feat: add support for `start_time` parameter in `ReadChanges` endpoint (#156)
+- feat: add support for `start_time` parameter in `ReadChanges` endpoint (#156) - Note, this feature requires v1.8.0 of OpenFGA or newer
+- feat!: add support for `BatchCheck` API (#154) - Note, this feature requires v1.8.2 of OpenFGA or newer
 - fix: change default max retry limit to 3 from 15 - thanks @ovindu-a (#155)
+
+BREAKING CHANGE:
+
+Usage of the existing batch_check should now use client_batch_check instead, additionally the existing
+BatchCheckResponse has been renamed to ClientBatchCheckClientResponse.
+
+Please see (#154)(https://github.com/openfga/python-sdk/pull/154) for more details on this change.
 
 ## v0.8.1
 
