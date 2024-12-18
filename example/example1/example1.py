@@ -283,7 +283,7 @@ async def main():
                         relation="viewer",
                         object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                         context=dict(ViewCount=100),
-                        correlation_id=anne_cor_id,
+                        correlation_id=anne_cor_id,  # correlation_id is an optional parameter, the SDK will insert a value if not provided.
                     ),
                     ClientBatchCheckItem(
                         user="user:bob",
@@ -294,8 +294,12 @@ async def main():
                 ]
             )
         )
-        print(f"Anne allowed: {response.result[0].allowed}")
-        print(f"Bob allowed: {response.result[1].allowed}")
+
+        for result in response.result:
+            if result.correlation_id == anne_cor_id:
+                print(f"Anne allowed: {result.allowed}")
+            else:
+                print(f"{result.request.user} allowed: {result.allowed}")
 
         # List objects with context
         print("Listing objects for access with context")
