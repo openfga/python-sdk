@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.8.1...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.0...HEAD)
+
+## v0.9.0
+
+### [0.9.0](https://github.com/openfga/python-sdk/compare/v0.8.1...v0.9.0) (2024-12-18)
 
 - feat: remove client-side validation - thanks @GMorris-professional (#155)
 - feat: add support for `start_time` parameter in `ReadChanges` endpoint (#156) - Note, this feature requires v1.8.0 of OpenFGA or newer
