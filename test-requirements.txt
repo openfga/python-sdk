@@ -7,4 +7,4 @@ flake8 >= 7.0.0, < 8
 griffe >= 0.41.2, < 2
 isort==5.13.2
 pytest-cov >= 5, < 7
-pyupgrade==3.19.0
+pyupgrade==3.19.1
