@@ -59,7 +59,7 @@ jobs:
 
       - if: matrix.python-version == '3.10'
         name: Upload coverage to Codecov
-        uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -97,7 +97,7 @@ jobs:
           python setup.py sdist bdist_wheel
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@15c56dba361d8335944d31a2ecd17d700fc7bcbc # v1.12.2
+        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70 # v1.12.3
 
   create-release:
     runs-on: ubuntu-latest
