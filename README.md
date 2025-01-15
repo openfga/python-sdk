@@ -825,81 +825,9 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 # ]
 ```
 
-If you are using an OpenFGA version less than 1.8.0, you can use the `clientBatchCheck` function, 
+If you are using an OpenFGA version less than 1.8.0, you can use `client_batch_check`, 
 which calls `check` in parallel. It will return `allowed: false` if it encounters an error, and will return the error in the body.
 If 429s or 5xxs are encountered, the underlying check will retry up to 3 times before giving up.
-
-```python
-# from openfga_sdk import OpenFgaClient
-# from openfga_sdk.client import ClientCheckRequest
-# from openfga_sdk.client.models import ClientTuple
-# Initialize the fga_client
-# fga_client = OpenFgaClient(configuration)
-
-options = {
-    # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
-}
-body = [ClientCheckRequest(
-    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    relation="viewer",
-    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-@@ -748,7 +750,7 @@
-    context=dict(
-        ViewCount=100
-    )
-), ClientCheckRequest(
-    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    relation="admin",
-    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-@@ -759,20 +761,21 @@
-            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-        ),
-    ]
-), ClientCheckRequest(
-    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    relation="creator",
-    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-), ClientCheckRequest(
-    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-    relation="deleter",
-    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-)]
-
-response = await fga_client.batch_check(body, options)
-# response.responses = [{
-#   allowed: false,
-#   request: {
-#     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-#     relation: "viewer",
-#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-@@ -787,7 +790,8 @@
-#   }
-# }, {
-#   allowed: false,
-#   request: {
-#     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-#     relation: "admin",
-#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-@@ -799,35 +803,40 @@
-#   }
-# }, {
-#   allowed: false,
-#   request: {
-#     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-#     relation: "creator",
-#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-#   },
-#   error: <FgaError ...>
-# }, {
-#   allowed: true,
-#   request: {
-#     user: "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-#     relation: "deleter",
-#     object: "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-#   }},
-# ]
-```
 
 #### Expand
 
