@@ -192,7 +192,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **create_store**
-> CreateStoreResponse create_store(body)
+> CreateStoreResponse create_store()
 
 Create a store
 
@@ -213,6 +213,7 @@ from pprint import pprint
 configuration = openfga_sdk.Configuration(
     scheme = "https",
     api_host = "api.fga.example",
+    store_id = 'YOUR_STORE_ID',
 )
 
 
@@ -221,6 +222,7 @@ credentials = Credentials(method='api_token', configuration=CredentialConfigurat
 configuration = openfga_sdk.Configuration(
     scheme = "https",
     api_host = "api.fga.example",
+    store_id = 'YOUR_STORE_ID',
     credentials = credentials
 )
 
@@ -228,11 +230,10 @@ configuration = openfga_sdk.Configuration(
 async with openfga_sdk.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = openfga_sdk.OpenFgaApi(api_client)
-    body = openfga_sdk.CreateStoreRequest() # CreateStoreRequest | 
 
     try:
         # Create a store
-        api_response = await api_instance.api_instance.create_store(body)
+        api_response = await api_instance.api_instance.create_store()
         pprint(api_response)
     except ApiException as e:
         print("Exception when calling OpenFgaApi->create_store: %s\n" % e)
@@ -244,7 +245,6 @@ async with openfga_sdk.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body** | [**CreateStoreRequest**](CreateStoreRequest.md)|  |
 
 ### Return type
 

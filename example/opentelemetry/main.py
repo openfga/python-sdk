@@ -76,7 +76,6 @@ class app:
             if not self._configuration:
                 self._configuration = ClientConfiguration(
                     api_url=os.getenv("FGA_API_URL"),
-                    store_id=os.getenv("FGA_STORE_ID"),
                     authorization_model_id=os.getenv("FGA_AUTHORIZATION_MODEL_ID"),
                     credentials=self._credentials,
                 )
@@ -186,12 +185,25 @@ async def main():
 
         print("Reading authorization model ...", end=" ")
         authorization_models = app().unpack(
-            await fga_client.read_authorization_models(), "authorization_models"
+            await fga_client.read_authorization_models(
+                {
+                    "store_id": os.getenv("FGA_STORE_ID"),
+                }
+            ),
+            "authorization_models",
         )
         print(f"Done! Models Count: {len(authorization_models)}")
 
         print("Reading tuples ...", end=" ")
-        tuples = app().unpack(await fga_client.read(ReadRequestTupleKey()), "tuples")
+        tuples = app().unpack(
+            await fga_client.read(
+                ReadRequestTupleKey(),
+                {
+                    "store_id": os.getenv("FGA_STORE_ID"),
+                },
+            ),
+            "tuples",
+        )
         print(f"Done! Tuples Count: {len(tuples)}")
 
         checks_requests = randint(1, 10)
@@ -201,9 +213,12 @@ async def main():
             try:
                 allowed = app().unpack(
                     await fga_client.check(
-                        body=ClientCheckRequest(
+                        ClientCheckRequest(
                             user="user:anne", relation="owner", object="folder:foo"
                         ),
+                        {
+                            "store_id": os.getenv("FGA_STORE_ID"),
+                        },
                     ),
                     "allowed",
                 )

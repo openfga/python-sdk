@@ -108,7 +108,6 @@ class Configuration:
     :param api_host: Base url
         .. deprecated:: 0.4.1
             Use `api_url` instead.
-    :param store_id: ID of store for API
     :param credentials: Configuration for obtaining authentication credential
     :param retry_params: Retry parameters upon HTTP too many request
     :param api_key: Dict to store API key(s).
@@ -152,7 +151,6 @@ class Configuration:
         self,
         api_scheme="https",
         api_host=None,
-        store_id=None,
         credentials=None,
         retry_params=None,
         api_key=None,
@@ -186,7 +184,6 @@ class Configuration:
         self._url = api_url
         self._scheme = api_scheme
         self._base_path = api_host
-        self._store_id = store_id
         self._credentials = credentials
         if retry_params is not None:
             self._retry_params = retry_params
@@ -611,15 +608,6 @@ class Configuration:
                     f"api_host `{self.api_scheme}` is not expected to have query specified"
                 )
 
-        if (
-            self.store_id is not None
-            and self.store_id != ""
-            and is_well_formed_ulid_string(self.store_id) is False
-        ):
-            raise FgaValidationException(
-                "store_id ('%s') is not in a valid ulid format" % self.store_id
-            )
-
         if self._credentials is not None:
             self._credentials.validate_credentials_config()
 
@@ -669,16 +657,6 @@ class Configuration:
     def api_url(self, value):
         """Update configured api_url"""
         self._url = value
-
-    @property
-    def store_id(self):
-        """Return store id."""
-        return self._store_id
-
-    @store_id.setter
-    def store_id(self, value):
-        """Update store id."""
-        self._store_id = value
 
     @property
     def credentials(self):

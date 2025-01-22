@@ -73,8 +73,7 @@ async def main():
         response = await fga_client.create_store(body)
         print(f"Test Store ID: {response.id}")
 
-        # Set the store ID
-        fga_client.set_store_id(response.id)
+        store_id = response.id
 
         # ListStores (after create)
         print("Listing Stores")
@@ -83,17 +82,19 @@ async def main():
 
         # GetStore (after create)
         print("Getting Current Store")
-        response = await fga_client.get_store()
+        response = await fga_client.get_store({"store_id": store_id})
         print(f"Current Store Name: {response.name}")
 
         # ReadAuthorizationModels (before write)
         print("Reading Authorization Models")
-        response = await fga_client.read_authorization_models()
+        response = await fga_client.read_authorization_models({"store_id": store_id})
         print(f"Models Count: {len(response.authorization_models)}")
 
         # ReadLatestAuthorizationModel (before write)
         try:
-            response = await fga_client.read_latest_authorization_model()
+            response = await fga_client.read_latest_authorization_model(
+                {"store_id": store_id}
+            )
             if response.authorization_model is not None:
                 print(
                     f"Latest Authorization Model ID: {response.authorization_model.id}"
@@ -160,17 +161,22 @@ async def main():
                         ),
                     )
                 ),
-            )
+            ),
+            {
+                "store_id": store_id,
+            },
         )
         print(f"Authorization Model ID: {response.authorization_model_id}")
 
         # ReadAuthorizationModels (after write)
         print("Reading Authorization Models")
-        response = await fga_client.read_authorization_models()
+        response = await fga_client.read_authorization_models({"store_id": store_id})
         print(f"Models Count: {len(response.authorization_models)}")
 
         # ReadLatestAuthorizationModel (after write)
-        response = await fga_client.read_latest_authorization_model()
+        response = await fga_client.read_latest_authorization_model(
+            {"store_id": store_id}
+        )
         if response.authorization_model is not None:
             print(f"Latest Authorization Model ID: {response.authorization_model.id}")
 
@@ -196,7 +202,8 @@ async def main():
         )
         options = {
             # You can rely on the model id set in the configuration or override it for this specific request
-            "authorization_model_id": auth_model_id
+            "authorization_model_id": auth_model_id,
+            "store_id": store_id,
         }
         await fga_client.write(body, options)
         print("Done Writing Tuples")
@@ -224,6 +231,7 @@ async def main():
             # You can rely on the model id set in the configuration or override it for this specific request
             "authorization_model_id": auth_model_id,
             "transaction": WriteTransactionOpts(max_per_chunk=1),
+            "store_id": store_id,
         }
         await fga_client.write(body, options)
         print("Done Writing Tuples")
@@ -234,14 +242,22 @@ async def main():
         # Read
         print("Reading Tuples")
         response = await fga_client.read(
-            ReadRequestTupleKey(user="user:anne", object="document:")
+            ReadRequestTupleKey(user="user:anne", object="document:"),
+            options={
+                "store_id": store_id,
+            },
         )
         print(f"Read Tuples: {response.tuples}")
 
         # ReadChanges
         print("Reading Tuple Changes")
         body = ClientReadChangesRequest(type="document")
-        response = await fga_client.read_changes(body)
+        response = await fga_client.read_changes(
+            body,
+            {
+                "store_id": store_id,
+            },
+        )
         print(f"Read Changes Tuples: {response.changes}")
 
         # Check
@@ -252,7 +268,10 @@ async def main():
                     user="user:anne",
                     relation="viewer",
                     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-                )
+                ),
+                options={
+                    "store_id": store_id,
+                },
             )
             print(f"Allowed: {response.allowed}")
         except Exception as err:
@@ -267,7 +286,10 @@ async def main():
                 relation="viewer",
                 object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                 context=dict(ViewCount=100),
-            )
+            ),
+            options={
+                "store_id": store_id,
+            },
         )
         print(f"Allowed: {response.allowed}")
 
@@ -292,7 +314,10 @@ async def main():
                         context=dict(ViewCount=100),
                     ),
                 ]
-            )
+            ),
+            options={
+                "store_id": store_id,
+            },
         )
 
         for result in response.result:
@@ -310,7 +335,10 @@ async def main():
                 relation="viewer",
                 type="document",
                 context=dict(ViewCount=100),
-            )
+            ),
+            options={
+                "store_id": store_id,
+            },
         )
         print(f"Objects: {response.objects}")
 
@@ -322,7 +350,10 @@ async def main():
                 user="user:anne",
                 relations=["viewer", "writer"],
                 object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-            )
+            ),
+            options={
+                "store_id": store_id,
+            },
         )
         print(f"Relations: {response}")
 
@@ -335,7 +366,10 @@ async def main():
                 relations=["viewer", "writer"],
                 object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                 context=dict(ViewCount=100),
-            )
+            ),
+            options={
+                "store_id": store_id,
+            },
         )
         print(f"Relations: {response}")
 
@@ -350,7 +384,10 @@ async def main():
                     UserTypeFilter(type="user"),
                 ],
                 context=dict(ViewCount=100),
-            )
+            ),
+            options={
+                "store_id": store_id,
+            },
         )
         print(f"Users: {response.users}")
 
@@ -369,18 +406,21 @@ async def main():
                     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
                     expectation=False,
                 ),
-            ]
+            ],
+            {
+                "store_id": store_id,
+            },
         )
         print("Assertions updated")
 
         # ReadAssertions
         print("Reading Assertions")
-        response = await fga_client.read_assertions()
+        response = await fga_client.read_assertions({"store_id": store_id})
         print(f"Assertions: {response.assertions}")
 
         # DeleteStore
         print("Deleting Current Store")
-        await fga_client.delete_store()
+        await fga_client.delete_store({"store_id": store_id})
         print(f"Deleted Store: {store_name}")
 
 

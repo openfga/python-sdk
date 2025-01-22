@@ -109,6 +109,8 @@ def options_to_kwargs(options: dict[str, int | str] = None):
     """
     kwargs = {}
     if options is not None:
+        if options.get("store_id"):
+            kwargs["store_id"] = options["store_id"]
         if options.get("page_size"):
             kwargs["page_size"] = options["page_size"]
         if options.get("continuation_token"):
@@ -181,18 +183,6 @@ class OpenFgaClient:
             return options["consistency"]
         return None
 
-    def set_store_id(self, value):
-        """
-        Update the store ID in the configuration
-        """
-        self._api_client.set_store_id(value)
-
-    def get_store_id(self):
-        """
-        Return the store id (if any) store in the configuration
-        """
-        return self._api_client.get_store_id()
-
     def set_authorization_model_id(self, value):
         """
         Update the authorization model id in the configuration
@@ -237,7 +227,8 @@ class OpenFgaClient:
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         kwargs = options_to_kwargs(options)
-        api_response = await self._api.create_store(body, **kwargs)
+        kwargs["body"] = body
+        api_response = await self._api.create_store(**kwargs)
         return api_response
 
     async def get_store(self, options: dict[str, int | str] = None):

@@ -892,26 +892,3 @@ class ApiClient:
             if klass_name:
                 instance = self.__deserialize(data, klass_name)
         return instance
-
-    def _get_store_id(self):
-        """
-        Verify that the store id has been configured and not empty string.
-        It will return the store ID.
-        Otherwise, raise FgaValidationException
-        """
-        configuration = self.configuration
-        if configuration.store_id is None or configuration.store_id == "":
-            raise FgaValidationException("store_id is required but not configured")
-        return configuration.store_id
-
-    def set_store_id(self, value):
-        """
-        Update the store ID in the configuration
-        """
-        self.configuration.store_id = value
-
-    def get_store_id(self):
-        """
-        Return the store id (if any) store in the configuration
-        """
-        return self.configuration.store_id

@@ -67,12 +67,6 @@ def test_configuration_api_url(configuration):
     assert configuration.api_url == "https://fga.example/api"
 
 
-def test_configuration_store_id(configuration):
-    assert configuration.store_id is None
-    configuration.store_id = "store123"
-    assert configuration.store_id == "store123"
-
-
 def test_configuration_credentials(configuration):
     assert configuration.credentials is None
     credentials_mock = Mock()
@@ -112,7 +106,6 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         default_config = Configuration()
         default_config.api_scheme = "https"
         default_config.api_host = "fga.example"
-        default_config.store_id = "store123"
         default_config.credentials = Mock(
             _client_id="client123",
             _client_secret="secret123",
@@ -140,7 +133,6 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
 
         assert Configuration._default.api_scheme == "https"
         assert Configuration._default.api_host == "fga.example"
-        assert Configuration._default.store_id == "store123"
         assert (
             isinstance(Configuration._default.credentials, Mock)
             or Configuration._default.credentials is None
@@ -185,7 +177,6 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
         default_config = Configuration()
         default_config.api_scheme = "https"
         default_config.api_host = "fga.example"
-        default_config.store_id = "store123"
         default_config.credentials = Mock(
             _client_id="client123",
             _client_secret="secret123",
@@ -215,7 +206,7 @@ class TestConfigurationSetDefaultAndGetDefaultCopy:
 
         assert copied_config.api_scheme == "https"
         assert copied_config.api_host == "fga.example"
-        assert copied_config.store_id == "store123"
+
         assert (
             isinstance(copied_config.credentials, Mock)
             or copied_config.credentials is None
@@ -234,15 +225,8 @@ class TestConfigurationValidityChecks:
         with pytest.raises(FgaValidationException):
             configuration.is_valid()
 
-    def test_configuration_is_valid_invalid_store_id(self, configuration):
-        configuration.api_url = "https://fga.example"
-        configuration.store_id = "invalid_ulid"
-        with pytest.raises(FgaValidationException):
-            configuration.is_valid()
-
     def test_configuration_is_valid(self, configuration):
         configuration.api_url = "https://fga.example"
-        configuration.store_id = "01F9ZCDXDZBXK83WVMY1VZT23V"
         assert configuration.is_valid() is None
 
 
@@ -321,7 +305,6 @@ class TestConfigurationMiscellaneous:
         config = Configuration(
             api_scheme="https",
             api_host="fga.example",
-            store_id="store123",
             credentials=Mock(
                 _client_id="client123",
                 _client_secret="secret123",
@@ -353,7 +336,6 @@ class TestConfigurationMiscellaneous:
         # Verify all attributes of copied object are equal to original object
         assert copied_config.api_scheme == config.api_scheme
         assert copied_config.api_host == config.api_host
-        assert copied_config.store_id == config.store_id
         assert (
             isinstance(Configuration._default.credentials, Mock)
             or Configuration._default.credentials is None

@@ -143,8 +143,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
             """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.list_stores(
                 options={
@@ -199,8 +202,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             "created_at": "2022-07-25T17:41:26.607Z",
             "updated_at": "2022-07-25T17:41:26.607Z"}
             """
+
         mock_request.return_value = mock_response(response_body, 201)
+
         configuration = self.configuration
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.create_store(
                 CreateStoreRequest(name="test-store"), options={}
@@ -233,11 +239,17 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     "updated_at": "2022-07-25T21:15:37.524Z"
 }
             """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.get_store(options={})
+            api_response = await api_client.get_store(
+                options={
+                    "store_id": store_id,
+                }
+            )
             self.assertIsInstance(api_response, GetStoreResponse)
             self.assertEqual(api_response.id, "01YCP46JKYM8FJCQ37NMBYHE5X")
             self.assertEqual(api_response.name, "store1")
@@ -258,10 +270,15 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Get all stores
         """
         mock_request.return_value = mock_response("", 201)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
-            await api_client.delete_store(options={})
+            await api_client.delete_store(
+                options={
+                    "store_id": store_id,
+                }
+            )
             mock_request.assert_called_once_with(
                 "DELETE",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
@@ -313,14 +330,20 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
 
             # Return a particular version of an authorization model
-            api_response = await api_client.read_authorization_models(options={})
+            api_response = await api_client.read_authorization_models(
+                options={
+                    "store_id": store_id,
+                }
+            )
             self.assertIsInstance(api_response, ReadAuthorizationModelsResponse)
             type_definitions = [
                 TypeDefinition(
@@ -371,9 +394,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Create a new authorization model
         """
         response_body = '{"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}'
+
         mock_request.return_value = mock_response(response_body, 201)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             # example passing only required values which don't have defaults set
             body = WriteAuthorizationModelRequest(
@@ -403,7 +428,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ],
             )
             # Create a new authorization model
-            api_response = await api_client.write_authorization_model(body, options={})
+            api_response = await api_client.write_authorization_model(
+                body,
+                options={
+                    "store_id": store_id,
+                },
+            )
             self.assertIsInstance(api_response, WriteAuthorizationModelResponse)
             expected_response = WriteAuthorizationModelResponse(
                 authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J"
@@ -482,15 +512,20 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   }
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
 
             # Return a particular version of an authorization model
             api_response = await api_client.read_authorization_model(
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                }
             )
             self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
             type_definitions = [
@@ -571,14 +606,20 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
 
             # Return a particular version of an authorization model
-            api_response = await api_client.read_latest_authorization_model(options={})
+            api_response = await api_client.read_latest_authorization_model(
+                options={
+                    "store_id": store_id,
+                }
+            )
             self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
             type_definitions = [
                 TypeDefinition(
@@ -629,14 +670,20 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "authorization_models": []
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
 
             # Return a particular version of an authorization model
-            api_response = await api_client.read_latest_authorization_model(options={})
+            api_response = await api_client.read_latest_authorization_model(
+                options={
+                    "store_id": store_id,
+                }
+            )
             self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
             self.assertIsNone(api_response.authorization_model)
             mock_request.assert_called_once_with(
@@ -670,16 +717,22 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
 
             # Return a particular version of an authorization model
             api_response = await api_client.read_changes(
                 ClientReadChangesRequest("document", "2022-01-01T00:00:00+00:00"),
-                options={"page_size": 1, "continuation_token": "abcdefg"},
+                options={
+                    "page_size": 1,
+                    "continuation_token": "abcdefg",
+                    "store_id": store_id,
+                },
             )
 
             self.assertIsInstance(api_response, ReadChangesResponse)
@@ -732,9 +785,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": ""
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
             body = ReadRequestTupleKey(
@@ -749,6 +804,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
                     "retry_params": RetryParams(max_retry=3, min_wait_in_ms=1000),
+                    "store_id": store_id,
                 },
             )
             self.assertIsInstance(api_response, ReadResponse)
@@ -803,9 +859,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": ""
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
             body = ReadRequestTupleKey(
@@ -813,7 +871,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 relation="reader",
                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             )
-            api_response = await api_client.read(body=body, options={})
+            api_response = await api_client.read(
+                body=body,
+                options={
+                    "store_id": store_id,
+                },
+            )
             self.assertIsInstance(api_response, ReadResponse)
             key = TupleKey(
                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -863,13 +926,20 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   "continuation_token": ""
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
             body = ReadRequestTupleKey()
-            api_response = await api_client.read(body=body, options={})
+            api_response = await api_client.read(
+                body=body,
+                options={
+                    "store_id": store_id,
+                },
+            )
             self.assertIsInstance(api_response, ReadResponse)
             key = TupleKey(
                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
@@ -899,9 +969,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Add tuples from the store with transaction enabled
         """
         response_body = "{}"
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -924,7 +996,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ],
             )
             await api_client.write(
-                body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+                body,
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                },
             )
             mock_request.assert_called_once_with(
                 "POST",
@@ -965,9 +1041,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Delete tuples from the store with transaction enabled
         """
         response_body = "{}"
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -980,7 +1058,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ],
             )
             await api_client.write(
-                body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+                body,
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                },
             )
             mock_request.assert_called_once_with(
                 "POST",
@@ -1015,8 +1097,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response("{}", 200),
             mock_response("{}", 200),
         ]
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -1046,6 +1129,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "transaction": transaction,
+                    "store_id": store_id,
                 },
             )
 
@@ -1158,8 +1242,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response("{}", 200),
             mock_response("{}", 200),
         ]
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -1189,6 +1274,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "transaction": transaction,
+                    "store_id": store_id,
                 },
             )
 
@@ -1300,8 +1386,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response("{}", 200),
             mock_response("{}", 200),
         ]
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -1331,6 +1418,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "transaction": transaction,
+                    "store_id": store_id,
                 },
             )
 
@@ -1434,8 +1522,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             ValidationException(http_resp=http_mock_response(response_body, 400)),
             mock_response("{}", 200),
         ]
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -1465,6 +1554,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "transaction": transaction,
+                    "store_id": store_id,
                 },
             )
 
@@ -1582,8 +1672,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         mock_request.side_effect = [
             mock_response("{}", 200),
         ]
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             body = ClientWriteRequest(
@@ -1604,6 +1695,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "transaction": transaction,
+                    "store_id": store_id,
                 },
             )
             mock_request.assert_any_call(
@@ -1635,9 +1727,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Add tuples from the store with transaction enabled
         """
         response_body = "{}"
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             await api_client.write_tuples(
@@ -1658,7 +1752,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                     ),
                 ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                },
             )
             mock_request.assert_called_once_with(
                 "POST",
@@ -1699,9 +1796,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Add tuples from the store with transaction enabled
         """
         response_body = "{}"
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
 
             await api_client.delete_tuples(
@@ -1722,7 +1821,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                     ),
                 ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                },
             )
             mock_request.assert_called_once_with(
                 "POST",
@@ -1763,8 +1865,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         mock_request.side_effect = UnauthorizedException(
             http_resp=http_mock_response("{}", 401)
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(UnauthorizedException):
                 body = ClientWriteRequest(
@@ -1784,6 +1887,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     options={
                         "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                         "transaction": transaction,
+                        "store_id": store_id,
                     },
                 )
 
@@ -1822,7 +1926,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         # First, mock the response
         response_body = '{"allowed": true, "resolution": "1234"}'
+
         mock_request.return_value = mock_response(response_body, 200)
+
         body = ClientCheckRequest(
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
             relation="reader",
@@ -1835,14 +1941,16 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ),
             ],
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.check(
                 body=body,
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                    "store_id": store_id,
                 },
             )
             self.assertIsInstance(api_response, CheckResponse)
@@ -1886,17 +1994,25 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         # First, mock the response
         response_body = '{"allowed": true, "resolution": "1234"}'
+
         mock_request.return_value = mock_response(response_body, 200)
+
         body = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
         configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
         async with OpenFgaClient(configuration) as api_client:
-            api_response = await api_client.check(body=body, options={})
+            api_response = await api_client.check(
+                body=body,
+                options={
+                    "store_id": store_id,
+                },
+            )
             self.assertIsInstance(api_response, CheckResponse)
             self.assertTrue(api_response.allowed)
             # Make sure the API was called with the right data
@@ -1928,20 +2044,26 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
         # First, mock the response
         response_body = '{"allowed": true, "resolution": "1234"}'
+
         mock_request.side_effect = [
             mock_response(response_body, 200),
         ]
+
         body = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.client_batch_check(
                 body=[body],
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "store_id": store_id,
+                },
             )
             self.assertIsInstance(api_response, list)
             self.assertEqual(len(api_response), 1)
@@ -1981,29 +2103,34 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
             mock_response('{"allowed": true, "resolution": "1234"}', 200),
         ]
+
         body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         )
+
         body2 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
         )
+
         body3 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.client_batch_check(
                 body=[body1, body2, body3],
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "max_parallel_requests": 2,
+                    "store_id": store_id,
                 },
             )
             self.assertIsInstance(api_response, list)
@@ -2090,29 +2217,34 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             ValidationException(http_resp=http_mock_response(response_body, 400)),
             mock_response('{"allowed": false, "resolution": "1234"}', 200),
         ]
+
         body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
         )
+
         body2 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
         )
+
         body3 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.client_batch_check(
                 body=[body1, body2, body3],
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "max_parallel_requests": 2,
+                    "store_id": store_id,
                 },
             )
             self.assertIsInstance(api_response, list)
@@ -2214,12 +2346,16 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 ),
             ]
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.batch_check(
                 body=body,
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "store_id": store_id,
+                },
             )
             self.assertEqual(len(api_response.result), 1)
             self.assertEqual(api_response.result[0].error, None)
@@ -2317,7 +2453,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         )
 
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.batch_check(
                 body=body,
@@ -2325,6 +2461,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "max_parallel_requests": 1,
                     "max_batch_size": 2,
+                    "store_id": store_id,
                 },
             )
             self.assertEqual(len(api_response.result), 3)
@@ -2413,12 +2550,15 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             ]
         )
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
                 await api_client.batch_check(
                     body=body,
-                    options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                    options={
+                        "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                        "store_id": store_id,
+                    },
                 )
             self.assertEqual(
                 "Duplicate correlation_id (1) provided", str(error.exception)
@@ -2471,7 +2611,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         )
 
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(UnauthorizedException):
                 await api_client.batch_check(
@@ -2480,6 +2620,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                         "max_parallel_requests": 1,
                         "max_batch_size": 2,
+                        "store_id": store_id,
                     },
                 )
 
@@ -2547,9 +2688,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         response_body = """{
             "tree": {"root": {"name": "document:budget#reader", "leaf": {"users": {"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}}}
             """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             body = ClientExpandRequest(
                 object="document:budget",
@@ -2560,6 +2703,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                    "store_id": store_id,
                 },
             )
             self.assertIsInstance(api_response, ExpandResponse)
@@ -2598,9 +2742,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   ]
 }
             """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             body = ClientListObjectsRequest(
                 type="document",
@@ -2613,6 +2759,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                    "store_id": store_id,
                 },
             )
             self.assertIsInstance(api_response, ListObjectsResponse)
@@ -2648,9 +2795,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   ]
 }
             """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             body = ClientListObjectsRequest(
                 type="document",
@@ -2666,7 +2815,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             # Get all stores
             api_response = await api_client.list_objects(
-                body, options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+                body,
+                options={
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                    "store_id": store_id,
+                },
             )
             self.assertIsInstance(api_response, ListObjectsResponse)
             self.assertEqual(api_response.objects, ["document:abcd1234"])
@@ -2714,7 +2867,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         mock_request.side_effect = mock_check_requests
 
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.list_relations(
                 body=ClientListRelationsRequest(
@@ -2725,6 +2878,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                    "store_id": store_id,
                 },
             )
             self.assertEqual(api_response, ["reader", "viewer"])
@@ -2793,8 +2947,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         mock_request.side_effect = UnauthorizedException(
             http_resp=http_mock_response("{}", 401)
         )
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(UnauthorizedException):
                 await api_client.list_relations(
@@ -2803,7 +2958,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         relations=["reader", "owner", "viewer"],
                         object="document:2021-budget",
                     ),
-                    options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                    options={
+                        "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                        "store_id": store_id,
+                    },
                 )
 
             mock_request.assert_called()
@@ -2841,7 +2999,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         mock_request.return_value = mock_response(response_body, 200)
 
         configuration = self.configuration
-        configuration.store_id = store_id
 
         async with OpenFgaClient(configuration) as api_client:
             body = ClientListUsersRequest(
@@ -2870,6 +3027,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 options={
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+                    "store_id": store_id,
                 },
             )
 
@@ -2949,13 +3107,18 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
   ]
 }
         """
+
         mock_request.return_value = mock_response(response_body, 200)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         # Enter a context with an instance of the API client
         async with OpenFgaClient(configuration) as api_client:
             api_response = await api_client.read_assertions(
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                }
             )
             self.assertEqual(
                 api_response,
@@ -2989,8 +3152,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Get all stores
         """
         mock_request.return_value = mock_response("", 204)
+
         configuration = self.configuration
-        configuration.store_id = store_id
+
         async with OpenFgaClient(configuration) as api_client:
             await api_client.write_assertions(
                 [
@@ -3001,57 +3165,14 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         expectation=True,
                     )
                 ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "store_id": store_id,
+                },
             )
             mock_request.assert_called_once_with(
                 "PUT",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                body={
-                    "assertions": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:anne",
-                            },
-                            "expectation": True,
-                        }
-                    ]
-                },
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    async def test_set_store_id(self, mock_request):
-        """Test case for write assertions
-
-        Get all stores
-        """
-        mock_request.return_value = mock_response("", 204)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        async with OpenFgaClient(configuration) as api_client:
-            api_client.set_store_id("01YCP46JKYM8FJCQ37NMBYHE5Y")
-
-            await api_client.write_assertions(
-                [
-                    ClientAssertion(
-                        user="user:anne",
-                        relation="reader",
-                        object="document:2021-budget",
-                        expectation=True,
-                    )
-                ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
-            )
-            self.assertEqual(api_client.get_store_id(), "01YCP46JKYM8FJCQ37NMBYHE5Y")
-            mock_request.assert_called_once_with(
-                "PUT",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5Y/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
                 headers=ANY,
                 body={
                     "assertions": [
@@ -3078,9 +3199,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Get all stores
         """
         mock_request.return_value = mock_response("", 204)
+
         configuration = self.configuration
-        configuration.store_id = store_id
         configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
+
         async with OpenFgaClient(configuration) as api_client:
             await api_client.write_assertions(
                 [
@@ -3091,7 +3213,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         expectation=True,
                     )
                 ],
-                options={},
+                options={
+                    "store_id": store_id,
+                },
             )
             self.assertEqual(
                 api_client.get_authorization_model_id(), "01G5JAVJ41T49E9TT3SKVS7X1J"
@@ -3125,9 +3249,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Get all stores
         """
         mock_request.return_value = mock_response("", 204)
+
         configuration = self.configuration
-        configuration.store_id = store_id
         configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
+
         async with OpenFgaClient(configuration) as api_client:
             api_client.set_authorization_model_id("01G5JAVJ41T49E9TT3SKVS7X2J")
 
@@ -3140,7 +3265,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         expectation=True,
                     )
                 ],
-                options={},
+                options={
+                    "store_id": store_id,
+                },
             )
             mock_request.assert_called_once_with(
                 "PUT",
@@ -3164,15 +3291,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 _request_timeout=None,
             )
 
-    def test_configuration_store_id_invalid(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = ClientConfiguration(
-            api_host="localhost", api_scheme="http", store_id="abcd"
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
     def test_configuration_authorization_model_id_invalid(self):
         """
         Test whether ApiValueError is raised if host has query
@@ -3180,7 +3298,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         configuration = ClientConfiguration(
             api_host="localhost",
             api_scheme="http",
-            store_id="01H15K9J85050XTEDPVM8DJM78",
             authorization_model_id="abcd",
         )
         self.assertRaises(FgaValidationException, configuration.is_valid)
