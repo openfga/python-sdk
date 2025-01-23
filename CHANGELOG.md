@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.0...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.1...HEAD)
+
+## v0.9.1
+
+### [0.9.1](https://github.com/openfga/python-sdk/compare/v0.9.0...v0.9.1) (2025-01-23)
+
+- feat: add `/streamed-list-objects` endpoint support (#163)
+- feat: add `contextual_tuples` support for `/expand` endpoint requests (#164)
 
 ## v0.9.0
 
@@ -69,7 +76,7 @@ Please note that if you use third-party OpenTelemetry tooling to visualize the a
 ### [0.7.0](https://github.com/openfga/python-sdk/compare/v0.6.1...v0.7.0) (2024-08-30)
 
 - feat: enhancements to OpenTelemetry support (#120)
-  
+
 Note this introduces some breaking changes to our metrics:
 1. `fga-client.request.method` is now in TitleCase to match the naming conventions in the Protos, e.g. `Check`, `ListObjects`, etc..
 2. Due to possible high costs for attributes with high cardinality, we are no longer including the following attributes by default:

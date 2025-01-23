@@ -83,7 +83,7 @@ class OAuth2Client:
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.0",
+                "User-Agent": "openfga-sdk (python) 0.9.1",
             }
         )
 
