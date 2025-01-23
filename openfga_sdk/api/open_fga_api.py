@@ -122,6 +122,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -226,6 +227,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def check(self, body, **kwargs):
@@ -302,6 +304,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -405,6 +408,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def create_store(self, body, **kwargs):
@@ -481,6 +485,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -571,6 +576,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def delete_store(self, **kwargs):
@@ -643,6 +649,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -718,12 +725,13 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def expand(self, body, **kwargs):
         """Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 
-        The Expand API will return all users and usersets that have certain relationship with an object in a certain store. This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned. Body parameters `tuple_key.object` and `tuple_key.relation` are all required. The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.  ## Example To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body ```json {   \"tuple_key\": {     \"object\": \"document:2021-budget\",     \"relation\": \"reader\"   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` OpenFGA's response will be a userset tree of the users and usersets that have read access to the document. ```json {   \"tree\":{     \"root\":{       \"type\":\"document:2021-budget#reader\",       \"union\":{         \"nodes\":[           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"users\":{                 \"users\":[                   \"user:bob\"                 ]               }             }           },           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"computed\":{                 \"userset\":\"document:2021-budget#writer\"               }             }           }         ]       }     }   } } ``` The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
+        The Expand API will return all users and usersets that have certain relationship with an object in a certain store. This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned. Body parameters `tuple_key.object` and `tuple_key.relation` are all required. A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`. The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.  ## Example To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body ```json {   \"tuple_key\": {     \"object\": \"document:2021-budget\",     \"relation\": \"reader\"   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` OpenFGA's response will be a userset tree of the users and usersets that have read access to the document. ```json {   \"tree\":{     \"root\":{       \"type\":\"document:2021-budget#reader\",       \"union\":{         \"nodes\":[           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"users\":{                 \"users\":[                   \"user:bob\"                 ]               }             }           },           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"computed\":{                 \"userset\":\"document:2021-budget#writer\"               }             }           }         ]       }     }   } } ``` The caller can then call expand API for the `writer` relationship for the `document:2021-budget`. ### Expand Request with Contextual Tuples  Given the model ```python model     schema 1.1  type user  type folder     relations         define owner: [user]  type document     relations         define parent: [folder]         define viewer: [user] or writer         define writer: [user] or owner from parent ``` and the initial tuples ```json [{     \"user\": \"user:bob\",     \"relation\": \"owner\",     \"object\": \"folder:1\" }] ```  To expand all `writers` of `document:1` when `document:1` is put in `folder:1`, the first call could be  ```json {   \"tuple_key\": {     \"object\": \"document:1\",     \"relation\": \"writer\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"folder:1\",         \"relation\": \"parent\",         \"object\": \"document:1\"       }     ]   } } ``` this returns: ```json {   \"tree\": {     \"root\": {       \"name\": \"document:1#writer\",       \"union\": {         \"nodes\": [           {             \"name\": \"document:1#writer\",             \"leaf\": {               \"users\": {                 \"users\": []               }             }           },           {             \"name\": \"document:1#writer\",             \"leaf\": {               \"tupleToUserset\": {                 \"tupleset\": \"document:1#parent\",                 \"computed\": [                   {                     \"userset\": \"folder:1#owner\"                   }                 ]               }             }           }         ]       }     }   } } ``` This tells us that the `owner` of `folder:1` may also be a writer. So our next call could be to find the `owners` of `folder:1` ```json {   \"tuple_key\": {     \"object\": \"folder:1\",     \"relation\": \"owner\"   } } ``` which gives ```json {   \"tree\": {     \"root\": {       \"name\": \"folder:1#owner\",       \"leaf\": {         \"users\": {           \"users\": [             \"user:bob\"           ]         }       }     }   } } ```
 
         >>> thread = await api.expand(body)
 
@@ -750,7 +758,7 @@ class OpenFgaApi:
     async def expand_with_http_info(self, body, **kwargs):
         """Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
 
-        The Expand API will return all users and usersets that have certain relationship with an object in a certain store. This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned. Body parameters `tuple_key.object` and `tuple_key.relation` are all required. The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.  ## Example To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body ```json {   \"tuple_key\": {     \"object\": \"document:2021-budget\",     \"relation\": \"reader\"   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` OpenFGA's response will be a userset tree of the users and usersets that have read access to the document. ```json {   \"tree\":{     \"root\":{       \"type\":\"document:2021-budget#reader\",       \"union\":{         \"nodes\":[           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"users\":{                 \"users\":[                   \"user:bob\"                 ]               }             }           },           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"computed\":{                 \"userset\":\"document:2021-budget#writer\"               }             }           }         ]       }     }   } } ``` The caller can then call expand API for the `writer` relationship for the `document:2021-budget`.
+        The Expand API will return all users and usersets that have certain relationship with an object in a certain store. This is different from the `/stores/{store_id}/read` API in that both users and computed usersets are returned. Body parameters `tuple_key.object` and `tuple_key.relation` are all required. A `contextual_tuples` object may also be included in the body of the request. This object contains one field `tuple_keys`, which is an array of tuple keys. Each of these tuples may have an associated `condition`. The response will return a tree whose leaves are the specific users and usersets. Union, intersection and difference operator are located in the intermediate nodes.  ## Example To expand all users that have the `reader` relationship with object `document:2021-budget`, use the Expand API with the following request body ```json {   \"tuple_key\": {     \"object\": \"document:2021-budget\",     \"relation\": \"reader\"   },   \"authorization_model_id\": \"01G50QVV17PECNVAHX1GG4Y5NC\" } ``` OpenFGA's response will be a userset tree of the users and usersets that have read access to the document. ```json {   \"tree\":{     \"root\":{       \"type\":\"document:2021-budget#reader\",       \"union\":{         \"nodes\":[           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"users\":{                 \"users\":[                   \"user:bob\"                 ]               }             }           },           {             \"type\":\"document:2021-budget#reader\",             \"leaf\":{               \"computed\":{                 \"userset\":\"document:2021-budget#writer\"               }             }           }         ]       }     }   } } ``` The caller can then call expand API for the `writer` relationship for the `document:2021-budget`. ### Expand Request with Contextual Tuples  Given the model ```python model     schema 1.1  type user  type folder     relations         define owner: [user]  type document     relations         define parent: [folder]         define viewer: [user] or writer         define writer: [user] or owner from parent ``` and the initial tuples ```json [{     \"user\": \"user:bob\",     \"relation\": \"owner\",     \"object\": \"folder:1\" }] ```  To expand all `writers` of `document:1` when `document:1` is put in `folder:1`, the first call could be  ```json {   \"tuple_key\": {     \"object\": \"document:1\",     \"relation\": \"writer\"   },   \"contextual_tuples\": {     \"tuple_keys\": [       {         \"user\": \"folder:1\",         \"relation\": \"parent\",         \"object\": \"document:1\"       }     ]   } } ``` this returns: ```json {   \"tree\": {     \"root\": {       \"name\": \"document:1#writer\",       \"union\": {         \"nodes\": [           {             \"name\": \"document:1#writer\",             \"leaf\": {               \"users\": {                 \"users\": []               }             }           },           {             \"name\": \"document:1#writer\",             \"leaf\": {               \"tupleToUserset\": {                 \"tupleset\": \"document:1#parent\",                 \"computed\": [                   {                     \"userset\": \"folder:1#owner\"                   }                 ]               }             }           }         ]       }     }   } } ``` This tells us that the `owner` of `folder:1` may also be a writer. So our next call could be to find the `owners` of `folder:1` ```json {   \"tuple_key\": {     \"object\": \"folder:1\",     \"relation\": \"owner\"   } } ``` which gives ```json {   \"tree\": {     \"root\": {       \"name\": \"folder:1#owner\",       \"leaf\": {         \"users\": {           \"users\": [             \"user:bob\"           ]         }       }     }   } } ```
 
         >>> thread = api.expand_with_http_info(body)
 
@@ -794,6 +802,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -897,6 +906,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def get_store(self, **kwargs):
@@ -969,6 +979,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -1053,6 +1064,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def list_objects(self, body, **kwargs):
@@ -1129,6 +1141,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -1233,6 +1246,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def list_stores(self, **kwargs):
@@ -1313,6 +1327,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -1397,6 +1412,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def list_users(self, body, **kwargs):
@@ -1473,6 +1489,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -1577,6 +1594,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def read(self, body, **kwargs):
@@ -1653,6 +1671,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -1756,6 +1775,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def read_assertions(self, authorization_model_id, **kwargs):
@@ -1834,6 +1854,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -1933,6 +1954,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def read_authorization_model(self, id, **kwargs):
@@ -2009,6 +2031,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -2106,6 +2129,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def read_authorization_models(self, **kwargs):
@@ -2186,6 +2210,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -2276,6 +2301,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def read_changes(self, **kwargs):
@@ -2364,6 +2390,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -2458,6 +2485,189 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
+        )
+
+    async def streamed_list_objects(self, body, **kwargs):
+        """Stream all objects of the given type that the user has a relation with
+
+        The Streamed ListObjects API is very similar to the the ListObjects API, with two differences:  1. Instead of collecting all objects before returning a response, it streams them to the client as they are collected.  2. The number of results returned is only limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE.
+
+        >>> thread = await api.streamed_list_objects(body)
+
+        :param body: (required)
+        :type body: ListObjectsRequest
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :type _preload_content: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: StreamResultOfStreamedListObjectsResponse
+        """
+        kwargs["_return_http_data_only"] = True
+        return await self.streamed_list_objects_with_http_info(body, **kwargs)
+
+    async def streamed_list_objects_with_http_info(self, body, **kwargs):
+        """Stream all objects of the given type that the user has a relation with
+
+        The Streamed ListObjects API is very similar to the the ListObjects API, with two differences:  1. Instead of collecting all objects before returning a response, it streams them to the client as they are collected.  2. The number of results returned is only limited by the execution timeout specified in the flag OPENFGA_LIST_OBJECTS_DEADLINE.
+
+        >>> thread = api.streamed_list_objects_with_http_info(body)
+
+        :param body: (required)
+        :type body: ListObjectsRequest
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _return_http_data_only: response data without head status code
+                                       and headers
+        :type _return_http_data_only: bool, optional
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :type _preload_content: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :param _retry_param: if specified, override the retry parameters specified in configuration
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(StreamResultOfStreamedListObjectsResponse, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        local_var_params = locals()
+
+        all_params = ["body"]
+        all_params.extend(
+            [
+                "async_req",
+                "_return_http_data_only",
+                "_preload_content",
+                "_request_timeout",
+                "_request_auth",
+                "_content_type",
+                "_headers",
+                "_retry_params",
+                "_streaming",
+            ]
+        )
+
+        for key, val in local_var_params["kwargs"].items():
+            if key not in all_params:
+                raise FgaValidationException(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method streamed_list_objects" % key
+                )
+            local_var_params[key] = val
+        del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
+        if (
+            self.api_client.client_side_validation
+            and local_var_params.get("body") is None
+        ):
+            raise ApiValueError(
+                "Missing the required parameter `body` when calling `streamed_list_objects`"
+            )
+
+        collection_formats = {}
+
+        path_params = {}
+
+        store_id = None
+
+        if self.api_client._get_store_id() is None:
+            raise ApiValueError(
+                "Store ID expected in api_client's configuration when calling `streamed_list_objects`"
+            )
+        store_id = self.api_client._get_store_id()
+
+        query_params = []
+
+        header_params = dict(local_var_params.get("_headers", {}))
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if "body" in local_var_params:
+            body_params = local_var_params["body"]
+        # HTTP header `Accept`
+        header_params["Accept"] = self.api_client.select_header_accept(
+            ["application/json"]
+        )
+
+        # HTTP header `Content-Type`
+        content_types_list = local_var_params.get(
+            "_content_type",
+            self.api_client.select_header_content_type(
+                ["application/json"], "POST", body_params
+            ),
+        )
+        if content_types_list:
+            header_params["Content-Type"] = content_types_list
+
+        # Authentication setting
+        auth_settings = []
+
+        response_types_map = {
+            200: "StreamResultOfStreamedListObjectsResponse",
+            400: "ValidationErrorMessageResponse",
+            401: "UnauthenticatedResponse",
+            403: "ForbiddenResponse",
+            404: "PathUnknownErrorMessageResponse",
+            409: "AbortedMessageResponse",
+            422: "UnprocessableContentMessageResponse",
+            500: "InternalErrorMessageResponse",
+        }
+
+        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+            TelemetryAttributes.fga_client_request_method: "streamed_list_objects",
+            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+                "authorization_model_id", ""
+            ),
+        }
+
+        telemetry_attributes = TelemetryAttributes.fromBody(
+            body=body_params,
+            attributes=telemetry_attributes,
+        )
+
+        return await self.api_client.call_api(
+            "/stores/{store_id}/streamed-list-objects".replace("{store_id}", store_id),
+            "POST",
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_types_map=response_types_map,
+            auth_settings=auth_settings,
+            async_req=local_var_params.get("async_req"),
+            _return_http_data_only=local_var_params.get("_return_http_data_only"),
+            _preload_content=local_var_params.get("_preload_content", True),
+            _request_timeout=local_var_params.get("_request_timeout"),
+            _retry_params=local_var_params.get("_retry_params"),
+            collection_formats=collection_formats,
+            _request_auth=local_var_params.get("_request_auth"),
+            _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def write(self, body, **kwargs):
@@ -2534,6 +2744,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -2637,6 +2848,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def write_assertions(self, authorization_model_id, body, **kwargs):
@@ -2721,6 +2933,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -2831,6 +3044,7 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )
 
     async def write_authorization_model(self, body, **kwargs):
@@ -2907,6 +3121,7 @@ class OpenFgaApi:
                 "_content_type",
                 "_headers",
                 "_retry_params",
+                "_streaming",
             ]
         )
 
@@ -3011,4 +3226,5 @@ class OpenFgaApi:
             _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
+            _streaming=local_var_params.get("_streaming", False),
         )

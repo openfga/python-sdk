@@ -224,7 +224,3 @@ class TestCredentialsIssuer(IsolatedAsyncioTestCase):
         self.configuration.api_issuer = "https://issuer.fga.example:8080 "
         result = self.credentials._parse_issuer(self.configuration.api_issuer)
         self.assertEqual(result, "https://issuer.fga.example:8080/oauth/token")
-
-
-if __name__ == "__main__":
-    unittest.main()

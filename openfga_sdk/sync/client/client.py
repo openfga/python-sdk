@@ -62,6 +62,9 @@ from openfga_sdk.models.read_authorization_model_response import (
 )
 from openfga_sdk.models.read_request import ReadRequest
 from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
+from openfga_sdk.models.streamed_list_objects_response import (
+    StreamedListObjectsResponse,
+)
 from openfga_sdk.models.tuple_key import TupleKey
 from openfga_sdk.models.write_assertions_request import WriteAssertionsRequest
 from openfga_sdk.models.write_authorization_model_request import (
@@ -805,6 +808,43 @@ class OpenFgaClient:
             )
         api_response = self._api.list_objects(body=req_body, **kwargs)
         return api_response
+
+    def streamed_list_objects(
+        self, body: ClientListObjectsRequest, options: dict[str, str] = None
+    ):
+        """
+        Retrieve all objects of the given type that the user has a relation with, using the streaming ListObjects API.
+
+        :param body - list object parameters
+        :param authorization_model_id(options) - Overrides the authorization model id in the configuration
+        :param header(options) - Custom headers to send alongside the request
+        :param retryParams(options) - Override the retry parameters for this request
+        :param retryParams.maxRetry(options) - Override the max number of retries on each API request
+        :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param consistency(options) - The type of consistency preferred for the request
+        """
+        kwargs = options_to_kwargs(options)
+        kwargs["_streaming"] = True
+
+        req_body = ListObjectsRequest(
+            authorization_model_id=self._get_authorization_model_id(options),
+            user=body.user,
+            relation=body.relation,
+            type=body.type,
+            context=body.context,
+            consistency=self._get_consistency(options),
+        )
+
+        if body.contextual_tuples:
+            req_body.contextual_tuples = ContextualTupleKeys(
+                tuple_keys=convert_tuple_keys(body.contextual_tuples)
+            )
+
+        for response in self._api.streamed_list_objects(body=req_body, **kwargs):
+            if response and "result" in response and "object" in response["result"]:
+                yield StreamedListObjectsResponse(response["result"]["object"])
+
+        return
 
     def list_relations(
         self, body: ClientListRelationsRequest, options: dict[str, str] = None

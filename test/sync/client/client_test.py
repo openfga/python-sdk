@@ -177,10 +177,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores",
                 headers=ANY,
+                body=None,
                 query_params=[
                     ("page_size", 1),
                     ("continuation_token", "continuation_token_example"),
                 ],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -244,7 +246,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
                 headers=ANY,
+                body=None,
                 query_params=[],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -265,8 +269,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "DELETE",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
                 headers=ANY,
-                query_params=[],
                 body=None,
+                query_params=[],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -358,7 +363,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
                 headers=ANY,
+                body=None,
                 query_params=[],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -525,7 +532,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
                 headers=ANY,
+                body=None,
                 query_params=[],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -612,7 +621,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
                 headers=ANY,
+                body=None,
                 query_params=[("page_size", 1)],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -642,7 +653,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
                 headers=ANY,
+                body=None,
                 query_params=[("page_size", 1)],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -700,12 +713,14 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/changes",
                 headers=ANY,
+                body=None,
                 query_params=[
                     ("type", "document"),
                     ("page_size", 1),
                     ("continuation_token", "abcdefg"),
                     ("start_time", "2022-01-01T00:00:00+00:00"),
                 ],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )
@@ -2979,7 +2994,9 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
                 headers=ANY,
+                body=None,
                 query_params=[],
+                post_params=[],
                 _preload_content=ANY,
                 _request_timeout=None,
             )

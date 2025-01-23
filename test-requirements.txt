@@ -8,3 +8,4 @@ griffe >= 0.41.2, < 2
 isort==5.13.2
 pytest-cov >= 5, < 7
 pyupgrade==3.19.1
+pytest-asyncio >= 0.25, < 1
