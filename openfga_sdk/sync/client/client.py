@@ -776,6 +776,10 @@ class OpenFgaClient:
             authorization_model_id=self._get_authorization_model_id(options),
             consistency=self._get_consistency(options),
         )
+        if body.contextual_tuples:
+            req_body.contextual_tuples = ContextualTupleKeys(
+                tuple_keys=convert_tuple_keys(body.contextual_tuples)
+            )
         api_response = self._api.expand(body=req_body, **kwargs)
         return api_response
 
