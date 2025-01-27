@@ -18,13 +18,12 @@ import random
 import re
 import time
 import urllib
-
 from multiprocessing.pool import ThreadPool
 
 from dateutil.parser import parse
 
 import openfga_sdk.models
-
+from openfga_sdk.sync import rest, oauth2
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.exceptions import (
     ApiException,
@@ -33,10 +32,8 @@ from openfga_sdk.exceptions import (
     RateLimitExceededError,
     ServiceException,
 )
-from openfga_sdk.sync import oauth2, rest
 from openfga_sdk.telemetry import Telemetry
 from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
-
 
 DEFAULT_USER_AGENT = "openfga-sdk python/0.9.1"
 
