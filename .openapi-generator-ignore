@@ -14,3 +14,4 @@ test/*
 .gitlab-ci.yml
 .travis.yml
 tox.ini
+setup.cfg

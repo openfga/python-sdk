@@ -50,6 +50,7 @@ venv/
 .venv/
 .python-version
 .pytest_cache
+.ruff_cache
 test/__pycache__/
 
 # Translations
