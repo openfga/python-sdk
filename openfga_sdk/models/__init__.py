@@ -121,6 +121,7 @@ from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.write_request_writes import WriteRequestWrites
 
+
 __all__ = [
     "AbortedMessageResponse",
     "Any",

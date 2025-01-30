@@ -17,10 +17,10 @@ from openfga_sdk.client.models.batch_check_response import ClientBatchCheckRespo
 from openfga_sdk.client.models.batch_check_single_response import (
     ClientBatchCheckSingleResponse,
 )
+from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.client.models.client_batch_check_response import (
     ClientBatchCheckClientResponse,
 )
-from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
@@ -29,6 +29,7 @@ from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_response import ClientWriteResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+
 
 __all__ = [
     "ClientAssertion",

@@ -25,79 +25,59 @@ class ClientTuple:
         relation: str,
         object: str,
         condition: RelationshipCondition | None = None,
-    ):
+    ) -> None:
         self._user = user
         self._relation = relation
         self._object = object
         self._condition = condition
 
-    def __eq__(self, other):
-        return (
+    def __eq__(self, other) -> bool:
+        if (
             self.user == other.user
             and self.relation == other.relation
             and self.object == other.object
-        )
+            and self.condition == other.condition
+        ):
+            return True
+
+        return False
 
     @property
-    def user(self):
-        """
-        Return user
-        """
+    def user(self) -> str:
         return self._user
 
-    @property
-    def relation(self):
-        """
-        Return relation
-        """
-        return self._relation
-
-    @property
-    def object(self):
-        """
-        Return object
-        """
-        return self._object
-
-    @property
-    def condition(self):
-        """
-        Return condition
-        """
-        return self._condition
-
     @user.setter
-    def user(self, value):
-        """
-        Set user
-        """
+    def user(self, value: str) -> None:
         self._user = value
 
+    @property
+    def relation(self) -> str:
+        return self._relation
+
     @relation.setter
-    def relation(self, value):
-        """
-        Set relation
-        """
+    def relation(self, value: str) -> None:
         self._relation = value
 
+    @property
+    def object(self) -> str:
+        return self._object
+
     @object.setter
-    def object(self, value):
-        """
-        Set object
-        """
+    def object(self, value: str) -> None:
         self._object = value
 
+    @property
+    def condition(self) -> RelationshipCondition | None:
+        return self._condition
+
     @condition.setter
-    def condition(self, value):
-        """
-        Set condition
-        """
+    def condition(self, value: RelationshipCondition | None) -> None:
         self._condition = value
 
     @property
-    def tuple_key(self):
+    def tuple_key(self) -> TupleKey:
         """
-        Return the tuple as tuple_key
+        Return the ClientTuple as TupleKey
         """
         return TupleKey(
             object=self.object,
@@ -107,11 +87,11 @@ class ClientTuple:
         )
 
 
-def convert_tuple_keys(lists: list[ClientTuple]):
+def convert_tuple_keys(lists: list[ClientTuple]) -> list[TupleKey] | None:
     """
     Return the items as tuple_keys
     """
     if lists is None:
         return None
-    items = map(lambda item: item.tuple_key, lists)
-    return list(items)
+
+    return list(map(lambda item: item.tuple_key, lists))

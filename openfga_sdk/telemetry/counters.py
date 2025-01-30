@@ -36,12 +36,13 @@ class TelemetryCounters:
     ]
 
     @staticmethod
+    def getAll() -> list[TelemetryCounter]:
+        return TelemetryCounters._counters
+
+    @staticmethod
     def get(
         name: str | None = None,
-    ) -> list[TelemetryCounter] | TelemetryCounter | None:
-        if name is None:
-            return TelemetryCounters._counters
-
+    ) -> TelemetryCounter | None:
         for counter in TelemetryCounters._counters:
             if counter.name == name:
                 return counter

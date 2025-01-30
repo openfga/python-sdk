@@ -18,12 +18,13 @@ import random
 import re
 import time
 import urllib
+
 from multiprocessing.pool import ThreadPool
 
-from dateutil.parser import parse
+from dateutil.parser import parse  # type: ignore[import-untyped]
 
 import openfga_sdk.models
-from openfga_sdk.sync import rest, oauth2
+
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.exceptions import (
     ApiException,
@@ -32,18 +33,21 @@ from openfga_sdk.exceptions import (
     RateLimitExceededError,
     ServiceException,
 )
+from openfga_sdk.sync import oauth2, rest
 from openfga_sdk.telemetry import Telemetry
 from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
+
 
 DEFAULT_USER_AGENT = "openfga-sdk python/0.9.1"
 
 
-def random_time(loop_count, min_wait_in_ms):
+def random_time(loop_count, min_wait_in_ms) -> float:
     """
     Helper function to return the time (in s) to wait before retry
     """
     minimum = math.ceil(2**loop_count * min_wait_in_ms)
     maximum = math.ceil(2 ** (loop_count + 1) * min_wait_in_ms)
+
     return random.randrange(minimum, maximum) / 1000
 
 
@@ -120,11 +124,12 @@ class ApiClient:
             self._pool.close()
             self._pool.join()
             self._pool = None
-            if hasattr(atexit, "unregister"):
+
+            if hasattr(atexit, "unregister") and callable(atexit.unregister):
                 atexit.unregister(self.close)
 
     @property
-    def pool(self):
+    def pool(self) -> ThreadPool:
         """Create thread pool on first request
         avoids instantiating unused threadpool for blocking clients.
         """
@@ -164,7 +169,8 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute, str | int] = None,
+        _telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float]
+        | None = None,
         _streaming: bool = False,
     ):
         self.configuration.is_valid()
@@ -188,10 +194,9 @@ class ApiClient:
             path_params = self.parameters_to_tuples(path_params, collection_formats)
             for k, v in path_params:
                 # specified safe chars, encode everything
-                resource_path = resource_path.replace(
-                    "{%s}" % k,
-                    urllib.parse.quote(str(v), safe=config.safe_chars_for_path_param),
-                )
+                _k = urllib.parse.quote(str(k), safe=config.safe_chars_for_path_param)
+                _v = urllib.parse.quote(str(v), safe=config.safe_chars_for_path_param)
+                resource_path = resource_path.replace("{" + str(k) + "}", _v)
 
         # query parameters
         if query_params:
@@ -409,7 +414,7 @@ class ApiClient:
             return [self.sanitize_for_serialization(sub_obj) for sub_obj in obj]
         elif isinstance(obj, tuple):
             return tuple(self.sanitize_for_serialization(sub_obj) for sub_obj in obj)
-        elif isinstance(obj, (datetime.datetime, datetime.date)):
+        elif isinstance(obj, datetime.datetime | datetime.date):
             return obj.isoformat()
 
         if isinstance(obj, dict):
@@ -509,7 +514,8 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute, str | int] = None,
+        _telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float]
+        | None = None,
         _streaming: bool = False,
     ):
         """Makes the HTTP request (synchronous) and returns deserialized data.
@@ -843,7 +849,7 @@ class ApiClient:
         if (
             data is not None
             and klass.openapi_types is not None
-            and isinstance(data, (list, dict))
+            and isinstance(data, list | dict)
         ):
             for attr, attr_type in klass.openapi_types.items():
                 if klass.attribute_map[attr] in data:

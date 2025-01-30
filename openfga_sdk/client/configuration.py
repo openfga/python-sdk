@@ -53,8 +53,7 @@ class ClientConfiguration(Configuration):
             and is_well_formed_ulid_string(self.authorization_model_id) is False
         ):
             raise FgaValidationException(
-                "authorization_model_id ('%s') is not in a valid ulid format"
-                % self.authorization_model_id
+                f"authorization_model_id ('{self.authorization_model_id}') is not in a valid ulid format"
             )
 
     @property

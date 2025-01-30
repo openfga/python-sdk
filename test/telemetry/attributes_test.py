@@ -22,7 +22,6 @@ from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.models.batch_check_request import BatchCheckRequest
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.rest import RESTResponse
-
 from openfga_sdk.telemetry.attributes import (
     TelemetryAttributes,
 )

@@ -127,8 +127,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method batch_check" % key
+                    f"Got an unexpected keyword argument '{key}' to method batch_check"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -192,7 +191,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "batch_check",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -309,7 +308,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s' to method check" % key
+                    f"Got an unexpected keyword argument '{key}' to method check"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -373,7 +372,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "check",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -490,8 +489,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method create_store" % key
+                    f"Got an unexpected keyword argument '{key}' to method create_store"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -541,7 +539,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "create_store",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -654,8 +652,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method delete_store" % key
+                    f"Got an unexpected keyword argument '{key}' to method delete_store"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -690,7 +687,7 @@ class OpenFgaApi:
 
         response_types_map = {}
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "delete_store",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -807,7 +804,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s' to method expand" % key
+                    f"Got an unexpected keyword argument '{key}' to method expand"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -871,7 +868,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "expand",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -984,7 +981,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s' to method get_store" % key
+                    f"Got an unexpected keyword argument '{key}' to method get_store"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -1028,7 +1025,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "get_store",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -1145,8 +1142,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method list_objects" % key
+                    f"Got an unexpected keyword argument '{key}' to method list_objects"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -1210,7 +1206,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "list_objects",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -1331,8 +1327,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method list_stores" % key
+                    f"Got an unexpected keyword argument '{key}' to method list_stores"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -1376,7 +1371,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "list_stores",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -1493,7 +1488,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s' to method list_users" % key
+                    f"Got an unexpected keyword argument '{key}' to method list_users"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -1557,7 +1552,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "list_users",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -1674,7 +1669,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s' to method read" % key
+                    f"Got an unexpected keyword argument '{key}' to method read"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -1738,7 +1733,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "read",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -1855,8 +1850,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method read_assertions" % key
+                    f"Got an unexpected keyword argument '{key}' to method read_assertions"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -1913,7 +1907,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "read_assertions",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -2032,8 +2026,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method read_authorization_model" % key
+                    f"Got an unexpected keyword argument '{key}' to method read_authorization_model"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -2088,7 +2081,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "read_authorization_model",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -2211,8 +2204,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method read_authorization_models" % key
+                    f"Got an unexpected keyword argument '{key}' to method read_authorization_models"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -2262,7 +2254,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "read_authorization_models",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -2391,8 +2383,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method read_changes" % key
+                    f"Got an unexpected keyword argument '{key}' to method read_changes"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -2446,7 +2437,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "read_changes",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -2563,8 +2554,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method streamed_list_objects" % key
+                    f"Got an unexpected keyword argument '{key}' to method streamed_list_objects"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -2628,7 +2618,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "streamed_list_objects",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -2745,7 +2735,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s' to method write" % key
+                    f"Got an unexpected keyword argument '{key}' to method write"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -2809,7 +2799,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "write",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -2932,8 +2922,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method write_assertions" % key
+                    f"Got an unexpected keyword argument '{key}' to method write_assertions"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -3001,7 +2990,7 @@ class OpenFgaApi:
 
         response_types_map = {}
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "write_assertions",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
@@ -3120,8 +3109,7 @@ class OpenFgaApi:
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
                 raise FgaValidationException(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method write_authorization_model" % key
+                    f"Got an unexpected keyword argument '{key}' to method write_authorization_model"
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
@@ -3185,7 +3173,7 @@ class OpenFgaApi:
             500: "InternalErrorMessageResponse",
         }
 
-        telemetry_attributes: dict[TelemetryAttribute, str | int] = {
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: "write_authorization_model",
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: local_var_params.get(

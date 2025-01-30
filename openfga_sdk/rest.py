@@ -17,7 +17,7 @@ import re
 import ssl
 import urllib
 
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import aiohttp
 
@@ -38,28 +38,95 @@ logger = logging.getLogger(__name__)
 
 class RESTResponse(io.IOBase):
     """
-    Represents an HTTP response object.
+    Represents an HTTP response object in the asynchronous client.
     """
 
-    def __init__(self, resp: aiohttp.ClientResponse, data: bytes) -> None:
+    _response: aiohttp.ClientResponse
+    _data: bytes
+    _status: int
+    _reason: str | None
+
+    def __init__(
+        self,
+        response: aiohttp.ClientResponse,
+        data: bytes,
+        status: int | None = None,
+        reason: str | None = None,
+    ) -> None:
         """
-        Initializes a RESTResponse with an aiohttp response and corresponding data.
+        Initializes a RESTResponse with an aiohttp.ClientResponse and corresponding data.
 
         :param resp: The aiohttp.ClientResponse object.
         :param data: The raw byte data read from the response.
         """
-        self.aiohttp_response = resp
-        self.status = resp.status
-        self.reason = resp.reason
-        self.data = data
+        self._response = response
+        self._data = data
+        self._status = status or response.status
+        self._reason = reason or response.reason
 
-    def getheaders(self) -> aiohttp.typedefs.LooseHeaders:
+    @property
+    def response(self) -> aiohttp.ClientResponse:
+        """
+        Returns the underlying aiohttp.ClientResponse object.
+        """
+        return self._response
+
+    @response.setter
+    def response(self, value: aiohttp.ClientResponse) -> None:
+        """
+        Sets the underlying aiohttp.ClientResponse object.
+        """
+        self._response = value
+
+    @property
+    def data(self) -> bytes:
+        """
+        Returns the raw byte data of the response.
+        """
+        return self._data
+
+    @data.setter
+    def data(self, value: bytes) -> None:
+        """
+        Sets the raw byte data of the response.
+        """
+        self._data = value
+
+    @property
+    def status(self) -> int:
+        """
+        Returns the HTTP status code of the response.
+        """
+        return self._status
+
+    @status.setter
+    def status(self, value: int) -> None:
+        """
+        Sets the HTTP status code of the response.
+        """
+        self._status = value
+
+    @property
+    def reason(self) -> str | None:
+        """
+        Returns the HTTP reason phrase of the response.
+        """
+        return self._reason
+
+    @reason.setter
+    def reason(self, value: str | None) -> None:
+        """
+        Sets the HTTP reason phrase of the response.
+        """
+        self._reason = value
+
+    def getheaders(self) -> dict[str, str]:
         """
         Returns the response headers.
         """
-        return self.aiohttp_response.headers
+        return dict(self.response.headers)
 
-    def getheader(self, name: str, default: Optional[str] = None) -> Optional[str]:
+    def getheader(self, name: str, default: str | None = None) -> str | None:
         """
         Returns a specific header value by name.
 
@@ -67,7 +134,7 @@ class RESTResponse(io.IOBase):
         :param default: The default value if header is not found.
         :return: The header value, or default if not present.
         """
-        return self.aiohttp_response.headers.get(name, default)
+        return self.response.headers.get(name, default)
 
 
 class RESTClientObject:
@@ -76,7 +143,7 @@ class RESTClientObject:
     """
 
     def __init__(
-        self, configuration: Any, pools_size: int = 4, maxsize: Optional[int] = None
+        self, configuration: Any, pools_size: int = 4, maxsize: int | None = None
     ) -> None:
         """
         Creates a new RESTClientObject.
@@ -114,12 +181,12 @@ class RESTClientObject:
         self,
         method: str,
         url: str,
-        query_params: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        body: Optional[Any] = None,
-        post_params: Optional[List[Tuple[str, Any]]] = None,
+        query_params: dict | None = None,
+        headers: dict | None = None,
+        body: Any | None = None,
+        post_params: list[tuple[str, Any]] | None = None,
         _preload_content: bool = True,
-        _request_timeout: Optional[float] = None,
+        _request_timeout: float | None = None,
     ) -> dict:
         """
         Builds a dictionary of request arguments suitable for aiohttp.
@@ -162,7 +229,8 @@ class RESTClientObject:
             args["proxy_headers"] = self.proxy_headers
 
         if query_params:
-            args["url"] += "?" + urllib.parse.urlencode(query_params)
+            encoded_qs = urllib.parse.urlencode(query_params)
+            args["url"] = f"{url}?{encoded_qs}"
 
         if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
             if re.search("json", headers["Content-Type"], re.IGNORECASE):
@@ -228,7 +296,7 @@ class RESTClientObject:
 
     def _accumulate_json_lines(
         self, leftover: bytes, data: bytes, buffer: bytearray
-    ) -> Tuple[bytes, List[Any]]:
+    ) -> tuple[bytes, list[Any]]:
         """
         Processes a chunk of data and leftover bytes. Splits on newlines, decodes valid JSON,
         and returns leftover bytes and a list of decoded JSON objects.
@@ -238,7 +306,7 @@ class RESTClientObject:
         :param buffer: The main bytearray buffer for all data.
         :return: Updated leftover bytes and a list of decoded JSON objects.
         """
-        objects: List[Any] = []
+        objects: list[Any] = []
         leftover += data
         lines = leftover.split(
             b"\n"
@@ -257,11 +325,11 @@ class RESTClientObject:
         self,
         method: str,
         url: str,
-        query_params: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        body: Optional[Any] = None,
-        post_params: Optional[List[Tuple[str, Any]]] = None,
-        _request_timeout: Optional[float] = None,
+        query_params: dict | None = None,
+        headers: dict | None = None,
+        body: Any | None = None,
+        post_params: list[tuple[str, Any]] | None = None,
+        _request_timeout: float | None = None,
     ):
         """
         Streams JSON objects from a specified endpoint, handling partial chunks
@@ -292,7 +360,7 @@ class RESTClientObject:
         # Initialize buffers for data chunks
         buffer = bytearray()
         leftover = b""
-        response: Optional[aiohttp.ClientResponse] = None
+        response: aiohttp.ClientResponse | None = None
 
         try:
             # Send request, collect response handler
@@ -333,7 +401,7 @@ class RESTClientObject:
 
             # Decode the complete/buffered data for logging purposes
             if isinstance(response, aiohttp.ClientResponse):
-                response.data = buffer.decode("utf-8")
+                logger.debug("response body: %s", buffer.decode("utf-8"))
 
             # Handle any HTTP errors that may have occurred
             await self.handle_response_exception(response)
@@ -348,12 +416,12 @@ class RESTClientObject:
         self,
         method: str,
         url: str,
-        query_params: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        body: Optional[Any] = None,
-        post_params: Optional[List[Tuple[str, Any]]] = None,
+        query_params: dict | None = None,
+        headers: dict | None = None,
+        body: Any | None = None,
+        post_params: list[tuple[str, Any]] | None = None,
         _preload_content: bool = True,
-        _request_timeout: Optional[float] = None,
+        _request_timeout: float | None = None,
     ) -> RESTResponse | aiohttp.ClientResponse:
         """
         Executes a request and returns the response object.
@@ -382,20 +450,21 @@ class RESTClientObject:
         )
 
         # Send request, collect response handler
-        resp = await self.pool_manager.request(**args)
+        wrapped_response: RESTResponse | None = None
+        raw_response: aiohttp.ClientResponse = await self.pool_manager.request(**args)
 
         # If we want to preload the response, read it
         if _preload_content:
             # Collect response data
-            data = await resp.read()
+            data = await raw_response.read()
 
             # Transform response JSON data into RESTResponse object
-            resp = RESTResponse(resp, data)
+            wrapped_response = RESTResponse(raw_response, data)
 
             # Log the response body
-            logger.debug(f"response body: {resp.data}")
+            logger.debug("response body: %s", data.decode("utf-8"))
 
         # Handle any errors that may have occurred
-        await self.handle_response_exception(resp)
+        await self.handle_response_exception(raw_response)
 
-        return resp
+        return wrapped_response or raw_response

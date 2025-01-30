@@ -23,9 +23,9 @@ class ClientListRelationsRequest:
         user: str,
         relations: list[str],
         object: str,
-        contextual_tuples: list[ClientTuple] = None,
-        context: object = None,
-    ):
+        contextual_tuples: list[ClientTuple] | None = None,
+        context: dict[str, int | str] | None = None,
+    ) -> None:
         self._user = user
         self._relations = relations
         self._object = object
@@ -33,70 +33,70 @@ class ClientListRelationsRequest:
         self._context = context
 
     @property
-    def user(self):
+    def user(self) -> str:
         """
         Return user
         """
         return self._user
 
-    @property
-    def relations(self):
-        """
-        Return relations
-        """
-        return self._relations
-
-    @property
-    def object(self):
-        """
-        Return object
-        """
-        return self._object
-
-    @property
-    def contextual_tuples(self):
-        """
-        Return contextual_tuples
-        """
-        return self._contextual_tuples
-
-    @property
-    def context(self):
-        """
-        Return context
-        """
-        return self._context
-
     @user.setter
-    def user(self, value):
+    def user(self, value: str) -> None:
         """
         Set user
         """
         self._user = value
 
+    @property
+    def relations(self) -> list[str]:
+        """
+        Return relations
+        """
+        return self._relations
+
     @relations.setter
-    def relations(self, value):
+    def relations(self, value: list[str]) -> None:
         """
         Set relations
         """
         self._relations = value
 
+    @property
+    def object(self) -> str:
+        """
+        Return object
+        """
+        return self._object
+
     @object.setter
-    def object(self, value):
+    def object(self, value: str) -> None:
         """
         Set object
         """
         self._object = value
 
+    @property
+    def contextual_tuples(self) -> list[ClientTuple] | None:
+        """
+        Return contextual_tuples
+        """
+        return self._contextual_tuples
+
     @contextual_tuples.setter
-    def contextual_tuples(self, value):
+    def contextual_tuples(self, value: list[ClientTuple] | None) -> None:
         """
         Set contextual tuples
         """
         self._contextual_tuples = value
 
+    @property
+    def context(self) -> dict[str, int | str] | None:
+        """
+        Return context
+        """
+        return self._context
+
     @context.setter
-    def context(self, value):
+    def context(self, value: dict[str, int | str] | None) -> None:
         """
         Set context
         """
