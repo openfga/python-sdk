@@ -260,8 +260,8 @@ openfga_sdk/telemetry/metrics.py
 openfga_sdk/telemetry/telemetry.py
 openfga_sdk/telemetry/utilities.py
 openfga_sdk/validation.py
+pyproject.toml
 requirements.txt
-setup.cfg
 setup.py
 test-requirements.txt
 test/_/configuration_test.py
