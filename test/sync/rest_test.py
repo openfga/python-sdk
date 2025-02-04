@@ -32,13 +32,14 @@ def test_restresponse_init():
     mock_resp = MagicMock()
     mock_resp.status = 200
     mock_resp.reason = "OK"
-    resp_data = b'{"test":"data"}'
 
+    resp_data = b'{"test":"data"}'
     rest_resp = RESTResponse(mock_resp, resp_data)
+
     assert rest_resp.status == 200
     assert rest_resp.reason == "OK"
     assert rest_resp.data == resp_data
-    assert rest_resp.urllib3_response == mock_resp
+    assert rest_resp.response == mock_resp
 
 
 def test_restresponse_getheaders():

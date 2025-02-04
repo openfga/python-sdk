@@ -17,7 +17,7 @@ import re
 import ssl
 import urllib
 
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import urllib3
 
@@ -38,28 +38,95 @@ logger = logging.getLogger(__name__)
 
 class RESTResponse(io.IOBase):
     """
-    Represents an HTTP response object in the non-async client.
+    Represents an HTTP response object in the synchronous client.
     """
 
-    def __init__(self, resp: urllib3.HTTPResponse, data: bytes) -> None:
-        """
-        Initializes a RESTResponse with a urllib3.HTTPResponse and corresponding data.
+    _response: urllib3.BaseHTTPResponse
+    _data: bytes
+    _status: int
+    _reason: str | None
 
-        :param resp: The urllib3.HTTPResponse object.
+    def __init__(
+        self,
+        response: urllib3.BaseHTTPResponse,
+        data: bytes,
+        status: int | None = None,
+        reason: str | None = None,
+    ) -> None:
+        """
+        Initializes a RESTResponse with a urllib3.BaseHTTPResponse and corresponding data.
+
+        :param resp: The urllib3.BaseHTTPResponse object.
         :param data: The raw byte data read from the response.
         """
-        self.urllib3_response = resp
-        self.status = resp.status
-        self.reason = resp.reason
-        self.data = data
+        self._response = response
+        self._data = data
+        self._status = status or response.status
+        self._reason = reason or response.reason
 
-    def getheaders(self) -> dict:
+    @property
+    def response(self) -> urllib3.BaseHTTPResponse:
+        """
+        Returns the underlying urllib3.BaseHTTPResponse object.
+        """
+        return self._response
+
+    @response.setter
+    def response(self, value: urllib3.BaseHTTPResponse) -> None:
+        """
+        Sets the underlying urllib3.BaseHTTPResponse object.
+        """
+        self._response = value
+
+    @property
+    def data(self) -> bytes:
+        """
+        Returns the raw byte data of the response.
+        """
+        return self._data
+
+    @data.setter
+    def data(self, value: bytes) -> None:
+        """
+        Sets the raw byte data of the response.
+        """
+        self._data = value
+
+    @property
+    def status(self) -> int:
+        """
+        Returns the HTTP status code of the response.
+        """
+        return self._status
+
+    @status.setter
+    def status(self, value: int) -> None:
+        """
+        Sets the HTTP status code of the response.
+        """
+        self._status = value
+
+    @property
+    def reason(self) -> str | None:
+        """
+        Returns the HTTP reason phrase of the response.
+        """
+        return self._reason
+
+    @reason.setter
+    def reason(self, value: str | None) -> None:
+        """
+        Sets the HTTP reason phrase of the response.
+        """
+        self._reason = value
+
+    def getheaders(self) -> dict[str, str]:
         """
         Returns a dictionary of the response headers.
         """
-        return self.urllib3_response.headers
+        return dict(self.response.headers)
 
-    def getheader(self, name: str, default: Optional[str] = None) -> Optional[str]:
+    def getheader(self, name: str, default: str | None = None) -> str | None:
         """
         Returns a specific header value by name.
 
@@ -67,7 +134,7 @@ class RESTResponse(io.IOBase):
         :param default: The default value if header is not found.
         :return: The header value, or default if not present.
         """
-        return self.urllib3_response.headers.get(name, default)
+        return self.response.headers.get(name, default)
 
 
 class RESTClientObject:
@@ -76,7 +143,10 @@ class RESTClientObject:
     """
 
     def __init__(
-        self, configuration: Any, pools_size: int = 4, maxsize: Optional[int] = None
+        self,
+        configuration: Any,
+        pools_size: int = 4,
+        maxsize: int | None = None,
     ) -> None:
         """
         Creates a new RESTClientObject using urllib3.
@@ -119,16 +189,18 @@ class RESTClientObject:
         self._timeout_millisec = configuration.timeout_millisec
 
         if hasattr(configuration, "proxy") and configuration.proxy is not None:
-            self.pool_manager = urllib3.ProxyManager(
-                num_pools=pools_size,
-                maxsize=maxsize,
-                cert_reqs=cert_reqs,
-                ca_certs=configuration.ssl_ca_cert,
-                cert_file=configuration.cert_file,
-                key_file=configuration.key_file,
-                proxy_url=configuration.proxy,
-                proxy_headers=configuration.proxy_headers,
-                **addition_pool_args,
+            self.pool_manager: urllib3.ProxyManager | urllib3.PoolManager = (
+                urllib3.ProxyManager(
+                    num_pools=pools_size,
+                    maxsize=maxsize,
+                    cert_reqs=cert_reqs,
+                    ca_certs=configuration.ssl_ca_cert,
+                    cert_file=configuration.cert_file,
+                    key_file=configuration.key_file,
+                    proxy_url=configuration.proxy,
+                    proxy_headers=configuration.proxy_headers,
+                    **addition_pool_args,
+                )
             )
 
             return
@@ -153,12 +225,12 @@ class RESTClientObject:
         self,
         method: str,
         url: str,
-        query_params: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        body: Optional[Any] = None,
-        post_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        headers: dict | None = None,
+        body: Any | None = None,
+        post_params: dict | None = None,
         _preload_content: bool = True,
-        _request_timeout: Optional[float | tuple] = None,
+        _request_timeout: float | tuple | None = None,
     ) -> dict:
         """
         Builds a dictionary of request arguments suitable for urllib3.
@@ -185,7 +257,7 @@ class RESTClientObject:
         post_params = post_params or {}
         timeout_val = _request_timeout or self._timeout_millisec
 
-        if isinstance(timeout_val, (float, int)):
+        if isinstance(timeout_val, float | int):
             if timeout_val > 100:
                 timeout_val /= 1000
             timeout = urllib3.Timeout(total=timeout_val)
@@ -230,7 +302,7 @@ class RESTClientObject:
                 args["fields"] = post_params
                 args["encode_multipart"] = True
 
-            elif isinstance(body, (str, bytes)):
+            elif isinstance(body, str | bytes):
                 args["body"] = body
             else:
                 msg = (
@@ -246,7 +318,7 @@ class RESTClientObject:
         return args
 
     def handle_response_exception(
-        self, response: RESTResponse | urllib3.HTTPResponse
+        self, response: RESTResponse | urllib3.BaseHTTPResponse
     ) -> None:
         """
         Raises exceptions if response status indicates an error.
@@ -274,7 +346,7 @@ class RESTClientObject:
 
     def _accumulate_json_lines(
         self, leftover: bytes, data: bytes, buffer: bytearray
-    ) -> Tuple[bytes, List[Any]]:
+    ) -> tuple[bytes, list[Any]]:
         """
         Processes a chunk of data plus any leftover bytes from a previous iteration.
         Splits on newlines, decodes valid JSON lines, and returns updated leftover bytes
@@ -285,7 +357,7 @@ class RESTClientObject:
         :param buffer: The main bytearray buffer for all data in this request.
         :return: A tuple of (updated leftover bytes, list of decoded objects).
         """
-        objects: List[Any] = []
+        objects: list[Any] = []
         leftover += data
         lines = leftover.split(
             b"\n"
@@ -307,11 +379,11 @@ class RESTClientObject:
         self,
         method: str,
         url: str,
-        query_params: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        body: Optional[Any] = None,
-        post_params: Optional[dict] = None,
-        _request_timeout: Optional[float | tuple] = None,
+        query_params: dict | None = None,
+        headers: dict | None = None,
+        body: Any | None = None,
+        post_params: dict | None = None,
+        _request_timeout: float | tuple | None = None,
     ):
         """
         Streams JSON objects from a specified endpoint, reassembling partial chunks
@@ -355,8 +427,7 @@ class RESTClientObject:
                 )
 
                 # Yield any complete objects
-                for obj in decoded_objects:
-                    yield obj
+                yield from decoded_objects
 
         except Exception as e:
             logger.exception("Stream error: %s", e)
@@ -388,13 +459,13 @@ class RESTClientObject:
         self,
         method: str,
         url: str,
-        query_params: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        body: Optional[Any] = None,
-        post_params: Optional[dict] = None,
+        query_params: dict | None = None,
+        headers: dict | None = None,
+        body: Any | None = None,
+        post_params: dict | None = None,
         _preload_content: bool = True,
-        _request_timeout: Optional[float | tuple] = None,
-    ) -> RESTResponse | urllib3.HTTPResponse:
+        _request_timeout: float | tuple | None = None,
+    ) -> RESTResponse | urllib3.BaseHTTPResponse:
         """
         Executes a request and returns the response object.
 
@@ -424,20 +495,21 @@ class RESTClientObject:
         )
 
         # Send request, collect response handler
-        resp = self.pool_manager.request(**args)
+        wrapped_response: RESTResponse | None = None
+        raw_response: urllib3.BaseHTTPResponse = self.pool_manager.request(**args)
 
         # If we want to preload the response, read it
         if _preload_content:
             # Collect response data and transform response (JSON) into RESTResponse object
-            resp = RESTResponse(resp, resp.data)
+            wrapped_response = RESTResponse(raw_response, raw_response.data)
 
             # Log the response body
-            logger.debug("response body: %s", resp.data)
+            logger.debug("response body: %s", wrapped_response.data.decode("utf-8"))
 
         # Handle any errors that may have occurred
-        self.handle_response_exception(resp)
+        self.handle_response_exception(raw_response)
 
         # Release the connection back to the pool
         self.close()
 
-        return resp
+        return wrapped_response or raw_response

@@ -35,12 +35,13 @@ class TelemetryHistograms:
     ]
 
     @staticmethod
+    def getAll() -> list[TelemetryHistogram]:
+        return TelemetryHistograms._histograms
+
+    @staticmethod
     def get(
         name: str | None = None,
-    ) -> list[TelemetryHistogram] | TelemetryHistogram | None:
-        if name is None:
-            return TelemetryHistograms._histograms
-
+    ) -> TelemetryHistogram | None:
         for histogram in TelemetryHistograms._histograms:
             if histogram.name == name:
                 return histogram

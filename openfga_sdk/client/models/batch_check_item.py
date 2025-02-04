@@ -16,7 +16,7 @@ from openfga_sdk.models.check_request_tuple_key import CheckRequestTupleKey
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 
 
-def construct_batch_item(check):
+def construct_batch_item(check) -> BatchCheckItem:
     batch_item = BatchCheckItem(
         tuple_key=CheckRequestTupleKey(
             user=check.user,
@@ -41,95 +41,97 @@ class ClientBatchCheckItem:
         user: str,
         relation: str,
         object: str,
-        correlation_id: str = None,
-        contextual_tuples: list[ClientTuple] = None,
-        context: object = None,
-    ):
+        correlation_id: str | None = None,
+        contextual_tuples: list[ClientTuple] | None = None,
+        context: dict[str, int | str] | None = None,
+    ) -> None:
         self._user = user
         self._relation = relation
         self._object = object
         self._correlation_id = correlation_id
-        self._contextual_tuples = None
-        if contextual_tuples:
-            self._contextual_tuples = contextual_tuples
+        self._contextual_tuples = contextual_tuples
         self._context = context
 
     @property
-    def user(self):
+    def user(self) -> str:
         """
         Return user
         """
         return self._user
 
-    @property
-    def relation(self):
-        """
-        Return relation
-        """
-        return self._relation
-
-    @property
-    def object(self):
-        """
-        Return object
-        """
-        return self._object
-
-    @property
-    def contextual_tuples(self):
-        """
-        Return contextual tuples
-        """
-        return self._contextual_tuples
-
-    @property
-    def context(self):
-        """
-        Return context
-        """
-        return self._context
-
-    @property
-    def correlation_id(self):
-        """ """
-        return self._correlation_id
-
     @user.setter
-    def user(self, value):
+    def user(self, value: str) -> None:
         """
         Set user
         """
         self._user = value
 
+    @property
+    def relation(self) -> str:
+        """
+        Return relation
+        """
+        return self._relation
+
     @relation.setter
-    def relation(self, value):
+    def relation(self, value: str) -> None:
         """
         Set relation
         """
         self._relation = value
 
+    @property
+    def object(self) -> str:
+        """
+        Return object
+        """
+        return self._object
+
     @object.setter
-    def object(self, value):
+    def object(self, value: str) -> None:
         """
         Set object
         """
         self._object = value
 
+    @property
+    def correlation_id(self) -> str | None:
+        """
+        Return correlation id
+        """
+        return self._correlation_id
+
+    @correlation_id.setter
+    def correlation_id(self, value: str | None) -> None:
+        """
+        Set correlation id
+        """
+        self._correlation_id = value
+
+    @property
+    def contextual_tuples(self) -> list[ClientTuple] | None:
+        """
+        Return contextual tuples
+        """
+        return self._contextual_tuples
+
     @contextual_tuples.setter
-    def contextual_tuples(self, value):
+    def contextual_tuples(self, value: list[ClientTuple] | None) -> None:
         """
         Set contextual tuples
         """
         self._contextual_tuples = value
 
+    @property
+    def context(self) -> dict[str, int | str] | None:
+        """
+        Return context
+        """
+        return self._context
+
     @context.setter
-    def context(self, value):
+    def context(self, value: dict[str, int | str] | None) -> None:
         """
         Set context
         """
         self._context = value
-
-    @correlation_id.setter
-    def correlation_id(self, value):
-        """ """
-        self._correlation_id = value

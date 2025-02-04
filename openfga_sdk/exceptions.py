@@ -138,7 +138,7 @@ class ApiException(OpenApiException):
 
     def __str__(self):
         """Custom error messages for exception"""
-        error_message = "({})\nReason: {}\n".format(self.status, self.reason)
+        error_message = f"({self.status})\nReason: {self.reason}\n"
 
         if self.body:
             error_message += f"HTTP response body: {self.body}\n"

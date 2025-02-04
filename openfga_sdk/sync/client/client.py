@@ -91,22 +91,31 @@ def _chuck_array(array, max_size):
     ]
 
 
-def set_heading_if_not_set(options: dict[str, int | str], name: str, value: str):
+def set_heading_if_not_set(
+    options: dict[str, int | str | dict[str, int | str]] | None,
+    name: str,
+    value: str,
+) -> dict[str, int | str | dict[str, int | str]]:
     """
     Set heading to the value if it is not set
     """
-    if options is None:
-        options = {}
-    headers = options.get("headers")
-    if headers is None:
-        headers = {}
-    if headers.get(name) is None:
-        headers[name] = value
-    options["headers"] = headers
-    return options
+    _options: dict[str, int | str | dict[str, int | str]] = (
+        options if options is not None else {}
+    )
+
+    if type(_options.get("headers")) is not dict:
+        _options["headers"] = {}
+
+    if type(_options["headers"]) is dict:
+        if type(_options["headers"].get(name)) not in [int, str]:
+            _options["headers"][name] = value
+
+    return _options
 
 
-def options_to_kwargs(options: dict[str, int | str] = None):
+def options_to_kwargs(
+    options: dict[str, int | str | dict[str, int | str]] | None = None,
+) -> dict[str, int | str | dict[str, int | str]]:
     """
     Return kwargs with continuation_token and page_size
     """
@@ -123,7 +132,9 @@ def options_to_kwargs(options: dict[str, int | str] = None):
     return kwargs
 
 
-def options_to_transaction_info(options: dict[str, int | str] = None):
+def options_to_transaction_info(
+    options: dict[str, int | str | dict[str, int | str]] | None = None,
+):
     """
     Return the transaction info
     """
@@ -144,7 +155,7 @@ class OpenFgaClient:
     OpenFgaClient is the entry point for invoking calls against the OpenFGA API.
     """
 
-    def __init__(self, configuration: ClientConfiguration):
+    def __init__(self, configuration: ClientConfiguration) -> None:
         self._client_configuration = configuration
         self._api_client = ApiClient(configuration)
         self._api = OpenFgaApi(self._api_client)
@@ -152,13 +163,16 @@ class OpenFgaClient:
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         self._api.close()
 
-    def _get_authorization_model_id(self, options: object) -> str | None:
+    def _get_authorization_model_id(
+        self,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ) -> str | None:
         """
         Return the authorization model ID if specified in the options.
         Otherwise, return the authorization model ID stored in the client's configuration
@@ -170,18 +184,25 @@ class OpenFgaClient:
             return None
         if is_well_formed_ulid_string(authorization_model_id) is False:
             raise FgaValidationException(
-                "authorization_model_id ('%s') is not in a valid ulid format"
-                % authorization_model_id
+                f"authorization_model_id ('{authorization_model_id}') is not in a valid ulid format"
             )
         return authorization_model_id
 
-    def _get_consistency(self, options: object) -> str | None:
+    def _get_consistency(
+        self,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ) -> str | None:
         """
         Returns the consistency requested if specified in the options.
         Otherwise, returns None.
         """
-        if options is not None and "consistency" in options:
-            return options["consistency"]
+        consistency: int | str | dict[str, int | str] | None = (
+            options.get("consistency", None) if options is not None else None
+        )
+
+        if type(consistency) is str:
+            return consistency
+
         return None
 
     def set_store_id(self, value):
@@ -212,7 +233,9 @@ class OpenFgaClient:
     # Stores
     #################
 
-    def list_stores(self, options: dict[str, int | str] = None):
+    def list_stores(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         List the stores in the system
         :param page_size(options) - Number of items returned per request
@@ -230,7 +253,9 @@ class OpenFgaClient:
         return api_response
 
     def create_store(
-        self, body: CreateStoreRequest, options: dict[str, int | str] = None
+        self,
+        body: CreateStoreRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Create the stores in the system
@@ -243,7 +268,9 @@ class OpenFgaClient:
         api_response = self._api.create_store(body, **kwargs)
         return api_response
 
-    def get_store(self, options: dict[str, int | str] = None):
+    def get_store(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         Get the store info in the system. Store id is from the configuration.
         :param header(options) - Custom headers to send alongside the request
@@ -257,7 +284,9 @@ class OpenFgaClient:
         )
         return api_response
 
-    def delete_store(self, options: dict[str, int | str] = None):
+    def delete_store(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         Delete the store from the system. Store id is from the configuration.
         :param header(options) - Custom headers to send alongside the request
@@ -275,7 +304,9 @@ class OpenFgaClient:
     # Authorization Models
     #######################
 
-    def read_authorization_models(self, options: dict[str, int | str] = None):
+    def read_authorization_models(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         Return all the authorization models for a particular store.
         :param header(options) - Custom headers to send alongside the request
@@ -290,7 +321,9 @@ class OpenFgaClient:
         return api_response
 
     def write_authorization_model(
-        self, body: WriteAuthorizationModelRequest, options: dict[str, int | str] = None
+        self,
+        body: WriteAuthorizationModelRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Write authorization model.
@@ -307,7 +340,9 @@ class OpenFgaClient:
         )
         return api_response
 
-    def read_authorization_model(self, options: dict[str, int | str] = None):
+    def read_authorization_model(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         Read an authorization model.
         :param header(options) - Custom headers to send alongside the request
@@ -323,7 +358,9 @@ class OpenFgaClient:
         )
         return api_response
 
-    def read_latest_authorization_model(self, options: dict[str, int | str] = None):
+    def read_latest_authorization_model(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         Convenient method of reading the latest authorization model
         :param header(options) - Custom headers to send alongside the request
@@ -348,7 +385,9 @@ class OpenFgaClient:
     #######################
 
     def read_changes(
-        self, body: ClientReadChangesRequest, options: dict[str, str] = None
+        self,
+        body: ClientReadChangesRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Read changes for specified type
@@ -361,14 +400,23 @@ class OpenFgaClient:
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         """
         kwargs = options_to_kwargs(options)
-        kwargs["type"] = body.type
-        kwargs["start_time"] = body.start_time
+
+        if body.type is not None:
+            kwargs["type"] = body.type
+
+        if body.start_time is not None:
+            kwargs["start_time"] = body.start_time
+
         api_response = self._api.read_changes(
             **kwargs,
         )
         return api_response
 
-    def read(self, body: ReadRequestTupleKey, options: dict[str, str] = None):
+    def read(
+        self,
+        body: ReadRequestTupleKey,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Read changes for specified type
         :param body - the tuples we want to read
@@ -410,7 +458,10 @@ class OpenFgaClient:
         return api_response
 
     def _write_single_batch(
-        self, batch: list[ClientTuple], is_write: bool, options: dict[str, str] = None
+        self,
+        batch: list[ClientTuple],
+        is_write: bool,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         try:
             write_batch = None
@@ -433,7 +484,7 @@ class OpenFgaClient:
         tuple_keys: list[ClientTuple],
         transaction: WriteTransactionOpts,
         is_write: bool,
-        options: dict[str, str] = None,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Internal function for write/delete batches
@@ -456,7 +507,9 @@ class OpenFgaClient:
         return batch_write_responses
 
     def _write_with_transaction(
-        self, body: ClientWriteRequest, options: dict[str, str] = None
+        self,
+        body: ClientWriteRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Write or deletes tuples
@@ -490,7 +543,11 @@ class OpenFgaClient:
             ]
         return ClientWriteResponse(writes=writes_response, deletes=deletes_response)
 
-    def write(self, body: ClientWriteRequest, options: dict[str, str] = None):
+    def write(
+        self,
+        body: ClientWriteRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Write or deletes tuples
         :param body - the write request
@@ -522,7 +579,11 @@ class OpenFgaClient:
             )
         return ClientWriteResponse(writes=writes_response, deletes=deletes_response)
 
-    def write_tuples(self, body: list[ClientTuple], options: dict[str, str] = None):
+    def write_tuples(
+        self,
+        body: list[ClientTuple],
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Convenient method for writing tuples
         :param body - the list of tuples we want to write
@@ -535,7 +596,11 @@ class OpenFgaClient:
         result = self.write(ClientWriteRequest(body, None), options)
         return result
 
-    def delete_tuples(self, body: list[ClientTuple], options: dict[str, str] = None):
+    def delete_tuples(
+        self,
+        body: list[ClientTuple],
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Convenient method for deleteing tuples
         :param body - the list of tuples we want to delete
@@ -551,7 +616,11 @@ class OpenFgaClient:
     #######################
     # Relationship Queries
     #######################
-    def check(self, body: ClientCheckRequest, options: dict[str, str] = None):
+    def check(
+        self,
+        body: ClientCheckRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Check whether a user is authorized to access an object
         :param body - ClientCheckRequest defining check request
@@ -582,7 +651,9 @@ class OpenFgaClient:
         return api_response
 
     def _single_client_batch_check(
-        self, body: ClientCheckRequest, options: dict[str, str] = None
+        self,
+        body: ClientCheckRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Run a single batch request and return body in a SingleBatchCheckResponse
@@ -605,7 +676,9 @@ class OpenFgaClient:
             )
 
     def client_batch_check(
-        self, body: list[ClientCheckRequest], options: dict[str, str | int] = None
+        self,
+        body: list[ClientCheckRequest],
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Run a set of checks
@@ -647,7 +720,7 @@ class OpenFgaClient:
     def _single_batch_check(
         self,
         body: BatchCheckRequest,
-        options: dict[str, str] = None,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Run a single BatchCheck request
@@ -662,7 +735,11 @@ class OpenFgaClient:
         except Exception as err:
             raise err
 
-    def batch_check(self, body: ClientBatchCheckRequest, options=None):
+    def batch_check(
+        self,
+        body: ClientBatchCheckRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Run a batchcheck request
         :param body - BatchCheck request
@@ -757,7 +834,11 @@ class OpenFgaClient:
 
         return ClientBatchCheckResponse(result)
 
-    def expand(self, body: ClientExpandRequest, options: dict[str, str] = None):
+    def expand(
+        self,
+        body: ClientExpandRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Run expand request
         :param body - list of ClientExpandRequest defining expand request
@@ -786,7 +867,9 @@ class OpenFgaClient:
         return api_response
 
     def list_objects(
-        self, body: ClientListObjectsRequest, options: dict[str, str] = None
+        self,
+        body: ClientListObjectsRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Run list object request
@@ -816,7 +899,9 @@ class OpenFgaClient:
         return api_response
 
     def streamed_list_objects(
-        self, body: ClientListObjectsRequest, options: dict[str, str] = None
+        self,
+        body: ClientListObjectsRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Retrieve all objects of the given type that the user has a relation with, using the streaming ListObjects API.
@@ -853,7 +938,9 @@ class OpenFgaClient:
         return
 
     def list_relations(
-        self, body: ClientListRelationsRequest, options: dict[str, str] = None
+        self,
+        body: ClientListRelationsRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Return all the relations for which user has a relationship with the object
@@ -886,7 +973,11 @@ class OpenFgaClient:
         result_list = list(result_iterator)
         return [i.request.relation for i in result_list]
 
-    def list_users(self, body: ClientListUsersRequest, options: dict[str, str] = None):
+    def list_users(
+        self,
+        body: ClientListUsersRequest,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ):
         """
         Run list users request
         :param body - list user parameters
@@ -919,7 +1010,9 @@ class OpenFgaClient:
     #######################
     # Assertions
     #######################
-    def read_assertions(self, options: dict[str, str] = None):
+    def read_assertions(
+        self, options: dict[str, int | str | dict[str, int | str]] | None = None
+    ):
         """
         Return the assertions
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
@@ -935,7 +1028,9 @@ class OpenFgaClient:
         return api_response
 
     def write_assertions(
-        self, body: list[ClientAssertion], options: dict[str, str] = None
+        self,
+        body: list[ClientAssertion],
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
     ):
         """
         Upsert the assertions
@@ -949,7 +1044,7 @@ class OpenFgaClient:
         kwargs = options_to_kwargs(options)
         authorization_model_id = self._get_authorization_model_id(options)
 
-        def map_to_assertion(client_assertion: ClientAssertion):
+        def map_to_assertion(client_assertion: ClientAssertion) -> Assertion:
             return Assertion(
                 TupleKey(
                     user=client_assertion.user,

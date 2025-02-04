@@ -39,11 +39,11 @@ extend-select = [
   #"C4",   # flake8-comprehensions
   #"C9",   # mccabe
   "I",    # isort
-  #"PGH",  # pygrep-hooks
+  "PGH",  # pygrep-hooks
   #"RUF",  # ruff
-  #"UP",   # pyupgrade
-  #"W",    # pycodestyle
-  #"YTT",  # flake8-2020
+  "UP",   # pyupgrade
+  "W",    # pycodestyle
+  "YTT",  # flake8-2020
   #"TRY",  # tryceratops
   #"EM",   # flake8-errmsg
 ]
@@ -74,3 +74,13 @@ addopts = "--cov=openfga_sdk --cov-report term-missing --cov-report xml --cov-re
 
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.mypy]
+python_version = "3.10"
+packages = "openfga_sdk"
+exclude = [
+    "openfa_sdk/models",
+]
+#warn_return_any = "True"
+#warn_unused_configs = "True"
+#disallow_untyped_defs = "True"

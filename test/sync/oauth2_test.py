@@ -78,7 +78,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
         self.assertEqual(client._access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=int(120))
+            client._access_expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {

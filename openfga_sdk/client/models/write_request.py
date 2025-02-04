@@ -21,55 +21,67 @@ class ClientWriteRequest:
     """
 
     def __init__(
-        self, writes: list[ClientTuple] = None, deletes: list[ClientTuple] = None
-    ):
+        self,
+        writes: list[ClientTuple] | None = None,
+        deletes: list[ClientTuple] | None = None,
+    ) -> None:
         self._writes = writes
         self._deletes = deletes
 
     @property
-    def writes(self):
+    def writes(self) -> list[ClientTuple] | None:
         """
         Return writes
         """
         return self._writes
 
-    @property
-    def deletes(self):
-        """
-        Return deletes
-        """
-        return self._deletes
-
     @writes.setter
-    def writes(self, value):
+    def writes(self, value: list[ClientTuple] | None) -> None:
         """
         Set writes
         """
         self._writes = value
 
+    @property
+    def deletes(self) -> list[ClientTuple] | None:
+        """
+        Return deletes
+        """
+        return self._deletes
+
     @deletes.setter
-    def deletes(self, value):
+    def deletes(self, value: list[ClientTuple] | None) -> None:
         """
         Set deletes
         """
         self._deletes = value
 
     @property
-    def writes_tuple_keys(self):
+    def writes_tuple_keys(self) -> WriteRequestWrites | None:
         """
         Return the writes as tuple keys
         """
-        keys = convert_tuple_keys(self.writes)
+        if self._writes is None:
+            return None
+
+        keys = convert_tuple_keys(self._writes)
+
         if keys is None:
             return None
+
         return WriteRequestWrites(tuple_keys=keys)
 
     @property
-    def deletes_tuple_keys(self):
+    def deletes_tuple_keys(self) -> WriteRequestDeletes | None:
         """
         Return the delete as tuple keys
         """
-        keys = convert_tuple_keys(self.deletes)
+        if self._deletes is None:
+            return None
+
+        keys = convert_tuple_keys(self._deletes)
+
         if keys is None:
             return None
+
         return WriteRequestDeletes(tuple_keys=keys)
