@@ -18,7 +18,7 @@ from unittest.mock import ANY, patch
 
 import urllib3
 
-from openfga_sdk.client import ClientConfiguration
+from openfga_sdk.configuration import Configuration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
@@ -31,7 +31,6 @@ from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequ
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
-from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
 from openfga_sdk.exceptions import (
     FgaValidationException,
     UnauthorizedException,
@@ -83,3111 +82,3047 @@ from openfga_sdk.models.write_authorization_model_request import (
 from openfga_sdk.models.write_authorization_model_response import (
     WriteAuthorizationModelResponse,
 )
-from openfga_sdk.sync import rest
-from openfga_sdk.sync.client.client import OpenFgaClient
+from openfga_sdk.protocols import ConfigurationProtocol
+from openfga_sdk.sync import OpenFgaClient, RestClient, RestClientResponse
 
 
 store_id = "01YCP46JKYM8FJCQ37NMBYHE5X"
 request_id = "x1y2z3"
 
 
-# Helper function to construct mock response
-def http_mock_response(body, status):
-    headers = urllib3.response.HTTPHeaderDict(
-        {"content-type": "application/json", "Fga-Request-Id": request_id}
-    )
-    return urllib3.HTTPResponse(
-        body.encode("utf-8"), headers, status, preload_content=False
-    )
-
-
-def mock_response(body, status):
-    obj = http_mock_response(body, status)
-    return rest.RESTResponse(obj, obj.data)
-
-
-class TestOpenFgaClient(IsolatedAsyncioTestCase):
-    """Test for OpenFGA Client"""
-
-    def setUp(self):
-        self.configuration = ClientConfiguration(
-            api_url="http://api.fga.example",
-        )
-
-    def tearDown(self):
-        pass
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_list_stores(self, mock_request):
-        """Test case for list_stores
-
-        Get all stores
-        """
-        response_body = """
-{
-  "stores": [
-    {
-      "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
-      "name": "store1",
-      "created_at": "2022-07-25T21:15:37.524Z",
-      "updated_at": "2022-07-25T21:15:37.524Z",
-      "deleted_at": "2022-07-25T21:15:37.524Z"
-    },
-    {
-      "id": "01YCP46JKYM8FJCQ37NMBYHE6X",
-      "name": "store2",
-      "created_at": "2022-07-25T21:15:37.524Z",
-      "updated_at": "2022-07-25T21:15:37.524Z",
-      "deleted_at": "2022-07-25T21:15:37.524Z"
-    }
-  ],
-  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-}
-            """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.list_stores(
-                options={
-                    "page_size": 1,
-                    "continuation_token": "continuation_token_example",
-                }
-            )
-            self.assertIsInstance(api_response, ListStoresResponse)
-            self.assertEqual(
-                api_response.continuation_token,
-                "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
-            )
-            store1 = Store(
-                id="01YCP46JKYM8FJCQ37NMBYHE5X",
-                name="store1",
-                created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
-                updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
-                deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
-            )
-            store2 = Store(
-                id="01YCP46JKYM8FJCQ37NMBYHE6X",
-                name="store2",
-                created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
-                updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
-                deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
-            )
-
-            stores = [store1, store2]
-            self.assertEqual(api_response.stores, stores)
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores",
-                headers=ANY,
-                body=None,
-                query_params=[
-                    ("page_size", 1),
-                    ("continuation_token", "continuation_token_example"),
-                ],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_create_store(self, mock_request):
-        """Test case for create_store
-
-        Create a store
-        """
-        response_body = """{
-            "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
-            "name": "test_store",
-            "created_at": "2022-07-25T17:41:26.607Z",
-            "updated_at": "2022-07-25T17:41:26.607Z"}
-            """
-        mock_request.return_value = mock_response(response_body, 201)
-        configuration = self.configuration
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.create_store(
-                CreateStoreRequest(name="test-store"), options={}
-            )
-            self.assertIsInstance(api_response, CreateStoreResponse)
-            self.assertEqual(api_response.id, "01YCP46JKYM8FJCQ37NMBYHE5X")
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={"name": "test-store"},
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_get_store(self, mock_request):
-        """Test case for get_store
-
-        Get all stores
-        """
-        response_body = """
-{
-    "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
-    "name": "store1",
-    "created_at": "2022-07-25T21:15:37.524Z",
-    "updated_at": "2022-07-25T21:15:37.524Z"
-}
-            """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.get_store(options={})
-            self.assertIsInstance(api_response, GetStoreResponse)
-            self.assertEqual(api_response.id, "01YCP46JKYM8FJCQ37NMBYHE5X")
-            self.assertEqual(api_response.name, "store1")
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
-                headers=ANY,
-                body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_delete_store(self, mock_request):
-        """Test case for delete_store
-
-        Get all stores
-        """
-        mock_request.return_value = mock_response("", 201)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_client.delete_store(options={})
-            mock_request.assert_called_once_with(
-                "DELETE",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
-                headers=ANY,
-                body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_authorization_models(self, mock_request):
-        """Test case for read_authorization_models
-
-        Return all authorization models configured for the store
-        """
-        response_body = """
-{
-  "authorization_models": [{
-    "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-    "schema_version":"1.1",
-    "type_definitions": [
-      {
-        "type": "document",
-        "relations": {
-          "reader": {
-            "union": {
-              "child": [
-                {
-                  "this": {}
-                },
-                {
-                  "computedUserset": {
-                    "object": "",
-                    "relation": "writer"
-                  }
-                }
-              ]
-            }
-          },
-          "writer": {
-            "this": {}
-          }
-        }
-      }
-    ]
-  }],
-  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            # Return a particular version of an authorization model
-            api_response = api_client.read_authorization_models(options={})
-            self.assertIsInstance(api_response, ReadAuthorizationModelsResponse)
-            type_definitions = [
-                TypeDefinition(
-                    type="document",
-                    relations=dict(
-                        reader=Userset(
-                            union=Usersets(
-                                child=[
-                                    Userset(this=dict()),
-                                    Userset(
-                                        computed_userset=ObjectRelation(
-                                            object="",
-                                            relation="writer",
-                                        )
-                                    ),
-                                ],
-                            ),
-                        ),
-                        writer=Userset(
-                            this=dict(),
-                        ),
-                    ),
-                )
-            ]
-            authorization_model = AuthorizationModel(
-                id="01G5JAVJ41T49E9TT3SKVS7X1J",
-                schema_version="1.1",
-                type_definitions=type_definitions,
-            )
-            self.assertEqual(api_response.authorization_models, [authorization_model])
-            self.assertEqual(
-                api_response.continuation_token,
-                "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
-            )
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
-                headers=ANY,
-                body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_authorization_model(self, mock_request):
-        """Test case for write_authorization_model
-
-        Create a new authorization model
-        """
-        response_body = '{"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}'
-        mock_request.return_value = mock_response(response_body, 201)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            # example passing only required values which don't have defaults set
-            body = WriteAuthorizationModelRequest(
-                schema_version="1.1",
-                type_definitions=[
-                    TypeDefinition(
-                        type="document",
-                        relations=dict(
-                            writer=Userset(
-                                this=dict(),
-                            ),
-                            reader=Userset(
-                                union=Usersets(
-                                    child=[
-                                        Userset(this=dict()),
-                                        Userset(
-                                            computed_userset=ObjectRelation(
-                                                object="",
-                                                relation="writer",
-                                            )
-                                        ),
-                                    ],
-                                ),
-                            ),
-                        ),
-                    ),
-                ],
-            )
-            # Create a new authorization model
-            api_response = api_client.write_authorization_model(body, options={})
-            self.assertIsInstance(api_response, WriteAuthorizationModelResponse)
-            expected_response = WriteAuthorizationModelResponse(
-                authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J"
-            )
-            self.assertEqual(api_response, expected_response)
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "schema_version": "1.1",
-                    "type_definitions": [
-                        {
-                            "type": "document",
-                            "relations": {
-                                "writer": {"this": {}},
-                                "reader": {
-                                    "union": {
-                                        "child": [
-                                            {"this": {}},
-                                            {
-                                                "computedUserset": {
-                                                    "object": "",
-                                                    "relation": "writer",
-                                                }
-                                            },
-                                        ]
-                                    }
-                                },
-                            },
-                        }
-                    ],
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_authorization_model(self, mock_request):
-        """Test case for read_authorization_model
-
-        Return a particular version of an authorization model
-        """
-        response_body = """
-{
-  "authorization_model": {
-    "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-    "schema_version":"1.1",
-    "type_definitions": [
-      {
-        "type": "document",
-        "relations": {
-          "reader": {
-            "union": {
-              "child": [
-                {
-                  "this": {}
-                },
-                {
-                  "computedUserset": {
-                    "object": "",
-                    "relation": "writer"
-                  }
-                }
-              ]
-            }
-          },
-          "writer": {
-            "this": {}
-          }
-        }
-      }
-    ]
-  }
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            # Return a particular version of an authorization model
-            api_response = api_client.read_authorization_model(
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
-            )
-            self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
-            type_definitions = [
-                TypeDefinition(
-                    type="document",
-                    relations=dict(
-                        reader=Userset(
-                            union=Usersets(
-                                child=[
-                                    Userset(this=dict()),
-                                    Userset(
-                                        computed_userset=ObjectRelation(
-                                            object="",
-                                            relation="writer",
-                                        )
-                                    ),
-                                ],
-                            ),
-                        ),
-                        writer=Userset(
-                            this=dict(),
-                        ),
-                    ),
-                )
-            ]
-            authorization_model = AuthorizationModel(
-                id="01G5JAVJ41T49E9TT3SKVS7X1J",
-                schema_version="1.1",
-                type_definitions=type_definitions,
-            )
-            self.assertEqual(api_response.authorization_model, authorization_model)
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_latest_authorization_model(self, mock_request):
-        """Test case for read_latest_authorization_model
-
-        Return the latest authorization models configured for the store
-        """
-        response_body = """
-{
-  "authorization_models": [{
-    "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-    "schema_version":"1.1",
-    "type_definitions": [
-      {
-        "type": "document",
-        "relations": {
-          "reader": {
-            "union": {
-              "child": [
-                {
-                  "this": {}
-                },
-                {
-                  "computedUserset": {
-                    "object": "",
-                    "relation": "writer"
-                  }
-                }
-              ]
-            }
-          },
-          "writer": {
-            "this": {}
-          }
-        }
-      }
-    ]
-  }],
-  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            # Return a particular version of an authorization model
-            api_response = api_client.read_latest_authorization_model(options={})
-            self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
-            type_definitions = [
-                TypeDefinition(
-                    type="document",
-                    relations=dict(
-                        reader=Userset(
-                            union=Usersets(
-                                child=[
-                                    Userset(this=dict()),
-                                    Userset(
-                                        computed_userset=ObjectRelation(
-                                            object="",
-                                            relation="writer",
-                                        )
-                                    ),
-                                ],
-                            ),
-                        ),
-                        writer=Userset(
-                            this=dict(),
-                        ),
-                    ),
-                )
-            ]
-            authorization_model = AuthorizationModel(
-                id="01G5JAVJ41T49E9TT3SKVS7X1J",
-                schema_version="1.1",
-                type_definitions=type_definitions,
-            )
-            self.assertEqual(api_response.authorization_model, authorization_model)
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
-                headers=ANY,
-                body=None,
-                query_params=[("page_size", 1)],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_latest_authorization_model_with_no_models(self, mock_request):
-        """Test case for read_latest_authorization_model when no models are in the store
-
-        Return the latest authorization models configured for the store
-        """
-        response_body = """
-{
-  "authorization_models": []
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            # Return a particular version of an authorization model
-            api_response = api_client.read_latest_authorization_model(options={})
-            self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
-            self.assertIsNone(api_response.authorization_model)
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
-                headers=ANY,
-                body=None,
-                query_params=[("page_size", 1)],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_changes(self, mock_request):
-        """Test case for read_changes
-
-        Return a list of all the tuple changes
-        """
-        response_body = """
-{
-  "changes": [
-    {
-      "tuple_key": {
-        "object": "document:2021-budget",
-        "relation": "reader",
-        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b"
-      },
-      "operation": "TUPLE_OPERATION_WRITE",
-      "timestamp": "2022-07-26T15:55:55.809Z"
-    }
-  ],
-  "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            # Return a particular version of an authorization model
-            api_response = api_client.read_changes(
-                ClientReadChangesRequest("document", "2022-01-01T00:00:00+00:00"),
-                options={"page_size": 1, "continuation_token": "abcdefg"},
-            )
-
-            self.assertIsInstance(api_response, ReadChangesResponse)
-            changes = TupleChange(
-                tuple_key=TupleKey(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                ),
-                operation=TupleOperation.WRITE,
-                timestamp=datetime.fromisoformat("2022-07-26T15:55:55.809+00:00"),
-            )
-            read_changes = ReadChangesResponse(
-                continuation_token="eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
-                changes=[changes],
-            )
-            self.assertEqual(api_response, read_changes)
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/changes",
-                headers=ANY,
-                body=None,
-                query_params=[
-                    ("type", "document"),
-                    ("page_size", 1),
-                    ("continuation_token", "abcdefg"),
-                    ("start_time", "2022-01-01T00:00:00+00:00"),
-                ],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read(self, mock_request):
-        """Test case for read
-
-        Get tuples from the store that matches a query, without following userset rewrite rules
-        """
-        response_body = """
-            {
-  "tuples": [
-    {
-      "key": {
-        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-06T15:32:11.128Z"
-    }
-  ],
-  "continuation_token": ""
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            body = ReadRequestTupleKey(
-                object="document:2021-budget",
-                relation="reader",
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            )
-            api_response = api_client.read(
-                body=body,
-                options={
-                    "page_size": 50,
-                    "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-            self.assertIsInstance(api_response, ReadResponse)
-            key = TupleKey(
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                relation="reader",
-                object="document:2021-budget",
-            )
-            timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(
-                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token=""
-            )
-            self.assertEqual(api_response, expected_data)
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "page_size": 50,
-                    "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_empty_options(self, mock_request):
-        """Test case for read with empty options
-
-        Get tuples from the store that matches a query, without following userset rewrite rules
-        """
-        response_body = """
-            {
-  "tuples": [
-    {
-      "key": {
-        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-06T15:32:11.128Z"
-    }
-  ],
-  "continuation_token": ""
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            body = ReadRequestTupleKey(
-                object="document:2021-budget",
-                relation="reader",
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            )
-            api_response = api_client.read(body=body, options={})
-            self.assertIsInstance(api_response, ReadResponse)
-            key = TupleKey(
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                relation="reader",
-                object="document:2021-budget",
-            )
-            timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(
-                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token=""
-            )
-            self.assertEqual(api_response, expected_data)
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    }
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_empty_body(self, mock_request):
-        """Test case for read with empty body
-
-        Get tuples from the store that matches a query, without following userset rewrite rules
-        """
-        response_body = """
-            {
-  "tuples": [
-    {
-      "key": {
-        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        "relation": "reader",
-        "object": "document:2021-budget"
-      },
-      "timestamp": "2021-10-06T15:32:11.128Z"
-    }
-  ],
-  "continuation_token": ""
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            body = ReadRequestTupleKey()
-            api_response = api_client.read(body=body, options={})
-            self.assertIsInstance(api_response, ReadResponse)
-            key = TupleKey(
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                relation="reader",
-                object="document:2021-budget",
-            )
-            timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
-            expected_data = ReadResponse(
-                tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token=""
-            )
-            self.assertEqual(api_response, expected_data)
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={},
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write(self, mock_request):
-        """Test case for write
-
-        Add tuples from the store with transaction enabled
-        """
-        response_body = "{}"
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                writes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-            )
-            api_client.write(
-                body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
-            )
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            },
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_delete(self, mock_request):
-        """Test case for delete
-
-        Delete tuples from the store with transaction enabled
-        """
-        response_body = "{}"
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                deletes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    )
-                ],
-            )
-            api_client.write(
-                body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
-            )
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "deletes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_batch(self, mock_request):
-        """Test case for write
-
-        Add tuples from the store with transaction disabled
-        """
-        mock_request.side_effect = [
-            mock_response("{}", 200),
-            mock_response("{}", 200),
-            mock_response("{}", 200),
-        ]
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                writes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-            )
-            transaction = WriteTransactionOpts(
-                disabled=True, max_per_chunk=1, max_parallel_requests=10
-            )
-            response = api_client.write(
-                body,
-                options={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "transaction": transaction,
-                },
-            )
-
-            self.assertEqual(response.deletes, None)
-            self.assertEqual(
-                response.writes,
-                [
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                ],
-            )
-            self.assertEqual(mock_request.call_count, 3)
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_batch_min_parallel(self, mock_request):
-        """Test case for write
-
-        Add tuples from the store with transaction disabled and minimum parallel request
-        """
-        mock_request.side_effect = [
-            mock_response("{}", 200),
-            mock_response("{}", 200),
-            mock_response("{}", 200),
-        ]
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                writes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-            )
-            transaction = WriteTransactionOpts(
-                disabled=True, max_per_chunk=1, max_parallel_requests=1
-            )
-            response = api_client.write(
-                body,
-                options={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "transaction": transaction,
-                },
-            )
-
-            self.assertEqual(response.deletes, None)
-            self.assertEqual(
-                response.writes,
-                [
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                ],
-            )
-            self.assertEqual(mock_request.call_count, 3)
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_batch_larger_chunk(self, mock_request):
-        """Test case for write
-
-        Add tuples from the store with transaction disabled and minimum parallel request
-        """
-        mock_request.side_effect = [
-            mock_response("{}", 200),
-            mock_response("{}", 200),
-            mock_response("{}", 200),
-        ]
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                writes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-            )
-            transaction = WriteTransactionOpts(
-                disabled=True, max_per_chunk=2, max_parallel_requests=2
-            )
-            response = api_client.write(
-                body,
-                options={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "transaction": transaction,
-                },
-            )
-
-            self.assertEqual(response.deletes, None)
-            self.assertEqual(
-                response.writes,
-                [
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                    ClientWriteSingleResponse(
-                        tuple_key=ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                        ),
-                        success=True,
-                        error=None,
-                    ),
-                ],
-            )
-            self.assertEqual(mock_request.call_count, 2)
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_batch_failed(self, mock_request):
-        """Test case for write
-
-        Add tuples from the store with transaction disabled where one of the request failed
-        """
-        response_body = """
-{
-  "code": "validation_error",
-  "message": "Generic validation error"
-}
-        """
-
-        mock_request.side_effect = [
-            mock_response("{}", 200),
-            ValidationException(http_resp=http_mock_response(response_body, 400)),
-            mock_response("{}", 200),
-        ]
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                writes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-            )
-            transaction = WriteTransactionOpts(
-                disabled=True, max_per_chunk=1, max_parallel_requests=10
-            )
-            response = api_client.write(
-                body,
-                options={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "transaction": transaction,
-                },
-            )
-
-            self.assertEqual(response.deletes, None)
-            self.assertEqual(len(response.writes), 3)
-            self.assertEqual(
-                response.writes[0],
-                ClientWriteSingleResponse(
-                    tuple_key=ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    success=True,
-                    error=None,
-                ),
-            )
-            self.assertEqual(
-                response.writes[1].tuple_key,
-                ClientTuple(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                ),
-            )
-            self.assertFalse(response.writes[1].success)
-            self.assertIsInstance(response.writes[1].error, ValidationException)
-            self.assertIsInstance(
-                response.writes[1].error.parsed_exception,
-                ValidationErrorMessageResponse,
-            )
-            self.assertEqual(
-                response.writes[2],
-                ClientWriteSingleResponse(
-                    tuple_key=ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                    success=True,
-                    error=None,
-                ),
-            )
-            self.assertEqual(mock_request.call_count, 3)
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_delete_batch(self, mock_request):
-        """Test case for delete
-
-        Delete tuples from the store with transaction disabled but there is only 1 relationship tuple
-        """
-        mock_request.side_effect = [
-            mock_response("{}", 200),
-        ]
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientWriteRequest(
-                deletes=[
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    )
-                ],
-                writes=[],
-            )
-            transaction = WriteTransactionOpts(
-                disabled=True, max_per_chunk=1, max_parallel_requests=10
-            )
-            api_client.write(
-                body,
-                options={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "transaction": transaction,
-                },
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "deletes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_tuples(self, mock_request):
-        """Test case for write tuples
-
-        Add tuples from the store with transaction enabled
-        """
-        response_body = "{}"
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_client.write_tuples(
-                [
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
-            )
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "writes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            },
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_delete_tuples(self, mock_request):
-        """Test case for delete tuples
-
-        Add tuples from the store with transaction enabled
-        """
-        response_body = "{}"
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_client.delete_tuples(
-                [
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    ),
-                    ClientTuple(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    ),
-                ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
-            )
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "deletes": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                            {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            },
-                        ]
-                    },
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_batch_unauthorized(self, mock_request):
-        """Test case for write with 401 response"""
-
-        mock_request.side_effect = UnauthorizedException(
-            http_resp=http_mock_response("{}", 401)
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(UnauthorizedException):
-                body = ClientWriteRequest(
-                    writes=[
-                        ClientTuple(
-                            object="document:2021-budget",
-                            relation="reader",
-                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        )
-                    ],
-                )
-                transaction = WriteTransactionOpts(
-                    disabled=True, max_per_chunk=1, max_parallel_requests=10
-                )
-                api_client.write(
-                    body,
-                    options={
-                        "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                        "transaction": transaction,
-                    },
-                )
-
-                mock_request.assert_called()
-                self.assertEqual(mock_request.call_count, 1)
-
-                mock_request.assert_called_once_with(
-                    "POST",
-                    "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
-                    headers=ANY,
-                    query_params=[],
-                    post_params=[],
-                    body={
-                        "writes": {
-                            "tuple_keys": [
-                                {
-                                    "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                                    "relation": "reader",
-                                    "object": "document:2021-budget",
-                                }
-                            ]
-                        },
-                        "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    },
-                    _preload_content=ANY,
-                    _request_timeout=ANY,
-                )
-                api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_check(self, mock_request):
-        """Test case for check
-
-        Check whether a user is authorized to access an object
-        """
-
-        # First, mock the response
-        response_body = '{"allowed": true, "resolution": "1234"}'
-        mock_request.return_value = mock_response(response_body, 200)
-        body = ClientCheckRequest(
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="reader",
-            object="document:budget",
-            contextual_tuples=[
-                ClientTuple(
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    relation="writer",
-                    object="document:budget",
-                ),
-            ],
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.check(
-                body=body,
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-            self.assertIsInstance(api_response, CheckResponse)
-            self.assertTrue(api_response.allowed)
-            # Make sure the API was called with the right data
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        "relation": "reader",
-                        "object": "document:budget",
-                    },
-                    "contextual_tuples": {
-                        "tuple_keys": [
-                            {
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                                "relation": "writer",
-                                "object": "document:budget",
-                            }
-                        ]
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_check_config_auth_model(self, mock_request):
-        """Test case for check
-
-        Check whether a user is authorized to access an object and the auth model is already encoded in store
-        """
-
-        # First, mock the response
-        response_body = '{"allowed": true, "resolution": "1234"}'
-        mock_request.return_value = mock_response(response_body, 200)
-        body = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.check(body=body, options={})
-            self.assertIsInstance(api_response, CheckResponse)
-            self.assertTrue(api_response.allowed)
-            # Make sure the API was called with the right data
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_client_batch_check_single_request(self, mock_request):
-        """Test case for check with single request
-
-        Check whether a user is authorized to access an object
-        """
-
-        # First, mock the response
-        response_body = '{"allowed": true, "resolution": "1234"}'
-        mock_request.side_effect = [
-            mock_response(response_body, 200),
-        ]
-        body = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.client_batch_check(
-                body=[body],
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-            self.assertIsInstance(api_response, list)
-            self.assertEqual(len(api_response), 1)
-            self.assertEqual(api_response[0].error, None)
-            self.assertTrue(api_response[0].allowed)
-            self.assertEqual(api_response[0].request, body)
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_client_batch_check_multiple_request(self, mock_request):
-        """Test case for check with multiple request
-
-        Check whether a user is authorized to access an object
-        """
-
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-            mock_response('{"allowed": false, "resolution": "1234"}', 200),
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-        ]
-        body1 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        )
-        body2 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-        )
-        body3 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.client_batch_check(
-                body=[body1, body2, body3],
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "max_parallel_requests": 2,
-                },
-            )
-            self.assertIsInstance(api_response, list)
-            self.assertEqual(len(api_response), 3)
-            self.assertEqual(api_response[0].error, None)
-            self.assertTrue(api_response[0].allowed)
-            self.assertEqual(api_response[0].request, body1)
-            self.assertEqual(api_response[1].error, None)
-            self.assertFalse(api_response[1].allowed)
-            self.assertEqual(api_response[1].request, body2)
-            self.assertEqual(api_response[2].error, None)
-            self.assertTrue(api_response[2].allowed)
-            self.assertEqual(api_response[2].request, body3)
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_client_batch_check_multiple_request_fail(self, mock_request):
-        """Test case for check with multiple request with one request failed
-
-        Check whether a user is authorized to access an object
-        """
-        response_body = """
-{
-  "code": "validation_error",
-  "message": "Generic validation error"
-}
-        """
-
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-            ValidationException(http_resp=http_mock_response(response_body, 400)),
-            mock_response('{"allowed": false, "resolution": "1234"}', 200),
-        ]
-        body1 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-        )
-        body2 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-        )
-        body3 = ClientCheckRequest(
-            object="document:2021-budget",
-            relation="reader",
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.client_batch_check(
-                body=[body1, body2, body3],
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "max_parallel_requests": 2,
-                },
-            )
-            self.assertIsInstance(api_response, list)
-            self.assertEqual(len(api_response), 3)
-            self.assertEqual(api_response[0].error, None)
-            self.assertTrue(api_response[0].allowed)
-            self.assertEqual(api_response[0].request, body1)
-            self.assertFalse(api_response[1].allowed)
-            self.assertEqual(api_response[1].request, body2)
-            self.assertIsInstance(api_response[1].error, ValidationException)
-            self.assertIsInstance(
-                api_response[1].error.parsed_exception, ValidationErrorMessageResponse
-            )
-            self.assertEqual(api_response[2].error, None)
-            self.assertFalse(api_response[2].allowed)
-            self.assertEqual(api_response[2].request, body3)
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_batch_check_single_request(self, mock_request):
-        """Test case for check with single request
-
-        Check whether a user is authorized to access an object
-        """
-
-        # First, mock the response
-        response_body = """
-        {
-            "result": {
-                "1": {
-                    "allowed": true
-                }
-            }
-        }
-        """
-        mock_request.side_effect = [
-            mock_response(response_body, 200),
-        ]
-
-        body = ClientBatchCheckRequest(
-            checks=[
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    correlation_id="1",
-                ),
-            ]
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.batch_check(
-                body=body,
-                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
-            )
-            self.assertEqual(len(api_response.result), 1)
-            self.assertEqual(api_response.result[0].error, None)
-            self.assertTrue(api_response.result[0].allowed)
-            self.assertEqual(api_response.result[0].correlation_id, "1")
-            self.assertEqual(api_response.result[0].request, body.checks[0])
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            "correlation_id": "1",
-                        }
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(uuid, "uuid4")
-    @patch.object(rest.RESTClientObject, "request")
-    def test_batch_check_multiple_request(self, mock_request, mock_uuid):
-        """Test case for check with multiple request
-
-        Check whether a user is authorized to access an object
-        """
-        first_response_body = """
-        {
-            "result": {
-                "1": {
-                    "allowed": true
-                },
-                "2": {
-                    "allowed": false
-                }
-            }
-        }
-"""
-
-        second_response_body = """
-{
-    "result": {
-        "fake-uuid": {
-            "error": {
-                "input_error": "validation_error",
-                "message": "type 'doc' not found"
-            }
-        }
-    }
-}"""
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response(first_response_body, 200),
-            mock_response(second_response_body, 200),
-        ]
-
-        def mock_v4(val: str):
-            return val
-
-        mock_uuid.side_effect = [mock_v4("batch-id-header"), mock_v4("fake-uuid")]
-
-        body = ClientBatchCheckRequest(
-            checks=[
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    correlation_id="1",
-                ),
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    correlation_id="2",
-                ),
-                ClientBatchCheckItem(
-                    object="doc:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                ),
-            ]
-        )
-
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.batch_check(
-                body=body,
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "max_parallel_requests": 1,
-                    "max_batch_size": 2,
-                },
-            )
-            self.assertEqual(len(api_response.result), 3)
-            self.assertEqual(api_response.result[0].error, None)
-            self.assertTrue(api_response.result[0].allowed)
-            self.assertEqual(api_response.result[1].error, None)
-            self.assertFalse(api_response.result[1].allowed)
-            self.assertEqual(
-                api_response.result[2].error.message, "type 'doc' not found"
-            )
-            self.assertFalse(api_response.result[2].allowed)
-            # value generated from the uuid mock
-            self.assertEqual(api_response.result[2].correlation_id, "fake-uuid")
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            "correlation_id": "1",
-                        },
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                            "correlation_id": "2",
-                        },
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "doc:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            },
-                            "correlation_id": "fake-uuid",
-                        }
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    def test_batch_check_errors_dupe_cor_id(self):
-        """Test case for duplicate correlation_id being provided to batch_check"""
-
-        body = ClientBatchCheckRequest(
-            checks=[
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    correlation_id="1",
-                ),
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    correlation_id="1",
-                ),
-            ]
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(FgaValidationException) as error:
-                api_client.batch_check(
-                    body=body,
-                    options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
-                )
-            self.assertEqual(
-                "Duplicate correlation_id (1) provided", str(error.exception)
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_batch_check_errors_unauthorized(self, mock_request):
-        """Test case for BatchCheck with a 401"""
-        first_response_body = """
-        {
-            "result": {
-                "1": {
-                    "allowed": true
-                },
-                "2": {
-                    "allowed": false
-                }
-            }
-        }
-"""
-
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response(first_response_body, 200),
-            UnauthorizedException(http_resp=http_mock_response("{}", 401)),
-        ]
-
-        body = ClientBatchCheckRequest(
-            checks=[
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    correlation_id="1",
-                ),
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                    correlation_id="2",
-                ),
-                ClientBatchCheckItem(
-                    object="document:2021-budget",
-                    relation="reader",
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                    correlation_id="3",
-                ),
-            ]
-        )
-
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(UnauthorizedException):
-                api_client.batch_check(
-                    body=body,
-                    options={
-                        "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                        "max_parallel_requests": 1,
-                        "max_batch_size": 2,
-                    },
-                )
-
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            },
-                            "correlation_id": "1",
-                        },
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
-                            },
-                            "correlation_id": "2",
-                        },
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "checks": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
-                            },
-                            "correlation_id": "3",
-                        }
-                    ],
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_expand(self, mock_request):
-        """Test case for expand
-
-        Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
-        """
-        response_body = """{
-            "tree": {"root": {"name": "document:budget#reader", "leaf": {"users": {"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}}}
-            """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientExpandRequest(
-                object="document:budget",
-                relation="reader",
-            )
-            api_response = api_client.expand(
-                body=body,
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-            self.assertIsInstance(api_response, ExpandResponse)
-            cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
-            leaf = Leaf(users=cur_users)
-            node = Node(name="document:budget#reader", leaf=leaf)
-            userTree = UsersetTree(node)
-            expected_response = ExpandResponse(userTree)
-            self.assertEqual(api_response, expected_response)
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/expand",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {"object": "document:budget", "relation": "reader"},
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_list_objects(self, mock_request):
-        """Test case for list_objects
-
-        List objects
-        """
-        response_body = """
-{
-  "objects": [
-    "document:abcd1234"
-  ]
-}
-            """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientListObjectsRequest(
-                type="document",
-                relation="reader",
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            )
-            # Get all stores
-            api_response = api_client.list_objects(
-                body,
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-            self.assertIsInstance(api_response, ListObjectsResponse)
-            self.assertEqual(api_response.objects, ["document:abcd1234"])
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-objects",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "type": "document",
-                    "relation": "reader",
-                    "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_list_objects_contextual_tuples(self, mock_request):
-        """Test case for list_objects
-
-        List objects
-        """
-        response_body = """
-{
-  "objects": [
-    "document:abcd1234"
-  ]
-}
-            """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientListObjectsRequest(
-                type="document",
-                relation="reader",
-                user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                contextual_tuples=[
-                    ClientTuple(
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        relation="writer",
-                        object="document:budget",
-                    ),
-                ],
-            )
-            # Get all stores
-            api_response = api_client.list_objects(
-                body, options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
-            )
-            self.assertIsInstance(api_response, ListObjectsResponse)
-            self.assertEqual(api_response.objects, ["document:abcd1234"])
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-objects",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "type": "document",
-                    "relation": "reader",
-                    "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    "contextual_tuples": {
-                        "tuple_keys": [
-                            {
-                                "object": "document:budget",
-                                "relation": "writer",
-                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            }
-                        ]
-                    },
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_list_relations(self, mock_request):
-        """Test case for list relations
-
-        Check whether a user is authorized to access an object
-        """
-
-        def mock_check_requests(*args, **kwargs):
-            body = kwargs.get("body")
-            tuple_key = body.get("tuple_key")
-            if tuple_key["relation"] == "owner":
-                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
-            return mock_response('{"allowed": true, "resolution": "1234"}', 200)
-
-        # First, mock the response
-        mock_request.side_effect = mock_check_requests
-
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.list_relations(
-                body=ClientListRelationsRequest(
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    relations=["reader", "owner", "viewer"],
-                    object="document:2021-budget",
-                ),
-                options={
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-            self.assertEqual(api_response, ["reader", "viewer"])
-
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "owner",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "viewer",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_list_relations_unauthorized(self, mock_request):
-        """Test case for list relations with 401 response"""
-
-        mock_request.side_effect = UnauthorizedException(
-            http_resp=http_mock_response("{}", 401)
-        )
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            with self.assertRaises(UnauthorizedException) as api_exception:
-                api_client.list_relations(
-                    body=ClientListRelationsRequest(
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                        relations=["reader", "owner", "viewer"],
-                        object="document:2021-budget",
-                    ),
-                    options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
-                )
-
-            self.assertIsInstance(api_exception.exception, UnauthorizedException)
-            mock_request.assert_called()
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_list_users(self, mock_request):
-        """
-        Test case for list_users
-        """
-
-        response_body = """{
-  "users": [
-    {
-      "object": {
-        "id": "81684243-9356-4421-8fbf-a4f8d36aa31b",
-        "type": "user"
-      }
-    },
-    {
-      "userset": {
-        "id": "fga",
-        "relation": "member",
-        "type": "team"
-      }
-    },
-    {
-      "wildcard": {
-        "type": "user"
-      }
-    }
-  ]
-}"""
-
-        mock_request.return_value = mock_response(response_body, 200)
-
-        configuration = self.configuration
-        configuration.store_id = store_id
-
-        with OpenFgaClient(configuration) as api_client:
-            body = ClientListUsersRequest()
-            body.object = FgaObject(type="document", id="2021-budget")
-            body.relation = "can_read"
-            body.user_filters = [
-                UserTypeFilter(type="user"),
-            ]
-            body.context = {}
-            body.contextual_tuples = [
-                ClientTuple(
-                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    relation="editor",
-                    object="folder:product",
-                ),
-                ClientTuple(
-                    user="folder:product",
-                    relation="parent",
-                    object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-                ),
-            ]
-
-            response = api_client.list_users(
-                body,
-                options={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
-                },
-            )
-
-            self.assertIsInstance(response, ListUsersResponse)
-
-            self.assertEqual(response.users.__len__(), 3)
-
-            self.assertIsNotNone(response.users[0].object)
-            self.assertEqual(
-                response.users[0].object.id, "81684243-9356-4421-8fbf-a4f8d36aa31b"
-            )
-            self.assertEqual(response.users[0].object.type, "user")
-            self.assertIsNone(response.users[0].userset)
-            self.assertIsNone(response.users[0].wildcard)
-
-            self.assertIsNone(response.users[1].object)
-            self.assertIsNotNone(response.users[1].userset)
-            self.assertEqual(response.users[1].userset.id, "fga")
-            self.assertEqual(response.users[1].userset.relation, "member")
-            self.assertEqual(response.users[1].userset.type, "team")
-            self.assertIsNone(response.users[1].wildcard)
-
-            self.assertIsNone(response.users[2].object)
-            self.assertIsNone(response.users[2].userset)
-            self.assertIsNotNone(response.users[2].wildcard)
-            self.assertEqual(response.users[2].wildcard.type, "user")
-
-            mock_request.assert_called_once_with(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-users",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-                    "object": {"id": "2021-budget", "type": "document"},
-                    "relation": "can_read",
-                    "user_filters": [
-                        {"type": "user"},
-                    ],
-                    "contextual_tuples": [
-                        {
-                            "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                            "relation": "editor",
-                            "object": "folder:product",
-                        },
-                        {
-                            "user": "folder:product",
-                            "relation": "parent",
-                            "object": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-                        },
-                    ],
-                    "context": {},
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-            api_client.close()
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_read_assertions(self, mock_request):
-        """Test case for read assertions"""
-        response_body = """
-{
-  "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
-  "assertions": [
-    {
-      "tuple_key": {
-        "object": "document:2021-budget",
-        "relation": "reader",
-        "user": "user:anne"
-      },
-      "expectation": true
-    }
-  ]
-}
-        """
-        mock_request.return_value = mock_response(response_body, 200)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        # Enter a context with an instance of the API client
-        with OpenFgaClient(configuration) as api_client:
-            api_response = api_client.read_assertions(
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
-            )
-            self.assertEqual(
-                api_response,
-                ReadAssertionsResponse(
-                    authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
-                    assertions=[
-                        Assertion(
-                            tuple_key=TupleKeyWithoutCondition(
-                                object="document:2021-budget",
-                                relation="reader",
-                                user="user:anne",
-                            ),
-                            expectation=True,
-                        )
-                    ],
-                ),
-            )
-            mock_request.assert_called_once_with(
-                "GET",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_write_assertions(self, mock_request):
-        """Test case for write assertions
-
-        Get all stores
-        """
-        mock_request.return_value = mock_response("", 204)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_client.write_assertions(
-                [
-                    ClientAssertion(
-                        user="user:anne",
-                        relation="reader",
-                        object="document:2021-budget",
-                        expectation=True,
-                    )
-                ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
-            )
-            mock_request.assert_called_once_with(
-                "PUT",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                body={
-                    "assertions": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:anne",
-                            },
-                            "expectation": True,
-                        }
-                    ]
-                },
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_set_store_id(self, mock_request):
-        """Test case for write assertions
-
-        Get all stores
-        """
-        mock_request.return_value = mock_response("", 204)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        with OpenFgaClient(configuration) as api_client:
-            api_client.set_store_id("01YCP46JKYM8FJCQ37NMBYHE5Y")
-
-            api_client.write_assertions(
-                [
-                    ClientAssertion(
-                        user="user:anne",
-                        relation="reader",
-                        object="document:2021-budget",
-                        expectation=True,
-                    )
-                ],
-                options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
-            )
-            self.assertEqual(api_client.get_store_id(), "01YCP46JKYM8FJCQ37NMBYHE5Y")
-            mock_request.assert_called_once_with(
-                "PUT",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5Y/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                body={
-                    "assertions": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:anne",
-                            },
-                            "expectation": True,
-                        }
-                    ]
-                },
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_config_auth_model(self, mock_request):
-        """Test case for write assertions
-
-        Get all stores
-        """
-        mock_request.return_value = mock_response("", 204)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
-        with OpenFgaClient(configuration) as api_client:
-            api_client.write_assertions(
-                [
-                    ClientAssertion(
-                        user="user:anne",
-                        relation="reader",
-                        object="document:2021-budget",
-                        expectation=True,
-                    )
-                ],
-                options={},
-            )
-            self.assertEqual(
-                api_client.get_authorization_model_id(), "01G5JAVJ41T49E9TT3SKVS7X1J"
-            )
-            mock_request.assert_called_once_with(
-                "PUT",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
-                headers=ANY,
-                body={
-                    "assertions": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:anne",
-                            },
-                            "expectation": True,
-                        }
-                    ]
-                },
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    @patch.object(rest.RESTClientObject, "request")
-    def test_update_auth_model(self, mock_request):
-        """Test case for write assertions
-
-        Get all stores
-        """
-        mock_request.return_value = mock_response("", 204)
-        configuration = self.configuration
-        configuration.store_id = store_id
-        configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
-        with OpenFgaClient(configuration) as api_client:
-            api_client.set_authorization_model_id("01G5JAVJ41T49E9TT3SKVS7X2J")
-
-            api_client.write_assertions(
-                [
-                    ClientAssertion(
-                        user="user:anne",
-                        relation="reader",
-                        object="document:2021-budget",
-                        expectation=True,
-                    )
-                ],
-                options={},
-            )
-            mock_request.assert_called_once_with(
-                "PUT",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X2J",
-                headers=ANY,
-                body={
-                    "assertions": [
-                        {
-                            "tuple_key": {
-                                "object": "document:2021-budget",
-                                "relation": "reader",
-                                "user": "user:anne",
-                            },
-                            "expectation": True,
-                        }
-                    ]
-                },
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
-            )
-
-    def test_configuration_store_id_invalid(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = ClientConfiguration(
-            api_host="localhost", api_scheme="http", store_id="abcd"
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
-    def test_configuration_authorization_model_id_invalid(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = ClientConfiguration(
-            api_host="localhost",
-            api_scheme="http",
-            store_id="01H15K9J85050XTEDPVM8DJM78",
-            authorization_model_id="abcd",
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
+# # Helper function to construct mock response
+# def http_mock_response(body, status):
+#     headers = urllib3.response.HTTPHeaderDict(
+#         {"content-type": "application/json", "Fga-Request-Id": request_id}
+#     )
+#     return urllib3.HTTPResponse(
+#         body.encode("utf-8"), headers, status, preload_content=False
+#     )
+
+
+# def mock_response(body, status):
+#     obj = http_mock_response(body, status)
+#     return RestClientResponse(
+#         response=obj, data=obj.data, status=obj.status, reason=obj.reason
+#     )
+
+
+# class TestOpenFgaClient(IsolatedAsyncioTestCase):
+#     """Test for OpenFGA Client"""
+
+#     def setUp(self):
+#         self.configuration: ConfigurationProtocol = Configuration(
+#             api_url="http://api.fga.example",
+#         )
+
+#     def tearDown(self):
+#         pass
+
+#     @patch.object(RestClient, "request")
+#     def test_list_stores(self, mock_request):
+#         """Test case for list_stores
+
+#         Get all stores
+#         """
+#         response_body = """
+# {
+#   "stores": [
+#     {
+#       "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
+#       "name": "store1",
+#       "created_at": "2022-07-25T21:15:37.524Z",
+#       "updated_at": "2022-07-25T21:15:37.524Z",
+#       "deleted_at": "2022-07-25T21:15:37.524Z"
+#     },
+#     {
+#       "id": "01YCP46JKYM8FJCQ37NMBYHE6X",
+#       "name": "store2",
+#       "created_at": "2022-07-25T21:15:37.524Z",
+#       "updated_at": "2022-07-25T21:15:37.524Z",
+#       "deleted_at": "2022-07-25T21:15:37.524Z"
+#     }
+#   ],
+#   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+# }
+#             """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.list_stores(
+#                 options={
+#                     "page_size": 1,
+#                     "continuation_token": "continuation_token_example",
+#                 }
+#             )
+#             self.assertIsInstance(api_response, ListStoresResponse)
+#             self.assertEqual(
+#                 api_response.continuation_token,
+#                 "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+#             )
+#             store1 = Store(
+#                 id="01YCP46JKYM8FJCQ37NMBYHE5X",
+#                 name="store1",
+#                 created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+#                 updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+#                 deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+#             )
+#             store2 = Store(
+#                 id="01YCP46JKYM8FJCQ37NMBYHE6X",
+#                 name="store2",
+#                 created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+#                 updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+#                 deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+#             )
+
+#             stores = [store1, store2]
+#             self.assertEqual(api_response.stores, stores)
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[
+#                     ("page_size", 1),
+#                     ("continuation_token", "continuation_token_example"),
+#                 ],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_create_store(self, mock_request):
+#         """Test case for create_store
+
+#         Create a store
+#         """
+#         response_body = """{
+#             "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
+#             "name": "test_store",
+#             "created_at": "2022-07-25T17:41:26.607Z",
+#             "updated_at": "2022-07-25T17:41:26.607Z"}
+#             """
+#         mock_request.return_value = mock_response(response_body, 201)
+#         configuration = self.configuration
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.create_store(
+#                 CreateStoreRequest(name="test-store"), options={}
+#             )
+#             self.assertIsInstance(api_response, CreateStoreResponse)
+#             self.assertEqual(api_response.id, "01YCP46JKYM8FJCQ37NMBYHE5X")
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={"name": "test-store"},
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_get_store(self, mock_request):
+#         """Test case for get_store
+
+#         Get all stores
+#         """
+#         response_body = """
+# {
+#     "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
+#     "name": "store1",
+#     "created_at": "2022-07-25T21:15:37.524Z",
+#     "updated_at": "2022-07-25T21:15:37.524Z"
+# }
+#             """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.get_store(options={})
+#             self.assertIsInstance(api_response, GetStoreResponse)
+#             self.assertEqual(api_response.id, "01YCP46JKYM8FJCQ37NMBYHE5X")
+#             self.assertEqual(api_response.name, "store1")
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_delete_store(self, mock_request):
+#         """Test case for delete_store
+
+#         Get all stores
+#         """
+#         mock_request.return_value = mock_response("", 201)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.delete_store(options={})
+#             mock_request.assert_called_once_with(
+#                 "DELETE",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_read_authorization_models(self, mock_request):
+#         """Test case for read_authorization_models
+
+#         Return all authorization models configured for the store
+#         """
+#         response_body = """
+# {
+#   "authorization_models": [{
+#     "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#     "schema_version":"1.1",
+#     "type_definitions": [
+#       {
+#         "type": "document",
+#         "relations": {
+#           "reader": {
+#             "union": {
+#               "child": [
+#                 {
+#                   "this": {}
+#                 },
+#                 {
+#                   "computedUserset": {
+#                     "object": "",
+#                     "relation": "writer"
+#                   }
+#                 }
+#               ]
+#             }
+#           },
+#           "writer": {
+#             "this": {}
+#           }
+#         }
+#       }
+#     ]
+#   }],
+#   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             # Return a particular version of an authorization model
+#             api_response = api_client.read_authorization_models(options={})
+#             self.assertIsInstance(api_response, ReadAuthorizationModelsResponse)
+#             type_definitions = [
+#                 TypeDefinition(
+#                     type="document",
+#                     relations=dict(
+#                         reader=Userset(
+#                             union=Usersets(
+#                                 child=[
+#                                     Userset(this=dict()),
+#                                     Userset(
+#                                         computed_userset=ObjectRelation(
+#                                             object="",
+#                                             relation="writer",
+#                                         )
+#                                     ),
+#                                 ],
+#                             ),
+#                         ),
+#                         writer=Userset(
+#                             this=dict(),
+#                         ),
+#                     ),
+#                 )
+#             ]
+#             authorization_model = AuthorizationModel(
+#                 id="01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 schema_version="1.1",
+#                 type_definitions=type_definitions,
+#             )
+#             self.assertEqual(api_response.authorization_models, [authorization_model])
+#             self.assertEqual(
+#                 api_response.continuation_token,
+#                 "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+#             )
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_authorization_model(self, mock_request):
+#         """Test case for write_authorization_model
+
+#         Create a new authorization model
+#         """
+#         response_body = '{"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}'
+#         mock_request.return_value = mock_response(response_body, 201)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             # example passing only required values which don't have defaults set
+#             body = WriteAuthorizationModelRequest(
+#                 schema_version="1.1",
+#                 type_definitions=[
+#                     TypeDefinition(
+#                         type="document",
+#                         relations=dict(
+#                             writer=Userset(
+#                                 this=dict(),
+#                             ),
+#                             reader=Userset(
+#                                 union=Usersets(
+#                                     child=[
+#                                         Userset(this=dict()),
+#                                         Userset(
+#                                             computed_userset=ObjectRelation(
+#                                                 object="",
+#                                                 relation="writer",
+#                                             )
+#                                         ),
+#                                     ],
+#                                 ),
+#                             ),
+#                         ),
+#                     ),
+#                 ],
+#             )
+#             # Create a new authorization model
+#             api_response = api_client.write_authorization_model(body, options={})
+#             self.assertIsInstance(api_response, WriteAuthorizationModelResponse)
+#             expected_response = WriteAuthorizationModelResponse(
+#                 authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J"
+#             )
+#             self.assertEqual(api_response, expected_response)
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "schema_version": "1.1",
+#                     "type_definitions": [
+#                         {
+#                             "type": "document",
+#                             "relations": {
+#                                 "writer": {"this": {}},
+#                                 "reader": {
+#                                     "union": {
+#                                         "child": [
+#                                             {"this": {}},
+#                                             {
+#                                                 "computedUserset": {
+#                                                     "object": "",
+#                                                     "relation": "writer",
+#                                                 }
+#                                             },
+#                                         ]
+#                                     }
+#                                 },
+#                             },
+#                         }
+#                     ],
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read_authorization_model(self, mock_request):
+#         """Test case for read_authorization_model
+
+#         Return a particular version of an authorization model
+#         """
+#         response_body = """
+# {
+#   "authorization_model": {
+#     "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#     "schema_version":"1.1",
+#     "type_definitions": [
+#       {
+#         "type": "document",
+#         "relations": {
+#           "reader": {
+#             "union": {
+#               "child": [
+#                 {
+#                   "this": {}
+#                 },
+#                 {
+#                   "computedUserset": {
+#                     "object": "",
+#                     "relation": "writer"
+#                   }
+#                 }
+#               ]
+#             }
+#           },
+#           "writer": {
+#             "this": {}
+#           }
+#         }
+#       }
+#     ]
+#   }
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             # Return a particular version of an authorization model
+#             api_response = api_client.read_authorization_model(
+#                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+#             )
+#             self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
+#             type_definitions = [
+#                 TypeDefinition(
+#                     type="document",
+#                     relations=dict(
+#                         reader=Userset(
+#                             union=Usersets(
+#                                 child=[
+#                                     Userset(this=dict()),
+#                                     Userset(
+#                                         computed_userset=ObjectRelation(
+#                                             object="",
+#                                             relation="writer",
+#                                         )
+#                                     ),
+#                                 ],
+#                             ),
+#                         ),
+#                         writer=Userset(
+#                             this=dict(),
+#                         ),
+#                     ),
+#                 )
+#             ]
+#             authorization_model = AuthorizationModel(
+#                 id="01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 schema_version="1.1",
+#                 type_definitions=type_definitions,
+#             )
+#             self.assertEqual(api_response.authorization_model, authorization_model)
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read_latest_authorization_model(self, mock_request):
+#         """Test case for read_latest_authorization_model
+
+#         Return the latest authorization models configured for the store
+#         """
+#         response_body = """
+# {
+#   "authorization_models": [{
+#     "id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#     "schema_version":"1.1",
+#     "type_definitions": [
+#       {
+#         "type": "document",
+#         "relations": {
+#           "reader": {
+#             "union": {
+#               "child": [
+#                 {
+#                   "this": {}
+#                 },
+#                 {
+#                   "computedUserset": {
+#                     "object": "",
+#                     "relation": "writer"
+#                   }
+#                 }
+#               ]
+#             }
+#           },
+#           "writer": {
+#             "this": {}
+#           }
+#         }
+#       }
+#     ]
+#   }],
+#   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             # Return a particular version of an authorization model
+#             api_response = api_client.read_latest_authorization_model(options={})
+#             self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
+#             type_definitions = [
+#                 TypeDefinition(
+#                     type="document",
+#                     relations=dict(
+#                         reader=Userset(
+#                             union=Usersets(
+#                                 child=[
+#                                     Userset(this=dict()),
+#                                     Userset(
+#                                         computed_userset=ObjectRelation(
+#                                             object="",
+#                                             relation="writer",
+#                                         )
+#                                     ),
+#                                 ],
+#                             ),
+#                         ),
+#                         writer=Userset(
+#                             this=dict(),
+#                         ),
+#                     ),
+#                 )
+#             ]
+#             authorization_model = AuthorizationModel(
+#                 id="01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 schema_version="1.1",
+#                 type_definitions=type_definitions,
+#             )
+#             self.assertEqual(api_response.authorization_model, authorization_model)
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[("page_size", 1)],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read_latest_authorization_model_with_no_models(self, mock_request):
+#         """Test case for read_latest_authorization_model when no models are in the store
+
+#         Return the latest authorization models configured for the store
+#         """
+#         response_body = """
+# {
+#   "authorization_models": []
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             # Return a particular version of an authorization model
+#             api_response = api_client.read_latest_authorization_model(options={})
+#             self.assertIsInstance(api_response, ReadAuthorizationModelResponse)
+#             self.assertIsNone(api_response.authorization_model)
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[("page_size", 1)],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read_changes(self, mock_request):
+#         """Test case for read_changes
+
+#         Return a list of all the tuple changes
+#         """
+#         response_body = """
+# {
+#   "changes": [
+#     {
+#       "tuple_key": {
+#         "object": "document:2021-budget",
+#         "relation": "reader",
+#         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b"
+#       },
+#       "operation": "TUPLE_OPERATION_WRITE",
+#       "timestamp": "2022-07-26T15:55:55.809Z"
+#     }
+#   ],
+#   "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ=="
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             # Return a particular version of an authorization model
+#             api_response = api_client.read_changes(
+#                 ClientReadChangesRequest("document", "2022-01-01T00:00:00+00:00"),
+#                 options={"page_size": 1, "continuation_token": "abcdefg"},
+#             )
+
+#             self.assertIsInstance(api_response, ReadChangesResponse)
+#             changes = TupleChange(
+#                 tuple_key=TupleKey(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                 ),
+#                 operation=TupleOperation.WRITE,
+#                 timestamp=datetime.fromisoformat("2022-07-26T15:55:55.809+00:00"),
+#             )
+#             read_changes = ReadChangesResponse(
+#                 continuation_token="eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+#                 changes=[changes],
+#             )
+#             self.assertEqual(api_response, read_changes)
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/changes",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[
+#                     ("type", "document"),
+#                     ("page_size", 1),
+#                     ("continuation_token", "abcdefg"),
+#                     ("start_time", "2022-01-01T00:00:00+00:00"),
+#                 ],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read(self, mock_request):
+#         """Test case for read
+
+#         Get tuples from the store that matches a query, without following userset rewrite rules
+#         """
+#         response_body = """
+#             {
+#   "tuples": [
+#     {
+#       "key": {
+#         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         "relation": "reader",
+#         "object": "document:2021-budget"
+#       },
+#       "timestamp": "2021-10-06T15:32:11.128Z"
+#     }
+#   ],
+#   "continuation_token": ""
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ReadRequestTupleKey(
+#                 object="document:2021-budget",
+#                 relation="reader",
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#             )
+#             api_response = api_client.read(
+#                 body=body,
+#                 options={
+#                     "page_size": 50,
+#                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, ReadResponse)
+#             key = TupleKey(
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                 relation="reader",
+#                 object="document:2021-budget",
+#             )
+#             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
+#             expected_data = ReadResponse(
+#                 tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token=""
+#             )
+#             self.assertEqual(api_response, expected_data)
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "page_size": 50,
+#                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read_empty_options(self, mock_request):
+#         """Test case for read with empty options
+
+#         Get tuples from the store that matches a query, without following userset rewrite rules
+#         """
+#         response_body = """
+#             {
+#   "tuples": [
+#     {
+#       "key": {
+#         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         "relation": "reader",
+#         "object": "document:2021-budget"
+#       },
+#       "timestamp": "2021-10-06T15:32:11.128Z"
+#     }
+#   ],
+#   "continuation_token": ""
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ReadRequestTupleKey(
+#                 object="document:2021-budget",
+#                 relation="reader",
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#             )
+#             api_response = api_client.read(body=body, options={})
+#             self.assertIsInstance(api_response, ReadResponse)
+#             key = TupleKey(
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                 relation="reader",
+#                 object="document:2021-budget",
+#             )
+#             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
+#             expected_data = ReadResponse(
+#                 tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token=""
+#             )
+#             self.assertEqual(api_response, expected_data)
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     }
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_read_empty_body(self, mock_request):
+#         """Test case for read with empty body
+
+#         Get tuples from the store that matches a query, without following userset rewrite rules
+#         """
+#         response_body = """
+#             {
+#   "tuples": [
+#     {
+#       "key": {
+#         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         "relation": "reader",
+#         "object": "document:2021-budget"
+#       },
+#       "timestamp": "2021-10-06T15:32:11.128Z"
+#     }
+#   ],
+#   "continuation_token": ""
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ReadRequestTupleKey()
+#             api_response = api_client.read(body=body, options={})
+#             self.assertIsInstance(api_response, ReadResponse)
+#             key = TupleKey(
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                 relation="reader",
+#                 object="document:2021-budget",
+#             )
+#             timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
+#             expected_data = ReadResponse(
+#                 tuples=[Tuple(key=key, timestamp=timestamp)], continuation_token=""
+#             )
+#             self.assertEqual(api_response, expected_data)
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/read",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={},
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write(self, mock_request):
+#         """Test case for write
+
+#         Add tuples from the store with transaction enabled
+#         """
+#         response_body = "{}"
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 writes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#             )
+#             api_client.write(
+#                 body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+#             )
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             },
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_delete(self, mock_request):
+#         """Test case for delete
+
+#         Delete tuples from the store with transaction enabled
+#         """
+#         response_body = "{}"
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 deletes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     )
+#                 ],
+#             )
+#             api_client.write(
+#                 body, options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+#             )
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "deletes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_batch(self, mock_request):
+#         """Test case for write
+
+#         Add tuples from the store with transaction disabled
+#         """
+#         mock_request.side_effect = [
+#             mock_response("{}", 200),
+#             mock_response("{}", 200),
+#             mock_response("{}", 200),
+#         ]
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 writes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#             )
+#             transaction = WriteTransactionOpts(
+#                 disabled=True, max_per_chunk=1, max_parallel_requests=10
+#             )
+#             response = api_client.write(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "transaction": transaction,
+#                 },
+#             )
+
+#             self.assertEqual(response.deletes, None)
+#             self.assertEqual(
+#                 response.writes,
+#                 [
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                 ],
+#             )
+#             self.assertEqual(mock_request.call_count, 3)
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_batch_min_parallel(self, mock_request):
+#         """Test case for write
+
+#         Add tuples from the store with transaction disabled and minimum parallel request
+#         """
+#         mock_request.side_effect = [
+#             mock_response("{}", 200),
+#             mock_response("{}", 200),
+#             mock_response("{}", 200),
+#         ]
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 writes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#             )
+#             transaction = WriteTransactionOpts(
+#                 disabled=True, max_per_chunk=1, max_parallel_requests=1
+#             )
+#             response = api_client.write(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "transaction": transaction,
+#                 },
+#             )
+
+#             self.assertEqual(response.deletes, None)
+#             self.assertEqual(
+#                 response.writes,
+#                 [
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                 ],
+#             )
+#             self.assertEqual(mock_request.call_count, 3)
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_batch_larger_chunk(self, mock_request):
+#         """Test case for write
+
+#         Add tuples from the store with transaction disabled and minimum parallel request
+#         """
+#         mock_request.side_effect = [
+#             mock_response("{}", 200),
+#             mock_response("{}", 200),
+#             mock_response("{}", 200),
+#         ]
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 writes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#             )
+#             transaction = WriteTransactionOpts(
+#                 disabled=True, max_per_chunk=2, max_parallel_requests=2
+#             )
+#             response = api_client.write(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "transaction": transaction,
+#                 },
+#             )
+
+#             self.assertEqual(response.deletes, None)
+#             self.assertEqual(
+#                 response.writes,
+#                 [
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                     ClientWriteSingleResponse(
+#                         tuple_key=ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                         ),
+#                         success=True,
+#                         error=None,
+#                     ),
+#                 ],
+#             )
+#             self.assertEqual(mock_request.call_count, 2)
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             },
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_batch_failed(self, mock_request):
+#         """Test case for write
+
+#         Add tuples from the store with transaction disabled where one of the request failed
+#         """
+#         response_body = """
+# {
+#   "code": "validation_error",
+#   "message": "Generic validation error"
+# }
+#         """
+
+#         mock_request.side_effect = [
+#             mock_response("{}", 200),
+#             ValidationException(http_resp=http_mock_response(response_body, 400)),
+#             mock_response("{}", 200),
+#         ]
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 writes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#             )
+#             transaction = WriteTransactionOpts(
+#                 disabled=True, max_per_chunk=1, max_parallel_requests=10
+#             )
+#             response = api_client.write(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "transaction": transaction,
+#                 },
+#             )
+
+#             self.assertEqual(response.deletes, None)
+#             self.assertEqual(len(response.writes), 3)
+#             self.assertEqual(
+#                 response.writes[0],
+#                 ClientWriteSingleResponse(
+#                     tuple_key=ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     success=True,
+#                     error=None,
+#                 ),
+#             )
+#             self.assertEqual(
+#                 response.writes[1].tuple_key,
+#                 ClientTuple(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                 ),
+#             )
+#             self.assertFalse(response.writes[1].success)
+#             self.assertIsInstance(response.writes[1].error, ValidationException)
+#             self.assertIsInstance(
+#                 response.writes[1].error.parsed_exception,
+#                 ValidationErrorMessageResponse,
+#             )
+#             self.assertEqual(
+#                 response.writes[2],
+#                 ClientWriteSingleResponse(
+#                     tuple_key=ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                     success=True,
+#                     error=None,
+#                 ),
+#             )
+#             self.assertEqual(mock_request.call_count, 3)
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_delete_batch(self, mock_request):
+#         """Test case for delete
+
+#         Delete tuples from the store with transaction disabled but there is only 1 relationship tuple
+#         """
+#         mock_request.side_effect = [
+#             mock_response("{}", 200),
+#         ]
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientWriteRequest(
+#                 deletes=[
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     )
+#                 ],
+#                 writes=[],
+#             )
+#             transaction = WriteTransactionOpts(
+#                 disabled=True, max_per_chunk=1, max_parallel_requests=10
+#             )
+#             api_client.write(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "transaction": transaction,
+#                 },
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "deletes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_tuples(self, mock_request):
+#         """Test case for write tuples
+
+#         Add tuples from the store with transaction enabled
+#         """
+#         response_body = "{}"
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.write_tuples(
+#                 [
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+#             )
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "writes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             },
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_delete_tuples(self, mock_request):
+#         """Test case for delete tuples
+
+#         Add tuples from the store with transaction enabled
+#         """
+#         response_body = "{}"
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.delete_tuples(
+#                 [
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     ),
+#                     ClientTuple(
+#                         object="document:2021-budget",
+#                         relation="reader",
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     ),
+#                 ],
+#                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+#             )
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "deletes": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             },
+#                             {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             },
+#                         ]
+#                     },
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 },
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_batch_unauthorized(self, mock_request):
+#         """Test case for write with 401 response"""
+
+#         mock_request.side_effect = UnauthorizedException(
+#             http_resp=http_mock_response("{}", 401)
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             with self.assertRaises(UnauthorizedException):
+#                 body = ClientWriteRequest(
+#                     writes=[
+#                         ClientTuple(
+#                             object="document:2021-budget",
+#                             relation="reader",
+#                             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         )
+#                     ],
+#                 )
+#                 transaction = WriteTransactionOpts(
+#                     disabled=True, max_per_chunk=1, max_parallel_requests=10
+#                 )
+#                 api_client.write(
+#                     body,
+#                     options={
+#                         "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                         "transaction": transaction,
+#                     },
+#                 )
+
+#                 mock_request.assert_called()
+#                 self.assertEqual(mock_request.call_count, 1)
+
+#                 mock_request.assert_called_once_with(
+#                     "POST",
+#                     "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+#                     headers=ANY,
+#                     query_params=[],
+#                     post_params=[],
+#                     body={
+#                         "writes": {
+#                             "tuple_keys": [
+#                                 {
+#                                     "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                                     "relation": "reader",
+#                                     "object": "document:2021-budget",
+#                                 }
+#                             ]
+#                         },
+#                         "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     },
+#                     timeout=None,
+#                 )
+#                 api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_check(self, mock_request):
+#         """Test case for check
+
+#         Check whether a user is authorized to access an object
+#         """
+
+#         # First, mock the response
+#         response_body = '{"allowed": true, "resolution": "1234"}'
+#         mock_request.return_value = mock_response(response_body, 200)
+#         body = ClientCheckRequest(
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#             relation="reader",
+#             object="document:budget",
+#             contextual_tuples=[
+#                 ClientTuple(
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     relation="writer",
+#                     object="document:budget",
+#                 ),
+#             ],
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.check(
+#                 body=body,
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, CheckResponse)
+#             self.assertTrue(api_response.allowed)
+#             # Make sure the API was called with the right data
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         "relation": "reader",
+#                         "object": "document:budget",
+#                     },
+#                     "contextual_tuples": {
+#                         "tuple_keys": [
+#                             {
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                                 "relation": "writer",
+#                                 "object": "document:budget",
+#                             }
+#                         ]
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_check_config_auth_model(self, mock_request):
+#         """Test case for check
+
+#         Check whether a user is authorized to access an object and the auth model is already encoded in store
+#         """
+
+#         # First, mock the response
+#         response_body = '{"allowed": true, "resolution": "1234"}'
+#         mock_request.return_value = mock_response(response_body, 200)
+#         body = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.check(body=body, options={})
+#             self.assertIsInstance(api_response, CheckResponse)
+#             self.assertTrue(api_response.allowed)
+#             # Make sure the API was called with the right data
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_client_batch_check_single_request(self, mock_request):
+#         """Test case for check with single request
+
+#         Check whether a user is authorized to access an object
+#         """
+
+#         # First, mock the response
+#         response_body = '{"allowed": true, "resolution": "1234"}'
+#         mock_request.side_effect = [
+#             mock_response(response_body, 200),
+#         ]
+#         body = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.client_batch_check(
+#                 body=[body],
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, list)
+#             self.assertEqual(len(api_response), 1)
+#             self.assertEqual(api_response[0].error, None)
+#             self.assertTrue(api_response[0].allowed)
+#             self.assertEqual(api_response[0].request, body)
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_client_batch_check_multiple_request(self, mock_request):
+#         """Test case for check with multiple request
+
+#         Check whether a user is authorized to access an object
+#         """
+
+#         # First, mock the response
+#         mock_request.side_effect = [
+#             mock_response('{"allowed": true, "resolution": "1234"}', 200),
+#             mock_response('{"allowed": false, "resolution": "1234"}', 200),
+#             mock_response('{"allowed": true, "resolution": "1234"}', 200),
+#         ]
+#         body1 = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         )
+#         body2 = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#         )
+#         body3 = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.client_batch_check(
+#                 body=[body1, body2, body3],
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "max_parallel_requests": 2,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, list)
+#             self.assertEqual(len(api_response), 3)
+#             self.assertEqual(api_response[0].error, None)
+#             self.assertTrue(api_response[0].allowed)
+#             self.assertEqual(api_response[0].request, body1)
+#             self.assertEqual(api_response[1].error, None)
+#             self.assertFalse(api_response[1].allowed)
+#             self.assertEqual(api_response[1].request, body2)
+#             self.assertEqual(api_response[2].error, None)
+#             self.assertTrue(api_response[2].allowed)
+#             self.assertEqual(api_response[2].request, body3)
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_client_batch_check_multiple_request_fail(self, mock_request):
+#         """Test case for check with multiple request with one request failed
+
+#         Check whether a user is authorized to access an object
+#         """
+#         response_body = """
+# {
+#   "code": "validation_error",
+#   "message": "Generic validation error"
+# }
+#         """
+
+#         # First, mock the response
+#         mock_request.side_effect = [
+#             mock_response('{"allowed": true, "resolution": "1234"}', 200),
+#             ValidationException(http_resp=http_mock_response(response_body, 400)),
+#             mock_response('{"allowed": false, "resolution": "1234"}', 200),
+#         ]
+#         body1 = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         )
+#         body2 = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#         )
+#         body3 = ClientCheckRequest(
+#             object="document:2021-budget",
+#             relation="reader",
+#             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.client_batch_check(
+#                 body=[body1, body2, body3],
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "max_parallel_requests": 2,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, list)
+#             self.assertEqual(len(api_response), 3)
+#             self.assertEqual(api_response[0].error, None)
+#             self.assertTrue(api_response[0].allowed)
+#             self.assertEqual(api_response[0].request, body1)
+#             self.assertFalse(api_response[1].allowed)
+#             self.assertEqual(api_response[1].request, body2)
+#             self.assertIsInstance(api_response[1].error, ValidationException)
+#             self.assertIsInstance(
+#                 api_response[1].error.parsed_exception, ValidationErrorMessageResponse
+#             )
+#             self.assertEqual(api_response[2].error, None)
+#             self.assertFalse(api_response[2].allowed)
+#             self.assertEqual(api_response[2].request, body3)
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_batch_check_single_request(self, mock_request):
+#         """Test case for check with single request
+
+#         Check whether a user is authorized to access an object
+#         """
+
+#         # First, mock the response
+#         response_body = """
+#         {
+#             "result": {
+#                 "1": {
+#                     "allowed": true
+#                 }
+#             }
+#         }
+#         """
+#         mock_request.side_effect = [
+#             mock_response(response_body, 200),
+#         ]
+
+#         body = ClientBatchCheckRequest(
+#             checks=[
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     correlation_id="1",
+#                 ),
+#             ]
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.batch_check(
+#                 body=body,
+#                 options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+#             )
+#             self.assertEqual(len(api_response.result), 1)
+#             self.assertEqual(api_response.result[0].error, None)
+#             self.assertTrue(api_response.result[0].allowed)
+#             self.assertEqual(api_response.result[0].correlation_id, "1")
+#             self.assertEqual(api_response.result[0].request, body.checks[0])
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "checks": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             "correlation_id": "1",
+#                         }
+#                     ],
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(uuid, "uuid4")
+#     @patch.object(RestClient, "request")
+#     def test_batch_check_multiple_request(self, mock_request, mock_uuid):
+#         """Test case for check with multiple request
+
+#         Check whether a user is authorized to access an object
+#         """
+#         first_response_body = """
+#         {
+#             "result": {
+#                 "1": {
+#                     "allowed": true
+#                 },
+#                 "2": {
+#                     "allowed": false
+#                 }
+#             }
+#         }
+# """
+
+#         second_response_body = """
+# {
+#     "result": {
+#         "fake-uuid": {
+#             "error": {
+#                 "input_error": "validation_error",
+#                 "message": "type 'doc' not found"
+#             }
+#         }
+#     }
+# }"""
+#         # First, mock the response
+#         mock_request.side_effect = [
+#             mock_response(first_response_body, 200),
+#             mock_response(second_response_body, 200),
+#         ]
+
+#         def mock_v4(val: str):
+#             return val
+
+#         mock_uuid.side_effect = [mock_v4("batch-id-header"), mock_v4("fake-uuid")]
+
+#         body = ClientBatchCheckRequest(
+#             checks=[
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     correlation_id="1",
+#                 ),
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     correlation_id="2",
+#                 ),
+#                 ClientBatchCheckItem(
+#                     object="doc:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                 ),
+#             ]
+#         )
+
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.batch_check(
+#                 body=body,
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "max_parallel_requests": 1,
+#                     "max_batch_size": 2,
+#                 },
+#             )
+#             self.assertEqual(len(api_response.result), 3)
+#             self.assertEqual(api_response.result[0].error, None)
+#             self.assertTrue(api_response.result[0].allowed)
+#             self.assertEqual(api_response.result[1].error, None)
+#             self.assertFalse(api_response.result[1].allowed)
+#             self.assertEqual(
+#                 api_response.result[2].error.message, "type 'doc' not found"
+#             )
+#             self.assertFalse(api_response.result[2].allowed)
+#             # value generated from the uuid mock
+#             self.assertEqual(api_response.result[2].correlation_id, "fake-uuid")
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "checks": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             "correlation_id": "1",
+#                         },
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             },
+#                             "correlation_id": "2",
+#                         },
+#                     ],
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "checks": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "doc:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             },
+#                             "correlation_id": "fake-uuid",
+#                         }
+#                     ],
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     def test_batch_check_errors_dupe_cor_id(self):
+#         """Test case for duplicate correlation_id being provided to batch_check"""
+
+#         body = ClientBatchCheckRequest(
+#             checks=[
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     correlation_id="1",
+#                 ),
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     correlation_id="1",
+#                 ),
+#             ]
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             with self.assertRaises(FgaValidationException) as error:
+#                 api_client.batch_check(
+#                     body=body,
+#                     options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+#                 )
+#             self.assertEqual(
+#                 "Duplicate correlation_id (1) provided", str(error.exception)
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_batch_check_errors_unauthorized(self, mock_request):
+#         """Test case for BatchCheck with a 401"""
+#         first_response_body = """
+#         {
+#             "result": {
+#                 "1": {
+#                     "allowed": true
+#                 },
+#                 "2": {
+#                     "allowed": false
+#                 }
+#             }
+#         }
+# """
+
+#         # First, mock the response
+#         mock_request.side_effect = [
+#             mock_response(first_response_body, 200),
+#             UnauthorizedException(http_resp=http_mock_response("{}", 401)),
+#         ]
+
+#         body = ClientBatchCheckRequest(
+#             checks=[
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     correlation_id="1",
+#                 ),
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                     correlation_id="2",
+#                 ),
+#                 ClientBatchCheckItem(
+#                     object="document:2021-budget",
+#                     relation="reader",
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                     correlation_id="3",
+#                 ),
+#             ]
+#         )
+
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             with self.assertRaises(UnauthorizedException):
+#                 api_client.batch_check(
+#                     body=body,
+#                     options={
+#                         "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                         "max_parallel_requests": 1,
+#                         "max_batch_size": 2,
+#                     },
+#                 )
+
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "checks": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             },
+#                             "correlation_id": "1",
+#                         },
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+#                             },
+#                             "correlation_id": "2",
+#                         },
+#                     ],
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "checks": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
+#                             },
+#                             "correlation_id": "3",
+#                         }
+#                     ],
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_expand(self, mock_request):
+#         """Test case for expand
+
+#         Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
+#         """
+#         response_body = """{
+#             "tree": {"root": {"name": "document:budget#reader", "leaf": {"users": {"users": ["user:81684243-9356-4421-8fbf-a4f8d36aa31b"]}}}}}
+#             """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientExpandRequest(
+#                 object="document:budget",
+#                 relation="reader",
+#             )
+#             api_response = api_client.expand(
+#                 body=body,
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, ExpandResponse)
+#             cur_users = Users(users=["user:81684243-9356-4421-8fbf-a4f8d36aa31b"])
+#             leaf = Leaf(users=cur_users)
+#             node = Node(name="document:budget#reader", leaf=leaf)
+#             userTree = UsersetTree(node)
+#             expected_response = ExpandResponse(userTree)
+#             self.assertEqual(api_response, expected_response)
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/expand",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {"object": "document:budget", "relation": "reader"},
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_list_objects(self, mock_request):
+#         """Test case for list_objects
+
+#         List objects
+#         """
+#         response_body = """
+# {
+#   "objects": [
+#     "document:abcd1234"
+#   ]
+# }
+#             """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientListObjectsRequest(
+#                 type="document",
+#                 relation="reader",
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#             )
+#             # Get all stores
+#             api_response = api_client.list_objects(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+#             self.assertIsInstance(api_response, ListObjectsResponse)
+#             self.assertEqual(api_response.objects, ["document:abcd1234"])
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-objects",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "type": "document",
+#                     "relation": "reader",
+#                     "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_list_objects_contextual_tuples(self, mock_request):
+#         """Test case for list_objects
+
+#         List objects
+#         """
+#         response_body = """
+# {
+#   "objects": [
+#     "document:abcd1234"
+#   ]
+# }
+#             """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientListObjectsRequest(
+#                 type="document",
+#                 relation="reader",
+#                 user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                 contextual_tuples=[
+#                     ClientTuple(
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         relation="writer",
+#                         object="document:budget",
+#                     ),
+#                 ],
+#             )
+#             # Get all stores
+#             api_response = api_client.list_objects(
+#                 body, options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+#             )
+#             self.assertIsInstance(api_response, ListObjectsResponse)
+#             self.assertEqual(api_response.objects, ["document:abcd1234"])
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-objects",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "type": "document",
+#                     "relation": "reader",
+#                     "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     "contextual_tuples": {
+#                         "tuple_keys": [
+#                             {
+#                                 "object": "document:budget",
+#                                 "relation": "writer",
+#                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             }
+#                         ]
+#                     },
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_list_relations(self, mock_request):
+#         """Test case for list relations
+
+#         Check whether a user is authorized to access an object
+#         """
+
+#         def mock_check_requests(*args, **kwargs):
+#             body = kwargs.get("body")
+#             tuple_key = body.get("tuple_key")
+#             if tuple_key["relation"] == "owner":
+#                 return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+#             return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+
+#         # First, mock the response
+#         mock_request.side_effect = mock_check_requests
+
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.list_relations(
+#                 body=ClientListRelationsRequest(
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     relations=["reader", "owner", "viewer"],
+#                     object="document:2021-budget",
+#                 ),
+#                 options={
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+#             self.assertEqual(api_response, ["reader", "viewer"])
+
+#             # Make sure the API was called with the right data
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "reader",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "owner",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             mock_request.assert_any_call(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "tuple_key": {
+#                         "object": "document:2021-budget",
+#                         "relation": "viewer",
+#                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     },
+#                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_list_relations_unauthorized(self, mock_request):
+#         """Test case for list relations with 401 response"""
+
+#         mock_request.side_effect = UnauthorizedException(
+#             http_resp=http_mock_response("{}", 401)
+#         )
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             with self.assertRaises(UnauthorizedException) as api_exception:
+#                 api_client.list_relations(
+#                     body=ClientListRelationsRequest(
+#                         user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                         relations=["reader", "owner", "viewer"],
+#                         object="document:2021-budget",
+#                     ),
+#                     options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+#                 )
+
+#             self.assertIsInstance(api_exception.exception, UnauthorizedException)
+#             mock_request.assert_called()
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_list_users(self, mock_request):
+#         """
+#         Test case for list_users
+#         """
+
+#         response_body = """{
+#   "users": [
+#     {
+#       "object": {
+#         "id": "81684243-9356-4421-8fbf-a4f8d36aa31b",
+#         "type": "user"
+#       }
+#     },
+#     {
+#       "userset": {
+#         "id": "fga",
+#         "relation": "member",
+#         "type": "team"
+#       }
+#     },
+#     {
+#       "wildcard": {
+#         "type": "user"
+#       }
+#     }
+#   ]
+# }"""
+
+#         mock_request.return_value = mock_response(response_body, 200)
+
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+
+#         with OpenFgaClient(configuration) as api_client:
+#             body = ClientListUsersRequest()
+#             body.object = FgaObject(type="document", id="2021-budget")
+#             body.relation = "can_read"
+#             body.user_filters = [
+#                 UserTypeFilter(type="user"),
+#             ]
+#             body.context = {}
+#             body.contextual_tuples = [
+#                 ClientTuple(
+#                     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                     relation="editor",
+#                     object="folder:product",
+#                 ),
+#                 ClientTuple(
+#                     user="folder:product",
+#                     relation="parent",
+#                     object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+#                 ),
+#             ]
+
+#             response = api_client.list_users(
+#                 body,
+#                 options={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "consistency": ConsistencyPreference.MINIMIZE_LATENCY,
+#                 },
+#             )
+
+#             self.assertIsInstance(response, ListUsersResponse)
+
+#             self.assertEqual(response.users.__len__(), 3)
+
+#             self.assertIsNotNone(response.users[0].object)
+#             self.assertEqual(
+#                 response.users[0].object.id, "81684243-9356-4421-8fbf-a4f8d36aa31b"
+#             )
+#             self.assertEqual(response.users[0].object.type, "user")
+#             self.assertIsNone(response.users[0].userset)
+#             self.assertIsNone(response.users[0].wildcard)
+
+#             self.assertIsNone(response.users[1].object)
+#             self.assertIsNotNone(response.users[1].userset)
+#             self.assertEqual(response.users[1].userset.id, "fga")
+#             self.assertEqual(response.users[1].userset.relation, "member")
+#             self.assertEqual(response.users[1].userset.type, "team")
+#             self.assertIsNone(response.users[1].wildcard)
+
+#             self.assertIsNone(response.users[2].object)
+#             self.assertIsNone(response.users[2].userset)
+#             self.assertIsNotNone(response.users[2].wildcard)
+#             self.assertEqual(response.users[2].wildcard.type, "user")
+
+#             mock_request.assert_called_once_with(
+#                 "POST",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/list-users",
+#                 headers=ANY,
+#                 query_params=[],
+#                 post_params=[],
+#                 body={
+#                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     "object": {"id": "2021-budget", "type": "document"},
+#                     "relation": "can_read",
+#                     "user_filters": [
+#                         {"type": "user"},
+#                     ],
+#                     "contextual_tuples": [
+#                         {
+#                             "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+#                             "relation": "editor",
+#                             "object": "folder:product",
+#                         },
+#                         {
+#                             "user": "folder:product",
+#                             "relation": "parent",
+#                             "object": "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+#                         },
+#                     ],
+#                     "context": {},
+#                     "consistency": "MINIMIZE_LATENCY",
+#                 },
+#                 timeout=None,
+#             )
+
+#             api_client.close()
+
+#     @patch.object(RestClient, "request")
+#     def test_read_assertions(self, mock_request):
+#         """Test case for read assertions"""
+#         response_body = """
+# {
+#   "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+#   "assertions": [
+#     {
+#       "tuple_key": {
+#         "object": "document:2021-budget",
+#         "relation": "reader",
+#         "user": "user:anne"
+#       },
+#       "expectation": true
+#     }
+#   ]
+# }
+#         """
+#         mock_request.return_value = mock_response(response_body, 200)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         # Enter a context with an instance of the API client
+#         with OpenFgaClient(configuration) as api_client:
+#             api_response = api_client.read_assertions(
+#                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"}
+#             )
+#             self.assertEqual(
+#                 api_response,
+#                 ReadAssertionsResponse(
+#                     authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
+#                     assertions=[
+#                         Assertion(
+#                             tuple_key=TupleKeyWithoutCondition(
+#                                 object="document:2021-budget",
+#                                 relation="reader",
+#                                 user="user:anne",
+#                             ),
+#                             expectation=True,
+#                         )
+#                     ],
+#                 ),
+#             )
+#             mock_request.assert_called_once_with(
+#                 "GET",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 headers=ANY,
+#                 body=None,
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_write_assertions(self, mock_request):
+#         """Test case for write assertions
+
+#         Get all stores
+#         """
+#         mock_request.return_value = mock_response("", 204)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.write_assertions(
+#                 [
+#                     ClientAssertion(
+#                         user="user:anne",
+#                         relation="reader",
+#                         object="document:2021-budget",
+#                         expectation=True,
+#                     )
+#                 ],
+#                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+#             )
+#             mock_request.assert_called_once_with(
+#                 "PUT",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 headers=ANY,
+#                 body={
+#                     "assertions": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:anne",
+#                             },
+#                             "expectation": True,
+#                         }
+#                     ]
+#                 },
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_set_store_id(self, mock_request):
+#         """Test case for write assertions
+
+#         Get all stores
+#         """
+#         mock_request.return_value = mock_response("", 204)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.set_store_id("01YCP46JKYM8FJCQ37NMBYHE5Y")
+
+#             api_client.write_assertions(
+#                 [
+#                     ClientAssertion(
+#                         user="user:anne",
+#                         relation="reader",
+#                         object="document:2021-budget",
+#                         expectation=True,
+#                     )
+#                 ],
+#                 options={"authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+#             )
+#             self.assertEqual(api_client.get_store_id(), "01YCP46JKYM8FJCQ37NMBYHE5Y")
+#             mock_request.assert_called_once_with(
+#                 "PUT",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5Y/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 headers=ANY,
+#                 body={
+#                     "assertions": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:anne",
+#                             },
+#                             "expectation": True,
+#                         }
+#                     ]
+#                 },
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_config_auth_model(self, mock_request):
+#         """Test case for write assertions
+
+#         Get all stores
+#         """
+#         mock_request.return_value = mock_response("", 204)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.write_assertions(
+#                 [
+#                     ClientAssertion(
+#                         user="user:anne",
+#                         relation="reader",
+#                         object="document:2021-budget",
+#                         expectation=True,
+#                     )
+#                 ],
+#                 options={},
+#             )
+#             self.assertEqual(
+#                 api_client.get_authorization_model_id(), "01G5JAVJ41T49E9TT3SKVS7X1J"
+#             )
+#             mock_request.assert_called_once_with(
+#                 "PUT",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X1J",
+#                 headers=ANY,
+#                 body={
+#                     "assertions": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:anne",
+#                             },
+#                             "expectation": True,
+#                         }
+#                     ]
+#                 },
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     @patch.object(RestClient, "request")
+#     def test_update_auth_model(self, mock_request):
+#         """Test case for write assertions
+
+#         Get all stores
+#         """
+#         mock_request.return_value = mock_response("", 204)
+#         configuration = self.configuration
+#         configuration.store_id = store_id
+#         configuration.authorization_model_id = "01G5JAVJ41T49E9TT3SKVS7X1J"
+#         with OpenFgaClient(configuration) as api_client:
+#             api_client.set_authorization_model_id("01G5JAVJ41T49E9TT3SKVS7X2J")
+
+#             api_client.write_assertions(
+#                 [
+#                     ClientAssertion(
+#                         user="user:anne",
+#                         relation="reader",
+#                         object="document:2021-budget",
+#                         expectation=True,
+#                     )
+#                 ],
+#                 options={},
+#             )
+#             mock_request.assert_called_once_with(
+#                 "PUT",
+#                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/assertions/01G5JAVJ41T49E9TT3SKVS7X2J",
+#                 headers=ANY,
+#                 body={
+#                     "assertions": [
+#                         {
+#                             "tuple_key": {
+#                                 "object": "document:2021-budget",
+#                                 "relation": "reader",
+#                                 "user": "user:anne",
+#                             },
+#                             "expectation": True,
+#                         }
+#                     ]
+#                 },
+#                 query_params=[],
+#                 post_params=[],
+#                 timeout=None,
+#             )
+
+#     def test_configuration_authorization_model_id_invalid(self):
+#         """
+#         Test whether ApiValueError is raised if host has query
+#         """
+#         with self.assertRaises(FgaValidationException):
+#             Configuration(
+#                 api_url="localhost",
+#                 store_id="01H15K9J85050XTEDPVM8DJM78",
+#                 authorization_model_id="abcd",
+#             )

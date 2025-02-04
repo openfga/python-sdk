@@ -26,7 +26,7 @@ class TelemetryCounters:
     )
 
     fga_client_request: TelemetryCounter = TelemetryCounter(
-        name="fga-client.request",
+        name="fga-client.http_request.duration",
         description="Total number of requests made to the FGA server.",
     )
 

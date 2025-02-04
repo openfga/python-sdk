@@ -4,3 +4,4 @@ setuptools >= 69.1.1
 build >= 1.2.1, < 2
 urllib3 >= 1.25.11, < 3
 opentelemetry-api >= 1.25.0, < 2
+orjson >= 3.10, <4

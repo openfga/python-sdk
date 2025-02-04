@@ -18,7 +18,7 @@ class ClientReadChangesRequest:
 
     def __init__(
         self,
-        type: str,
+        type: str = "",
         start_time: str | None = None,
     ):
         self._type = type
