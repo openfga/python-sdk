@@ -658,9 +658,7 @@ class TelemetryMetricsConfigurationProtocol(Protocol):
         clear: bool = False,
     ) -> None: ...
 
-    def getMetrics(
-        self, filter_enabled: bool = True
-    ) -> dict[
+    def getMetrics(self, filter_enabled: bool = True) -> dict[
         TelemetryHistogram | TelemetryCounter,
         TelemetryMetricConfiguration | dict[TelemetryAttribute | str, bool] | None,
     ]: ...
@@ -905,9 +903,7 @@ class TelemetryMetricsConfiguration(TelemetryMetricsConfigurationProtocol):
 
         self._valid = None
 
-    def getMetrics(
-        self, filter_enabled: bool = True
-    ) -> dict[
+    def getMetrics(self, filter_enabled: bool = True) -> dict[
         TelemetryHistogram | TelemetryCounter,
         TelemetryMetricConfiguration | dict[TelemetryAttribute | str, bool] | None,
     ]:
@@ -1257,6 +1253,15 @@ class TelemetryConfiguration:
         return {
             TelemetryConfigurations.metrics: TelemetryMetricsConfiguration.getSdkDefaults(),
         }
+
+    @staticmethod
+    def withDefaults() -> "TelemetryConfiguration":
+        """
+        Get the default SDK configuration for telemetry.
+
+        :return: The default SDK configuration for telemetry.
+        """
+        return TelemetryConfiguration(config=TelemetryConfiguration.getSdkDefaults())
 
 
 def isMetricEnabled(

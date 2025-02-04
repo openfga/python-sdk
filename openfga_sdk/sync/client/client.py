@@ -178,14 +178,22 @@ class OpenFgaClient:
         Otherwise, return the authorization model ID stored in the client's configuration
         """
         authorization_model_id = self._client_configuration.authorization_model_id
-        if options is not None and "authorization_model_id" in options:
+
+        if (
+            options is not None
+            and "authorization_model_id" in options
+            and type(options["authorization_model_id"]) is str
+        ):
             authorization_model_id = options["authorization_model_id"]
+
         if authorization_model_id is None or authorization_model_id == "":
             return None
+
         if is_well_formed_ulid_string(authorization_model_id) is False:
             raise FgaValidationException(
                 f"authorization_model_id ('{authorization_model_id}') is not in a valid ulid format"
             )
+
         return authorization_model_id
 
     def _get_consistency(

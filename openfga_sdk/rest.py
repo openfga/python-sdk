@@ -143,7 +143,10 @@ class RESTClientObject:
     """
 
     def __init__(
-        self, configuration: Any, pools_size: int = 4, maxsize: int | None = None
+        self,
+        configuration: Any,
+        pools_size: int = 4,
+        maxsize: int | None = None,
     ) -> None:
         """
         Creates a new RESTClientObject.
@@ -156,6 +159,7 @@ class RESTClientObject:
             maxsize = configuration.connection_pool_maxsize
 
         ssl_context = ssl.create_default_context(cafile=configuration.ssl_ca_cert)
+
         if configuration.cert_file:
             ssl_context.load_cert_chain(
                 configuration.cert_file, keyfile=configuration.key_file
@@ -166,9 +170,11 @@ class RESTClientObject:
             ssl_context.verify_mode = ssl.CERT_NONE
 
         connector = aiohttp.TCPConnector(limit=maxsize, ssl=ssl_context)
+
         self.proxy = configuration.proxy
         self.proxy_headers = configuration.proxy_headers
         self._timeout_millisec = configuration.timeout_millisec
+
         self.pool_manager = aiohttp.ClientSession(connector=connector, trust_env=True)
 
     async def close(self) -> None:

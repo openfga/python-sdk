@@ -24,18 +24,22 @@ class OpenFgaApi:
     Do not edit the class manually.
     """
 
-    def __init__(self, api_client=None):
+    def __init__(
+        self,
+        api_client: ApiClient | None = None,
+    ):
         if api_client is None:
             api_client = ApiClient()
+
         self.api_client: ApiClient = api_client
 
         self._oauth2_client = None
+
         if api_client.configuration is not None:
             credentials = api_client.configuration.credentials
+
             if credentials is not None and credentials.method == "client_credentials":
-                self._oauth2_client = OAuth2Client(
-                    credentials, api_client.configuration
-                )
+                self._oauth2_client = OAuth2Client(credentials)
 
         self._telemetry = Telemetry()
 

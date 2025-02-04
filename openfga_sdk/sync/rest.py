@@ -21,6 +21,7 @@ from typing import Any
 
 import urllib3
 
+from openfga_sdk.configuration import Configuration
 from openfga_sdk.exceptions import (
     ApiException,
     ApiValueError,
@@ -142,78 +143,88 @@ class RESTClientObject:
     A synchronous client object that manages HTTP interactions using urllib3.
     """
 
+    _configuration: Configuration
+    _pool_manager: urllib3.PoolManager | urllib3.ProxyManager | None = None
+    _pool_size: int | None = None
+    _pool_size_max: int | None = None
+    _timeout: int | None = None
+
     def __init__(
         self,
-        configuration: Any,
-        pools_size: int = 4,
-        maxsize: int | None = None,
+        configuration: Configuration,
+        pool_size: int | None = None,
+        pool_size_max: int | None = None,
+        timeout: int | None = None,
     ) -> None:
         """
         Creates a new RESTClientObject using urllib3.
 
         :param configuration: A configuration object with necessary parameters.
-        :param pools_size: The number of connection pools to use.
-        :param maxsize: The maximum number of connections per pool.
+        :param pool_size: The number of connection pools to use.
+        :param pool_size_max: The maximum number of connections per pool.
+        :param timeout: The timeout for requests in milliseconds.
         """
-        if hasattr(configuration, "verify_ssl") and configuration.verify_ssl:
-            cert_reqs = ssl.CERT_REQUIRED
-        else:
-            cert_reqs = ssl.CERT_NONE
+        self._configuration = configuration
+        self._pool_size = pool_size
+        self._pool_size_max = pool_size_max
+        self._timeout = timeout
 
-        addition_pool_args = {}
-
-        if (
-            hasattr(configuration, "assert_hostname")
-            and configuration.assert_hostname is not None
-        ):
-            addition_pool_args["assert_hostname"] = configuration.assert_hostname
-
-        if hasattr(configuration, "retries") and configuration.retries is not None:
-            addition_pool_args["retries"] = configuration.retries
-
-        if (
-            hasattr(configuration, "socket_options")
-            and configuration.socket_options is not None
-        ):
-            addition_pool_args["socket_options"] = configuration.socket_options
-
-        if maxsize is None:
-            if (
-                hasattr(configuration, "connection_pool_maxsize")
-                and configuration.connection_pool_maxsize is not None
-            ):
-                maxsize = configuration.connection_pool_maxsize
-            else:
-                maxsize = 4
-
-        self._timeout_millisec = configuration.timeout_millisec
-
-        if hasattr(configuration, "proxy") and configuration.proxy is not None:
-            self.pool_manager: urllib3.ProxyManager | urllib3.PoolManager = (
-                urllib3.ProxyManager(
-                    num_pools=pools_size,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=configuration.ssl_ca_cert,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    proxy_url=configuration.proxy,
-                    proxy_headers=configuration.proxy_headers,
-                    **addition_pool_args,
-                )
+    @property
+    def pool_manager(self) -> urllib3.PoolManager | urllib3.ProxyManager:
+        """
+        Returns the underlying urllib3.PoolManager or urllib3.ProxyManager object.
+        """
+        if self._pool_manager is None:
+            pool_size = self._pool_size or self._configuration.connection_pool_size
+            pool_size_max = (
+                self._pool_size_max or self._configuration.connection_pool_size_max
             )
 
-            return
+            cert_required = (
+                ssl.CERT_REQUIRED if self._configuration.verify_ssl else ssl.CERT_NONE
+            )
 
-        self.pool_manager = urllib3.PoolManager(
-            num_pools=pools_size,
-            maxsize=maxsize,
-            cert_reqs=cert_reqs,
-            ca_certs=configuration.ssl_ca_cert,
-            cert_file=configuration.cert_file,
-            key_file=configuration.key_file,
-            **addition_pool_args,
-        )
+            addition_pool_args = {}
+
+            if self._configuration.assert_hostname:
+                addition_pool_args["assert_hostname"] = (
+                    self._configuration.assert_hostname.assert_hostname
+                )
+
+            if self._configuration.socket_options:
+                addition_pool_args["socket_options"] = (
+                    self._configuration.assert_hostname.socket_options
+                )
+
+            if self._configuration.proxy:
+                self._pool_manager = urllib3.ProxyManager(
+                    num_pools=pool_size,
+                    maxsize=pool_size_max,
+                    cert_reqs=cert_required,
+                    ca_certs=self._configuration.ssl_ca_cert,
+                    cert_file=self._configuration.cert_file,
+                    key_file=self._configuration.key_file,
+                    proxy_url=self._configuration.proxy,
+                    proxy_headers=self._configuration.proxy_headers,
+                    **addition_pool_args,
+                )
+
+            else:
+                self._pool_manager = urllib3.PoolManager(
+                    num_pools=pool_size,
+                    maxsize=pool_size_max,
+                    cert_reqs=cert_required,
+                    ca_certs=self._configuration.ssl_ca_cert,
+                    cert_file=self._configuration.cert_file,
+                    key_file=self._configuration.key_file,
+                    **addition_pool_args,
+                )
+
+        return self._pool_manager
+
+    @pool_manager.setter
+    def pool_manager(self, value: urllib3.PoolManager | urllib3.ProxyManager) -> None:
+        self._pool_manager = value
 
     def close(self) -> None:
         """
@@ -255,7 +266,7 @@ class RESTClientObject:
 
         headers = headers or {}
         post_params = post_params or {}
-        timeout_val = _request_timeout or self._timeout_millisec
+        timeout_val = _request_timeout or self._timeout
 
         if isinstance(timeout_val, float | int):
             if timeout_val > 100:

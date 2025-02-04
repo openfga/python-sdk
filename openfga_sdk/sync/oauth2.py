@@ -23,6 +23,7 @@ import urllib3
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
+from openfga_sdk.sync.rest import RESTClientObject
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
 
@@ -43,16 +44,15 @@ def jitter(loop_count, min_wait_in_ms):
 
 
 class OAuth2Client:
-    def __init__(self, credentials: Credentials, configuration=None):
-        self._credentials = credentials
-        self._access_token = None
-        self._access_expiry_time = None
-        self._telemetry = Telemetry()
+    _configuration: Configuration | None = None
+    _access_token: str | None = None
+    _access_expiry_time: datetime | None = None
 
-        if configuration is None:
-            configuration = Configuration.get_default_copy()
-
-        self.configuration = configuration
+    def __init__(
+        self,
+        configuration: Configuration | None = None,
+    ):
+        self._configuration = configuration
 
     def _token_valid(self):
         """
@@ -64,18 +64,17 @@ class OAuth2Client:
             return False
         return True
 
-    def _obtain_token(self, client):
+    def _obtain_token(self, client: RESTClientObject):
         """
         Perform OAuth2 and obtain token
         """
-        configuration = self._credentials.configuration
 
-        token_url = f"https://{configuration.api_issuer}/oauth/token"
+        token_url = f"https://{self._configuration.credentials.api_issuer}/oauth/token"
 
         post_params = {
-            "client_id": configuration.client_id,
-            "client_secret": configuration.client_secret,
-            "audience": configuration.api_audience,
+            "client_id": self._configuration.credentials.client_id,
+            "client_secret": self._configuration.credentials.client_secret,
+            "audience": self._configuration.credentials.api_audience,
             "grant_type": "client_credentials",
         }
 
@@ -87,25 +86,7 @@ class OAuth2Client:
             }
         )
 
-        max_retry = (
-            self.configuration.retry_params.max_retry
-            if (
-                self.configuration.retry_params is not None
-                and self.configuration.retry_params.max_retry is not None
-            )
-            else 0
-        )
-
-        min_wait_in_ms = (
-            self.configuration.retry_params.min_wait_in_ms
-            if (
-                self.configuration.retry_params is not None
-                and self.configuration.retry_params.min_wait_in_ms is not None
-            )
-            else 0
-        )
-
-        for attempt in range(max_retry + 1):
+        for attempt in range(self._configuration.retry_params.max_retry + 1):
             raw_response = client.request(
                 method="POST",
                 url=token_url,
@@ -118,8 +99,13 @@ class OAuth2Client:
             )
 
             if 500 <= raw_response.status <= 599 or raw_response.status == 429:
-                if attempt < max_retry and raw_response.status != 501:
-                    time.sleep(jitter(attempt, min_wait_in_ms))
+                if (
+                    attempt < self._configuration.retry_params.max_retry
+                    and raw_response.status != 501
+                ):
+                    time.sleep(
+                        jitter(attempt, self._configuration.retry_params.min_wait_in_ms)
+                    )
                     continue
 
             if 200 <= raw_response.status <= 299:
@@ -135,9 +121,9 @@ class OAuth2Client:
                     self._access_token = api_response.get("access_token")
                     self._telemetry.metrics.credentialsRequest(
                         attributes={
-                            TelemetryAttributes.fga_client_request_client_id: configuration.client_id
+                            TelemetryAttributes.fga_client_request_client_id: self._configuration.credentials.client_id
                         },
-                        configuration=self.configuration.telemetry,
+                        configuration=self._configuration.telemetry,
                     )
                     break
 

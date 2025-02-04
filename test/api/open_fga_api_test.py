@@ -121,6 +121,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         )
 
     def tearDown(self):
+        self.configuration = None
         pass
 
     @patch.object(rest.RESTClientObject, "request")
@@ -1076,78 +1077,6 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 _request_timeout=None,
             )
 
-    def test_default_scheme(self):
-        """
-        Ensure default scheme is https
-        """
-        configuration = openfga_sdk.Configuration(api_host="localhost")
-        self.assertEqual(configuration.api_scheme, "https")
-
-    def test_host_port(self):
-        """
-        Ensure host has port will not raise error
-        """
-        configuration = openfga_sdk.Configuration(api_host="localhost:3000")
-        self.assertEqual(configuration.api_host, "localhost:3000")
-
-    def test_configuration_missing_host(self):
-        """
-        Test whether FgaValidationException is raised if configuration does not have host specified
-        """
-        configuration = openfga_sdk.Configuration(api_scheme="http")
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
-    def test_configuration_missing_scheme(self):
-        """
-        Test whether FgaValidationException is raised if configuration does not have scheme specified
-        """
-        configuration = openfga_sdk.Configuration(api_host="localhost")
-        configuration.api_scheme = None
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
-    def test_configuration_bad_scheme(self):
-        """
-        Test whether ApiValueError is raised if scheme is bad
-        """
-        configuration = openfga_sdk.Configuration(
-            api_host="localhost", api_scheme="foo"
-        )
-        self.assertRaises(ApiValueError, configuration.is_valid)
-
-    def test_configuration_bad_host(self):
-        """
-        Test whether ApiValueError is raised if host is bad
-        """
-        configuration = openfga_sdk.Configuration(api_host="/", api_scheme="foo")
-        self.assertRaises(ApiValueError, configuration.is_valid)
-
-    def test_configuration_has_path(self):
-        """
-        Test whether ApiValueError is raised if host has path
-        """
-        configuration = openfga_sdk.Configuration(
-            api_host="localhost/mypath", api_scheme="http"
-        )
-        self.assertRaises(ApiValueError, configuration.is_valid)
-
-    def test_configuration_has_query(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = openfga_sdk.Configuration(
-            api_host="localhost?mypath=foo", api_scheme="http"
-        )
-        self.assertRaises(ApiValueError, configuration.is_valid)
-
-    def test_configuration_store_id_invalid(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = openfga_sdk.Configuration(
-            api_host="localhost", api_scheme="http", store_id="abcd"
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
     def test_url(self):
         """
         Ensure that api_url is set and validated
@@ -1155,16 +1084,6 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         configuration = openfga_sdk.Configuration(api_url="http://localhost:8080")
         self.assertEqual(configuration.api_url, "http://localhost:8080")
         configuration.is_valid()
-
-    def test_url_with_scheme_and_host(self):
-        """
-        Ensure that api_url takes precedence over api_host and scheme
-        """
-        configuration = openfga_sdk.Configuration(
-            api_url="http://localhost:8080", api_host="localhost:8080", api_scheme="foo"
-        )
-        self.assertEqual(configuration.api_url, "http://localhost:8080")
-        configuration.is_valid()  # Should not throw and complain about scheme being invalid
 
     def test_timeout_millisec(self):
         """
@@ -1177,35 +1096,13 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         self.assertEqual(configuration.timeout_millisec, 10000)
         configuration.is_valid()
 
-    async def test_bad_configuration_read_authorization_model(self):
-        """
-        Test whether FgaValidationException is raised for API (reading authorization models)
-        with configuration is having incorrect API scheme
-        """
-        configuration = openfga_sdk.Configuration(
-            api_scheme="bad",
-            api_host="api.fga.example",
-        )
-        configuration.store_id = "xyz123"
-        # Enter a context with an instance of the API client
-        async with openfga_sdk.ApiClient(configuration) as api_client:
-            # Create an instance of the API class
-            api_instance = open_fga_api.OpenFgaApi(api_client)
-
-            # expects FgaValidationException to be thrown because api_scheme is bad
-            with self.assertRaises(ApiValueError):
-                await api_instance.read_authorization_models(
-                    page_size=1, continuation_token="abcdefg"
-                )
-
     async def test_configuration_missing_storeid(self):
         """
         Test whether FgaValidationException is raised for API (reading authorization models)
         required store ID but configuration is missing store ID
         """
         configuration = openfga_sdk.Configuration(
-            api_scheme="http",
-            api_host="api.fga.example",
+            api_url="api.fga.example",
         )
         # Notice the store_id is not set
         # Enter a context with an instance of the API client

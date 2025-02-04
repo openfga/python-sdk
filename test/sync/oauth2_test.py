@@ -43,10 +43,10 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         """
         Test getting authentication header when method is client credentials
         """
-        client = OAuth2Client(None)
+        client = OAuth2Client()
         client._access_token = "XYZ123"
         client._access_expiry_time = datetime.now() + timedelta(seconds=60)
-        auth_header = client.get_authentication_header(None)
+        auth_header = client.get_authentication_header()
         self.assertEqual(auth_header, {"Authorization": "Bearer XYZ123"})
 
     @patch.object(rest.RESTClientObject, "request")
@@ -71,7 +71,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
                 api_audience="myaudience",
             ),
         )
-        rest_client = rest.RESTClientObject(Configuration())
+        rest_client = rest.RESTClientObject(
+            Configuration(api_url="https://api.fga.example")
+        )
         current_time = datetime.now()
         client = OAuth2Client(credentials)
         auth_header = client.get_authentication_header(rest_client)
@@ -125,7 +127,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
                 api_audience="myaudience",
             ),
         )
-        rest_client = rest.RESTClientObject(Configuration())
+        rest_client = rest.RESTClientObject(
+            Configuration(api_url="https://api.fga.example")
+        )
         client = OAuth2Client(credentials)
         with self.assertRaises(AuthenticationError):
             client.get_authentication_header(rest_client)
@@ -155,7 +159,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
                 api_audience="myaudience",
             ),
         )
-        rest_client = rest.RESTClientObject(Configuration())
+        rest_client = rest.RESTClientObject(
+            Configuration(api_url="https://api.fga.example")
+        )
         client = OAuth2Client(credentials)
 
         client._access_token = "XYZ123"
@@ -185,7 +191,9 @@ This is not a JSON response
                 api_audience="myaudience",
             ),
         )
-        rest_client = rest.RESTClientObject(Configuration())
+        rest_client = rest.RESTClientObject(
+            Configuration(api_url="https://api.fga.example")
+        )
         client = OAuth2Client(credentials)
 
         with self.assertRaises(AuthenticationError):
@@ -214,7 +222,9 @@ This is not a JSON response
                 api_audience="myaudience",
             ),
         )
-        rest_client = rest.RESTClientObject(Configuration())
+        rest_client = rest.RESTClientObject(
+            Configuration(api_url="https://api.fga.example")
+        )
         client = OAuth2Client(credentials)
 
         with self.assertRaises(AuthenticationError):
@@ -258,7 +268,7 @@ This is not a JSON response
             ),
         )
 
-        configuration = Configuration()
+        configuration = Configuration(api_url="https://api.fga.example")
         configuration.retry_params.max_retry = 5
         configuration.retry_params.retry_interval = 0
 

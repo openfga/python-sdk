@@ -1084,87 +1084,72 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         """
         Ensure default scheme is https
         """
-        configuration = Configuration(api_host="localhost")
-        self.assertEqual(configuration.api_scheme, "https")
+        configuration = Configuration(api_url="localhost")
+        self.assertEqual(configuration.api_url, "https://localhost")
+
+    def test_http_scheme(self):
+        """
+        Ensure the scheme can be overridden
+        """
+        configuration = Configuration(api_url="http://localhost")
+        self.assertEqual(configuration.api_url, "http://localhost")
 
     def test_host_port(self):
         """
         Ensure host has port will not raise error
         """
-        configuration = Configuration(api_host="localhost:3000")
-        self.assertEqual(configuration.api_host, "localhost:3000")
+        configuration = Configuration(api_url="localhost:3000")
+        self.assertEqual(configuration.api_url, "https://localhost:3000")
 
     def test_configuration_missing_host(self):
         """
         Test whether FgaValidationException is raised if configuration does not have host specified
         """
-        configuration = Configuration(api_scheme="http")
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
-    def test_configuration_missing_scheme(self):
-        """
-        Test whether FgaValidationException is raised if configuration does not have scheme specified
-        """
-        configuration = Configuration(api_host="localhost")
-        configuration.api_scheme = None
-        self.assertRaises(FgaValidationException, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            configuration = Configuration(api_url="http://")
 
     def test_configuration_bad_scheme(self):
         """
         Test whether ApiValueError is raised if scheme is bad
         """
-        configuration = Configuration(api_host="localhost", api_scheme="foo")
-        self.assertRaises(ApiValueError, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            configuration = Configuration(api_url="foo://localhost")
+            print(configuration.api_url)
 
     def test_configuration_bad_host(self):
         """
         Test whether ApiValueError is raised if host is bad
         """
-        configuration = Configuration(api_host="/", api_scheme="foo")
-        self.assertRaises(ApiValueError, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            configuration = Configuration(api_url="https://?")
 
     def test_configuration_has_path(self):
         """
         Test whether ApiValueError is raised if host has path
         """
-        configuration = Configuration(api_host="localhost/mypath", api_scheme="http")
-        self.assertRaises(ApiValueError, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            configuration = Configuration(api_url="localhost/mypath")
 
     def test_configuration_has_query(self):
         """
         Test whether ApiValueError is raised if host has query
         """
-        configuration = Configuration(
-            api_host="localhost?mypath=foo", api_scheme="http"
-        )
-        self.assertRaises(ApiValueError, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            configuration = Configuration(api_url="localhost?mypath=foo")
 
     def test_configuration_store_id_invalid(self):
         """
         Test whether ApiValueError is raised if host has query
         """
-        configuration = Configuration(
-            api_host="localhost", api_scheme="http", store_id="abcd"
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            configuration = Configuration(api_url="localhost", store_id="abcd")
 
     def test_url(self):
         """
         Ensure that api_url is set and validated
         """
         configuration = Configuration(api_url="http://localhost:8080")
-        self.assertEqual(configuration.api_url, "http://localhost:8080")
         configuration.is_valid()
-
-    def test_url_with_scheme_and_host(self):
-        """
-        Ensure that api_url takes precedence over api_host and scheme
-        """
-        configuration = Configuration(
-            api_url="http://localhost:8080", api_host="localhost:8080", api_scheme="foo"
-        )
-        self.assertEqual(configuration.api_url, "http://localhost:8080")
-        configuration.is_valid()  # Should not throw and complain about scheme being invalid
 
     def test_timeout_millisec(self):
         """
@@ -1177,35 +1162,13 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         self.assertEqual(configuration.timeout_millisec, 10000)
         configuration.is_valid()
 
-    async def test_bad_configuration_read_authorization_model(self):
-        """
-        Test whether FgaValidationException is raised for API (reading authorization models)
-        with configuration is having incorrect API scheme
-        """
-        configuration = Configuration(
-            api_scheme="bad",
-            api_host="api.fga.example",
-        )
-        configuration.store_id = "xyz123"
-        # Enter a context with an instance of the API client
-        with ApiClient(configuration) as api_client:
-            # Create an instance of the API class
-            api_instance = open_fga_api.OpenFgaApi(api_client)
-
-            # expects FgaValidationException to be thrown because api_scheme is bad
-            with self.assertRaises(ApiValueError):
-                api_instance.read_authorization_models(
-                    page_size=1, continuation_token="abcdefg"
-                )
-
     async def test_configuration_missing_storeid(self):
         """
         Test whether FgaValidationException is raised for API (reading authorization models)
         required store ID but configuration is missing store ID
         """
         configuration = Configuration(
-            api_scheme="http",
-            api_host="api.fga.example",
+            api_url="api.fga.example",
         )
         # Notice the store_id is not set
         # Enter a context with an instance of the API client

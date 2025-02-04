@@ -3171,22 +3171,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 _request_timeout=None,
             )
 
-    def test_configuration_store_id_invalid(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = ClientConfiguration(
-            api_host="localhost", api_scheme="http", store_id="abcd"
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
-
     def test_configuration_authorization_model_id_invalid(self):
         """
         Test whether ApiValueError is raised if host has query
         """
         configuration = ClientConfiguration(
-            api_host="localhost",
-            api_scheme="http",
+            api_url="localhost",
             store_id="01H15K9J85050XTEDPVM8DJM78",
             authorization_model_id="abcd",
         )

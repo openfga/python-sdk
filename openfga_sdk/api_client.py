@@ -169,8 +169,9 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float]
-        | None = None,
+        _telemetry_attributes: (
+            dict[TelemetryAttribute, str | bool | int | float] | None
+        ) = None,
         _streaming: bool = False,
     ):
         self.configuration.is_valid()
@@ -193,10 +194,9 @@ class ApiClient:
             path_params = self.sanitize_for_serialization(path_params)
             path_params = self.parameters_to_tuples(path_params, collection_formats)
             for k, v in path_params:
-                # specified safe chars, encode everything
-                _k = urllib.parse.quote(str(k), safe=config.safe_chars_for_path_param)
-                _v = urllib.parse.quote(str(v), safe=config.safe_chars_for_path_param)
-                resource_path = resource_path.replace("{" + str(k) + "}", _v)
+                _k = urllib.parse.quote(str(k))
+                _v = urllib.parse.quote(str(v))
+                resource_path = resource_path.replace("{" + str(k) + "}", str(_v))
 
         # query parameters
         if query_params:
@@ -223,19 +223,7 @@ class ApiClient:
             body = self.sanitize_for_serialization(body)
 
         # request url
-        if _host is None:
-            if self.configuration.api_url is not None:
-                url = self.configuration.api_url + resource_path
-            else:
-                url = (
-                    self.configuration.api_scheme
-                    + "://"
-                    + self.configuration.api_host
-                    + resource_path
-                )
-        else:
-            # use server/host defined in path or operation instead
-            url = self.configuration.api_scheme + "://" + _host + resource_path
+        url = self.configuration.api_url + resource_path
 
         max_retry = (
             self.configuration.retry_params.max_retry
@@ -514,8 +502,9 @@ class ApiClient:
         _request_auth=None,
         _retry_params=None,
         _oauth2_client=None,
-        _telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float]
-        | None = None,
+        _telemetry_attributes: (
+            dict[TelemetryAttribute, str | bool | int | float] | None
+        ) = None,
         _streaming: bool = False,
     ):
         """Makes the HTTP request (synchronous) and returns deserialized data.
