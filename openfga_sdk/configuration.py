@@ -15,10 +15,17 @@ import http
 import logging
 import sys
 
+from typing import Any
 from urllib.parse import urlparse, urlunparse
 
-from openfga_sdk.credentials import CredentialConfiguration
 from openfga_sdk.exceptions import FgaValidationException
+from openfga_sdk.protocols import (
+    ConfigurationDataProtocol,
+    ConfigurationProtocol,
+    CredentialsProtocol,
+    RetryParamsProtocol,
+    TelemetryConfigurationProtocol,
+)
 from openfga_sdk.telemetry.attributes import TelemetryAttribute
 from openfga_sdk.telemetry.configuration import (
     TelemetryConfiguration,
@@ -29,32 +36,23 @@ from openfga_sdk.telemetry.configuration import (
 from openfga_sdk.telemetry.counters import TelemetryCounter
 from openfga_sdk.telemetry.histograms import TelemetryHistogram
 from openfga_sdk.validation import (
-    ValidatedDataclass,
     ValidatedInteger,
-    create_validated_integer,
     is_well_formed_ulid_string,
 )
 
 
 @dataclass
-class RetryParams(ValidatedDataclass):
-    """
-    Retry configuration in case of HTTP too many request
-
-    :param max_retry: Maximum number of retry
-    :param min_wait_in_ms: Minimum wait (in ms) between retry
-    """
-
-    max_retry: ValidatedInteger = field(
-        default_factory=lambda: create_validated_integer(3, 0, 15)
+class RetryParams(RetryParamsProtocol):
+    max_retries: ValidatedInteger = ValidatedInteger(
+        value=RetryParamsProtocol.DEFAULT_MAX_RETRIES, min=0, max=15
     )
-    min_wait_in_ms: ValidatedInteger = field(
-        default_factory=lambda: create_validated_integer(100, 0, 1000)
+    min_wait_in_ms: ValidatedInteger = ValidatedInteger(
+        value=RetryParamsProtocol.DEFAULT_MIN_WAIT, min=0, max=1000
     )
 
 
 @dataclass
-class _ConfigurationDefaults:
+class ConfigurationData(ConfigurationDataProtocol):
     api_key_prefix: dict[str, bool | int | str] = field(default_factory=dict)
     api_key: dict[str, bool | int | str] = field(default_factory=dict)
     api_url: str | None = None
@@ -63,7 +61,7 @@ class _ConfigurationDefaults:
     client_side_validation: bool = True
     connection_pool_size: int = 4
     connection_pool_size_max: int = 100
-    credentials: CredentialConfiguration | None = None
+    credentials: CredentialsProtocol | None = None
     debug: bool = False
     discard_unknown_keys: bool = False
     key_file: str | None = None
@@ -75,31 +73,33 @@ class _ConfigurationDefaults:
     password: str | None = None
     proxy_headers: dict[str, str] | None = field(default_factory=dict)
     proxy: str | None = None
-    retry_params: RetryParams = field(default_factory=lambda: RetryParams())
+    retry_params: RetryParamsProtocol = field(default_factory=lambda: RetryParams())
     socket_options: list[tuple[int, int, int | bytes]] | None = None
     ssl_ca_cert: str | None = None
     store_id: str | None = None
-    telemetry: TelemetryConfiguration = field(
+    authorization_model_id: str | None = None
+    telemetry: TelemetryConfigurationProtocol = field(
         default_factory=lambda: TelemetryConfiguration.withDefaults()
     )
-    timeout_millisec: int = 300000
+    timeout: int = 300000
     username: str | None = None
     verify_ssl: bool = True
 
 
-class Configuration:
+class Configuration(ConfigurationProtocol):
     """
     OpenFGA configuration
     """
 
-    _data: _ConfigurationDefaults = _ConfigurationDefaults()
+    _data: ConfigurationData
 
     def __init__(
         self,
         api_url: str,
         store_id: str | None = None,
-        credentials: CredentialConfiguration | None = None,
-        retry_params: RetryParams | None = None,
+        authorization_model_id: str | None = None,
+        credentials: CredentialsProtocol | None = None,
+        retry_params: RetryParamsProtocol | None = None,
         api_key: dict[str, bool | int | str] = {},
         api_key_prefix: dict[str, bool | int | str] = {},
         username: str | None = None,
@@ -107,7 +107,7 @@ class Configuration:
         discard_unknown_keys: bool = False,
         ssl_ca_cert: str | None = None,
         telemetry: (
-            TelemetryConfiguration
+            TelemetryConfigurationProtocol
             | dict[
                 TelemetryConfigurationType | str,
                 TelemetryMetricsConfiguration
@@ -121,10 +121,13 @@ class Configuration:
             ]
             | None
         ) = None,
-        timeout_millisec: int = 300000,
+        timeout: int = 300000,
     ):
+        self._data = ConfigurationData()
+
         self.api_url = api_url
         self.store_id = store_id
+        self.authorization_model_id = authorization_model_id
         self.credentials = credentials
         self.api_key = api_key
         self.api_key_prefix = api_key_prefix
@@ -132,7 +135,7 @@ class Configuration:
         self.password = password
         self.discard_unknown_keys = discard_unknown_keys
         self.ssl_ca_cert = ssl_ca_cert
-        self.timeout_millisec = timeout_millisec
+        self.timeout = timeout
 
         if retry_params is not None:
             self.retry_params = retry_params
@@ -141,8 +144,11 @@ class Configuration:
             self.telemetry = self._telemetry_from_config(telemetry)
 
     @classmethod
-    def get_default_copy(cls) -> _ConfigurationDefaults:
-        return _ConfigurationDefaults()
+    def get_default_copy(cls) -> ConfigurationData:
+        return ConfigurationData()
+
+    def get(self, key: str) -> Any:
+        return getattr(self._data, key)
 
     def auth_settings(self):
         """Gets Auth Settings dict for api client.
@@ -181,7 +187,7 @@ class Configuration:
     def _telemetry_from_config(
         self,
         value: (
-            TelemetryConfiguration
+            TelemetryConfigurationProtocol
             | dict[
                 TelemetryConfigurationType | str,
                 TelemetryMetricsConfiguration
@@ -195,11 +201,11 @@ class Configuration:
             ]
             | None
         ) = None,
-    ) -> TelemetryConfiguration:
+    ) -> TelemetryConfigurationProtocol:
         """
         Create a TelemetryConfiguration from a dictionary.
         """
-        if isinstance(value, TelemetryConfiguration):
+        if isinstance(value, TelemetryConfigurationProtocol):
             return value
 
         if isinstance(value, dict):
@@ -276,6 +282,24 @@ class Configuration:
         self._data.assert_hostname = value
 
     @property
+    def authorization_model_id(self) -> str | None:
+        return self._data.authorization_model_id
+
+    @authorization_model_id.setter
+    def authorization_model_id(self, value: str | None) -> None:
+        if value is None or value == "":
+            self._data.authorization_model_id = None
+            return
+
+        if is_well_formed_ulid_string(value):
+            self._data.authorization_model_id = value
+            return
+
+        raise FgaValidationException(
+            f"authorization_model_id ('{value}') is not in a valid ulid format"
+        )
+
+    @property
     def cert_file(self) -> str | None:
         """
         When verifying SSL/TLS certificates, a custom private key (key_file) and corresponding certificate (cert_file) can be specified. This is useful when the server uses a self-signed certificate or a certificate from a non-standard CA.
@@ -324,13 +348,13 @@ class Configuration:
         self._data.connection_pool_size_max = value
 
     @property
-    def credentials(self) -> CredentialConfiguration | None:
+    def credentials(self) -> CredentialsProtocol | None:
         return self._data.credentials
 
     @credentials.setter
-    def credentials(self, value: CredentialConfiguration | None):
+    def credentials(self, value: CredentialsProtocol | None):
         if value is not None:
-            value.validate_credentials_config()
+            value.validate()
 
         self._data.credentials = value
 
@@ -520,25 +544,25 @@ class Configuration:
         self._data.store_id = value
 
     @property
-    def telemetry(self) -> TelemetryConfiguration:
+    def telemetry(self) -> TelemetryConfigurationProtocol:
         return self._data.telemetry
 
     @telemetry.setter
-    def telemetry(self, value: TelemetryConfiguration) -> None:
+    def telemetry(self, value: TelemetryConfigurationProtocol) -> None:
         self._data.telemetry = value
 
     @property
-    def timeout_millisec(self) -> int:
-        return self._data.timeout_millisec
+    def timeout(self) -> int:
+        return self._data.timeout
 
-    @timeout_millisec.setter
-    def timeout_millisec(self, value: int) -> None:
+    @timeout.setter
+    def timeout(self, value: int) -> None:
         if value < 0 or value > 600000:
             raise FgaValidationException(
-                f"timeout_millisec not within reasonable range (0,60000), {value}"
+                f"timeout not within reasonable range (0,60000), {value}"
             )
 
-        self._data.timeout_millisec = value
+        self._data.timeout = value
 
     @property
     def username(self) -> str | None:

@@ -33,14 +33,14 @@ class TestCredentials(IsolatedAsyncioTestCase):
         """
         credential = Credentials("bad")
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_method_none(self):
         """
         Test credential with method none is valid
         """
         credential = Credentials("none")
-        credential.validate_credentials_config()
+        credential.validate()
         self.assertEqual(credential.method, "none")
 
     def test_method_default(self):
@@ -48,8 +48,8 @@ class TestCredentials(IsolatedAsyncioTestCase):
         Test credential with not method is default to none
         """
         credential = Credentials()
-        credential.validate_credentials_config()
-        self.assertEqual(credential.method, "none")
+        credential.validate()
+        self.assertEqual(credential.method, None)
 
     def test_configuration_api_token(self):
         """
@@ -59,7 +59,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             method="api_token",
             configuration=CredentialConfiguration(api_token="ABCDEFG"),
         )
-        credential.validate_credentials_config()
+        credential.validate()
         self.assertEqual(credential.method, "api_token")
         self.assertEqual(credential.configuration.api_token, "ABCDEFG")
 
@@ -69,7 +69,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
         """
         credential = Credentials(method="api_token")
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_api_token_missing_token(self):
         """
@@ -79,7 +79,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             method="api_token", configuration=CredentialConfiguration()
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_api_token_empty_token(self):
         """
@@ -89,7 +89,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             method="api_token", configuration=CredentialConfiguration(api_token="")
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_client_credentials(self):
         """
@@ -104,7 +104,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
                 api_audience="myaudience",
             ),
         )
-        credential.validate_credentials_config()
+        credential.validate()
         self.assertEqual(credential.method, "client_credentials")
 
     def test_configuration_client_credentials_missing_config(self):
@@ -113,7 +113,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
         """
         credential = Credentials(method="client_credentials")
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_client_credentials_missing_client_id(self):
         """
@@ -128,7 +128,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             ),
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_client_credentials_missing_client_secret(self):
         """
@@ -143,7 +143,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             ),
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_client_credentials_missing_api_issuer(self):
         """
@@ -158,7 +158,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             ),
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
     def test_configuration_client_credentials_missing_api_audience(self):
         """
@@ -173,7 +173,7 @@ class TestCredentials(IsolatedAsyncioTestCase):
             ),
         )
         with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+            credential.validate()
 
 
 class TestCredentialsIssuer(IsolatedAsyncioTestCase):
@@ -210,9 +210,7 @@ class TestCredentialsIssuer(IsolatedAsyncioTestCase):
 
     def test_invalid_issuer_no_scheme(self):
         # Test an issuer URL without a scheme
-        self.configuration.api_issuer = (
-            "https://issuer.fga.example:8080/some_endpoint	"
-        )
+        self.configuration.api_issuer = "https://issuer.fga.example:8080/some_endpoint	"
         result = self.credentials._parse_issuer(self.configuration.api_issuer)
         self.assertEqual(result, "https://issuer.fga.example:8080/some_endpoint")
 

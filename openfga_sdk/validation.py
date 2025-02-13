@@ -25,91 +25,48 @@ def is_well_formed_ulid_string(ulid):
     return True
 
 
-class ValidatedDataclass:
-    def __setattr__(self, name, value):
-        if isinstance(value, ValidatedInteger):
-            value.__set__(self, value)
-        else:
-            super().__setattr__(name, value)
-
-
 class ValidatedInteger:
+    _name: str | None = None
+    _value: int | None = None
+    _min: int | None = None
+    _max: int | None = None
+    _exception: Exception | None = None
+
     def __init__(
         self,
+        *,
         value: int,
-        min_value: int,
-        max_value: int,
-        exception_type=FgaValidationException,
+        min: int | None = None,
+        max: int | None = None,
+        exception: Exception = FgaValidationException,
     ):
-        self.min_value = min_value
-        self.max_value = max_value
-        self.exception_type = exception_type
-
-        if not (min_value <= value <= max_value):
-            raise self.exception_type(
-                f"{value} is not in range [{self.min_value}, {self.max_value}]"
-            )
         self._value = value
+        self._min = min
+        self._max = max
+        self._exception = exception
 
-    def __get__(self, obj, objtype=None) -> int:
-        return self._value
+    def __set_name__(self, owner, name):
+        self._name = "_" + name
+
+    def __get__(self, obj, type) -> int:
+        if obj is None:
+            return self._value
+
+        return getattr(obj, self._name, self._value)
 
     def __set__(self, obj, value):
-        if isinstance(value, ValidatedInteger):
-            value = value._value
+        setattr(obj, self._name, int(value))
 
-        if not (self.min_value <= value <= self.max_value):
-            raise self.exception_type(
-                f"{value} is not in range [{self.min_value}, {self.max_value}]"
-            )
-        self._value = value
+        if self._min is not None and self._max is not None:
+            if not (self._min <= value <= self._max):
+                raise self._exception(
+                    f"{value} is not in range [{self._min}, {self._max}]"
+                )
 
-    def __int__(self):
-        return self._value
+        if self._min is not None:
+            if value < self._min:
+                raise self._exception(f"{value} is less than {self._min}")
 
-    def __add__(self, other):
-        if isinstance(other, int):
-            return self._value + other
-        raise TypeError(
-            f"Unsupported operand type(s) for +: 'ValidatedInteger' and '{type(other)}'"
-        )
-
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    def __sub__(self, other):
-        if isinstance(other, int):
-            return self._value - other
-        raise TypeError(
-            f"Unsupported operand type(s) for -: 'ValidatedInteger' and '{type(other)}'"
-        )
-
-    def __rsub__(self, other):
-        return -(self.__sub__(other))
-
-    def __mul__(self, other):
-        if isinstance(other, int):
-            return self._value * other
-        raise TypeError(
-            f"Unsupported operand type(s) for *: 'ValidatedInteger' and '{type(other)}'"
-        )
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __truediv__(self, other):
-        if isinstance(other, int):
-            return self._value / other
-        raise TypeError(
-            f"Unsupported operand type(s) for /: 'ValidatedInteger' and '{type(other)}'"
-        )
-
-    def __rtruediv__(self, other):
-        return 1 / self.__truediv__(other)
-
-    def __repr__(self):
-        return f"ValidatedInteger({self._value})"
-
-
-def create_validated_integer(default_value, min_value, max_value):
-    return ValidatedInteger(default_value, min_value, max_value)
+        if self._max is not None:
+            if value > self._max:
+                raise self._exception(f"{value} is greater than {self._max}")

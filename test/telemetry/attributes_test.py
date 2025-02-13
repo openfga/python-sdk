@@ -16,12 +16,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from urllib3 import HTTPResponse
-
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.models.batch_check_request import BatchCheckRequest
 from openfga_sdk.models.check_request import CheckRequest
-from openfga_sdk.rest import RESTResponse
+from openfga_sdk.rest import RestClientResponse
 from openfga_sdk.telemetry.attributes import (
     TelemetryAttributes,
 )
@@ -122,37 +120,14 @@ def test_from_request_without_optional_params(telemetry_attributes):
     assert TelemetryAttributes.fga_client_request_client_id not in attributes
 
 
-def test_from_response_with_http_response(telemetry_attributes):
-    response = MagicMock(spec=HTTPResponse)
-    response.status = 200
-    response.getheader.side_effect = lambda header: {
-        "openfga-authorization-model-id": "model_123",
-        "fga-query-duration-ms": "50",
-    }.get(header)
-
-    credentials = Credentials(
-        method="client_credentials",
-        configuration=CredentialConfiguration(client_id="client_123"),
-    )
-    attributes = telemetry_attributes.fromResponse(
-        response=response, credentials=credentials
-    )
-
-    assert attributes[TelemetryAttributes.http_response_status_code] == 200
-    assert attributes[TelemetryAttributes.fga_client_response_model_id] == "model_123"
-    assert attributes[TelemetryAttributes.http_server_request_duration] == "50"
-    assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_123"
-
-
 def test_from_response_with_rest_response(telemetry_attributes):
-    response = MagicMock(spec=RESTResponse)
+    response = MagicMock(spec=RestClientResponse)
     response.status = 404
     response.headers = {
         "openfga-authorization-model-id": "model_404",
         "fga-query-duration-ms": "100",
     }
-
-    response.getheader = lambda key: response.headers.get(key)
+    response.header = lambda key: response.headers.get(key)
 
     credentials = Credentials(
         method="client_credentials",

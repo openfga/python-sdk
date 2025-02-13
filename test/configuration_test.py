@@ -21,10 +21,8 @@ from openfga_sdk.exceptions import FgaValidationException
 
 
 @pytest.fixture
-def configuration() -> Configuration:
-    config = Configuration(api_url="https://api.fga.example")
-    print("Configuration object created", config)
-    return config
+def configuration():
+    yield Configuration(api_url="https://api.fga.example")
 
 
 class TestConfigurationProperties:
@@ -150,7 +148,7 @@ class TestConfigurationMiscellaneous:
             password="pass",
             discard_unknown_keys=True,
             ssl_ca_cert="/path/to/ca_cert.pem",
-            timeout_millisec=10000,
+            timeout=10000,
         )
 
         # Perform deep copy
@@ -165,4 +163,4 @@ class TestConfigurationMiscellaneous:
         assert copied_config.password == config.password
         assert copied_config.discard_unknown_keys == config.discard_unknown_keys
         assert copied_config.ssl_ca_cert == config.ssl_ca_cert
-        assert copied_config.timeout_millisec == config.timeout_millisec
+        assert copied_config.timeout == config.timeout
