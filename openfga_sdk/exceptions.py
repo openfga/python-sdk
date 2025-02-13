@@ -119,7 +119,7 @@ class ApiException(OpenApiException):
             try:
                 headers = http_resp.headers.items()
             except AttributeError:
-                headers = http_resp.getheaders().items()
+                headers = http_resp.headers().items()
 
             self.status = http_resp.status
             self.reason = http_resp.reason

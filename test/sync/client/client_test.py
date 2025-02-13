@@ -18,7 +18,7 @@ from unittest.mock import ANY, patch
 
 import urllib3
 
-from openfga_sdk.client import ClientConfiguration
+from openfga_sdk.configuration import Configuration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
@@ -83,8 +83,8 @@ from openfga_sdk.models.write_authorization_model_request import (
 from openfga_sdk.models.write_authorization_model_response import (
     WriteAuthorizationModelResponse,
 )
-from openfga_sdk.sync import rest
-from openfga_sdk.sync.client.client import OpenFgaClient
+from openfga_sdk.protocols import ConfigurationProtocol
+from openfga_sdk.sync import OpenFgaClient, RestClient, RestClientResponse
 
 
 store_id = "01YCP46JKYM8FJCQ37NMBYHE5X"
@@ -103,21 +103,23 @@ def http_mock_response(body, status):
 
 def mock_response(body, status):
     obj = http_mock_response(body, status)
-    return rest.RESTResponse(obj, obj.data)
+    return RestClientResponse(
+        response=obj, data=obj.data, status=obj.status, reason=obj.reason
+    )
 
 
 class TestOpenFgaClient(IsolatedAsyncioTestCase):
     """Test for OpenFGA Client"""
 
     def setUp(self):
-        self.configuration = ClientConfiguration(
+        self.configuration: ConfigurationProtocol = Configuration(
             api_url="http://api.fga.example",
         )
 
     def tearDown(self):
         pass
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_list_stores(self, mock_request):
         """Test case for list_stores
 
@@ -185,12 +187,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ("continuation_token", "continuation_token_example"),
                 ],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_create_store(self, mock_request):
         """Test case for create_store
 
@@ -217,12 +218,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 query_params=[],
                 post_params=[],
                 body={"name": "test-store"},
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_get_store(self, mock_request):
         """Test case for get_store
 
@@ -251,12 +251,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_delete_store(self, mock_request):
         """Test case for delete_store
 
@@ -274,12 +273,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_authorization_models(self, mock_request):
         """Test case for read_authorization_models
 
@@ -367,11 +365,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_authorization_model(self, mock_request):
         """Test case for write_authorization_model
 
@@ -446,11 +443,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         }
                     ],
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_authorization_model(self, mock_request):
         """Test case for read_authorization_model
 
@@ -535,11 +531,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_latest_authorization_model(self, mock_request):
         """Test case for read_latest_authorization_model
 
@@ -623,11 +618,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[("page_size", 1)],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_latest_authorization_model_with_no_models(self, mock_request):
         """Test case for read_latest_authorization_model when no models are in the store
 
@@ -654,11 +648,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[("page_size", 1)],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_changes(self, mock_request):
         """Test case for read_changes
 
@@ -718,11 +711,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ("start_time", "2022-01-01T00:00:00+00:00"),
                 ],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read(self, mock_request):
         """Test case for read
 
@@ -788,11 +780,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "continuation_token": "eyJwayI6IkxBVEVTVF9OU0NPTkZJR19hdXRoMHN0b3JlIiwic2siOiIxem1qbXF3MWZLZExTcUoyN01MdTdqTjh0cWgifQ==",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_empty_options(self, mock_request):
         """Test case for read with empty options
 
@@ -848,11 +839,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     }
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_empty_body(self, mock_request):
         """Test case for read with empty body
 
@@ -898,11 +888,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 query_params=[],
                 post_params=[],
                 body={},
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write(self, mock_request):
         """Test case for write
 
@@ -963,11 +952,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_delete(self, mock_request):
         """Test case for delete
 
@@ -1008,11 +996,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_batch(self, mock_request):
         """Test case for write
 
@@ -1108,8 +1095,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1129,8 +1115,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1150,11 +1135,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_batch_min_parallel(self, mock_request):
         """Test case for write
 
@@ -1250,8 +1234,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1271,8 +1254,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1292,11 +1274,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_batch_larger_chunk(self, mock_request):
         """Test case for write
 
@@ -1397,8 +1378,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1418,11 +1398,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_batch_failed(self, mock_request):
         """Test case for write
 
@@ -1532,8 +1511,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1553,8 +1531,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -1574,11 +1551,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_delete_batch(self, mock_request):
         """Test case for delete
 
@@ -1628,11 +1604,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_tuples(self, mock_request):
         """Test case for write tuples
 
@@ -1691,11 +1666,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_delete_tuples(self, mock_request):
         """Test case for delete tuples
 
@@ -1754,11 +1728,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_batch_unauthorized(self, mock_request):
         """Test case for write with 401 response"""
 
@@ -1810,12 +1783,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         },
                         "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                     },
-                    _preload_content=ANY,
-                    _request_timeout=ANY,
+                    timeout=None,
                 )
                 api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_check(self, mock_request):
         """Test case for check
 
@@ -1874,12 +1846,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_check_config_auth_model(self, mock_request):
         """Test case for check
 
@@ -1916,12 +1887,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_client_batch_check_single_request(self, mock_request):
         """Test case for check with single request
 
@@ -1969,12 +1939,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_client_batch_check_multiple_request(self, mock_request):
         """Test case for check with multiple request
 
@@ -2038,8 +2007,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2055,8 +2023,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2072,12 +2039,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_client_batch_check_multiple_request_fail(self, mock_request):
         """Test case for check with multiple request with one request failed
 
@@ -2150,8 +2116,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2167,8 +2132,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2184,12 +2148,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     },
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_batch_check_single_request(self, mock_request):
         """Test case for check with single request
 
@@ -2252,13 +2215,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
     @patch.object(uuid, "uuid4")
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_batch_check_multiple_request(self, mock_request, mock_uuid):
         """Test case for check with multiple request
 
@@ -2371,8 +2333,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2393,8 +2354,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
@@ -2430,7 +2390,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_batch_check_errors_unauthorized(self, mock_request):
         """Test case for BatchCheck with a 401"""
         first_response_body = """
@@ -2516,8 +2476,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2538,12 +2497,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     ],
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_expand(self, mock_request):
         """Test case for expand
 
@@ -2585,12 +2543,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_list_objects(self, mock_request):
         """Test case for list_objects
 
@@ -2635,12 +2592,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_list_objects_contextual_tuples(self, mock_request):
         """Test case for list_objects
 
@@ -2696,12 +2652,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         ]
                     },
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_list_relations(self, mock_request):
         """Test case for list relations
 
@@ -2750,8 +2705,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2768,8 +2722,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             mock_request.assert_any_call(
                 "POST",
@@ -2786,12 +2739,11 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_list_relations_unauthorized(self, mock_request):
         """Test case for list relations with 401 response"""
 
@@ -2815,7 +2767,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             mock_request.assert_called()
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_list_users(self, mock_request):
         """
         Test case for list_users
@@ -2930,13 +2882,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     "context": {},
                     "consistency": "MINIMIZE_LATENCY",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
             api_client.close()
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_read_assertions(self, mock_request):
         """Test case for read assertions"""
         response_body = """
@@ -2985,11 +2936,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 body=None,
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_write_assertions(self, mock_request):
         """Test case for write assertions
 
@@ -3028,11 +2978,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 },
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_set_store_id(self, mock_request):
         """Test case for write assertions
 
@@ -3074,11 +3023,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 },
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_config_auth_model(self, mock_request):
         """Test case for write assertions
 
@@ -3121,11 +3069,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 },
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
 
-    @patch.object(rest.RESTClientObject, "request")
+    @patch.object(RestClient, "request")
     def test_update_auth_model(self, mock_request):
         """Test case for write assertions
 
@@ -3167,27 +3114,16 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 },
                 query_params=[],
                 post_params=[],
-                _preload_content=ANY,
-                _request_timeout=None,
+                timeout=None,
             )
-
-    def test_configuration_store_id_invalid(self):
-        """
-        Test whether ApiValueError is raised if host has query
-        """
-        configuration = ClientConfiguration(
-            api_host="localhost", api_scheme="http", store_id="abcd"
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
 
     def test_configuration_authorization_model_id_invalid(self):
         """
         Test whether ApiValueError is raised if host has query
         """
-        configuration = ClientConfiguration(
-            api_host="localhost",
-            api_scheme="http",
-            store_id="01H15K9J85050XTEDPVM8DJM78",
-            authorization_model_id="abcd",
-        )
-        self.assertRaises(FgaValidationException, configuration.is_valid)
+        with self.assertRaises(FgaValidationException):
+            Configuration(
+                api_url="localhost",
+                store_id="01H15K9J85050XTEDPVM8DJM78",
+                authorization_model_id="abcd",
+            )
