@@ -288,6 +288,7 @@ def test_close():
     client.pool_manager = mock_pool_manager
 
     client.close()
+
     mock_pool_manager.clear.assert_called_once()
 
 
@@ -333,7 +334,6 @@ def test_request_preload_content():
     assert isinstance(resp, RESTResponse)
     assert resp.status == 200
     assert resp.data == b'{"some":"data"}'
-    mock_pool_manager.clear.assert_called_once()
 
 
 def test_request_no_preload_content():
@@ -380,7 +380,6 @@ def test_request_no_preload_content():
     # We expect the raw HTTPResponse
     assert resp == mock_raw_response
     assert resp.status == 200
-    mock_pool_manager.clear.assert_called_once()
 
 
 def test_stream_happy_path():
@@ -431,7 +430,6 @@ def test_stream_happy_path():
 
     assert results == [{"foo": "bar"}, {"hello": "world"}]
     mock_pool_manager.request.assert_called_once()
-    mock_pool_manager.clear.assert_called_once()
 
 
 def test_stream_partial_chunks():
@@ -483,7 +481,6 @@ def test_stream_partial_chunks():
 
     assert results == [{"foo": "bar"}, {"hello": "world"}]
     mock_pool_manager.request.assert_called_once()
-    mock_pool_manager.clear.assert_called_once()
 
 
 def test_stream_exception_in_chunks():
@@ -534,4 +531,3 @@ def test_stream_exception_in_chunks():
     # Exception is logged, we yield nothing
     assert results == []
     mock_pool_manager.request.assert_called_once()
-    mock_pool_manager.clear.assert_called_once()

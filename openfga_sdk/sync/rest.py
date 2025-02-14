@@ -452,9 +452,6 @@ class RESTClientObject:
             # Release the response object (required!)
             response.release_conn()
 
-        # Release the connection back to the pool
-        self.close()
-
     def request(
         self,
         method: str,

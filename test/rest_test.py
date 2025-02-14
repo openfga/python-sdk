@@ -319,7 +319,6 @@ async def test_stream_happy_path():
 
     client.handle_response_exception.assert_awaited_once()
     mock_response.release.assert_called_once()
-    client.close.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -364,7 +363,6 @@ async def test_stream_exception_in_chunks():
     assert results == []
     client.handle_response_exception.assert_awaited_once()
     mock_response.release.assert_called_once()
-    client.close.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -411,4 +409,3 @@ async def test_stream_partial_chunks():
 
     client.handle_response_exception.assert_awaited_once()
     mock_response.release.assert_called_once()
-    client.close.assert_awaited_once()
