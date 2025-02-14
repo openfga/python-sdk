@@ -116,14 +116,9 @@ example/opentelemetry/main.py
 example/opentelemetry/requirements.txt
 example/opentelemetry/setup.cfg
 example/opentelemetry/setup.py
-example/streamed-list-objects/.env.example
-example/streamed-list-objects/.gitignore
 example/streamed-list-objects/README.md
-example/streamed-list-objects/asynchronous.py
-example/streamed-list-objects/requirements.txt
-example/streamed-list-objects/setup.cfg
-example/streamed-list-objects/setup.py
-example/streamed-list-objects/synchronous.py
+example/streamed-list-objects/example.py
+example/streamed-list-objects/model.json
 openfga_sdk/__init__.py
 openfga_sdk/api/__init__.py
 openfga_sdk/api/open_fga_api.py
