@@ -1,39 +1,22 @@
-# Streamed List Objects example for OpenFGA's Python SDK
+# Streamed List Objects Example
 
-This example demonstrates working with the `POST` `/stores/:id/streamed-list-objects` endpoint in OpenFGA using the Python SDK.
+This example demonstrates working with [OpenFGA's `/streamed-list-objects` endpoint](https://openfga.dev/api/service#/Relationship%20Queries/StreamedListObjects) using the Python SDK's `streamed_list_objects()` method.
 
 ## Prerequisites
 
-If you do not already have an OpenFGA instance running, you can start one using the following command:
+- Python 3.10+
+- OpenFGA running on `localhost:8080`
+
+You can start OpenFGA with Docker by running the following command:
 
 ```bash
-docker run -d -p 8080:8080 openfga/openfga
+docker pull openfga/openfga && docker run -it --rm -p 8080:8080 openfga/openfga run
 ```
-
-## Configure the example
-
-You may need to configure the example for your environment:
-
-```bash
-cp .env.example .env
-```
-
-Now edit the `.env` file and set the values as appropriate.
 
 ## Running the example
 
-Begin by installing the required dependencies:
+No additional setup is required to run this example. Simply run the following command:
 
 ```bash
-pip install -r requirements.txt
-```
-
-Next, run the example. You can use either the synchronous or asynchronous client:
-
-```bash
-python asynchronous.py
-```
-
-```bash
-python synchronous.py
+python example.py
 ```
