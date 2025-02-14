@@ -409,9 +409,6 @@ class RESTClientObject:
             # Release the response object (required!)
             response.release()
 
-        # Release the connection back to the pool
-        await self.close()
-
     async def request(
         self,
         method: str,
