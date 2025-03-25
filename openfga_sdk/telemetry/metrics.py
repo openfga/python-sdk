@@ -179,7 +179,7 @@ class TelemetryMetrics:
 
                 if (
                     isinstance(configuration, TelemetryConfiguration)
-                    and type(configuration.metrics) is TelemetryMetricsConfiguration
+                    and isinstance(configuration.metrics, TelemetryMetricsConfiguration)
                     and isinstance(
                         configuration.metrics.fga_client_request_duration,
                         TelemetryMetricConfiguration,
@@ -228,7 +228,7 @@ class TelemetryMetrics:
 
                 if (
                     isinstance(configuration, TelemetryConfiguration)
-                    and isinstance(configuration.metrics, TelemetryMetricConfiguration)
+                    and isinstance(configuration.metrics, TelemetryMetricsConfiguration)
                     and isinstance(
                         configuration.metrics.fga_client_query_duration,
                         TelemetryMetricConfiguration,
