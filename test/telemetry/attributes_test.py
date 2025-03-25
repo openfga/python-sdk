@@ -123,6 +123,7 @@ def test_from_request_without_optional_params(telemetry_attributes):
 
 
 def test_from_response_with_http_response(telemetry_attributes):
+    start_time = time.time() - 5
     response = MagicMock(spec=HTTPResponse)
     response.status = 200
     response.getheader.side_effect = lambda header: {
@@ -135,16 +136,21 @@ def test_from_response_with_http_response(telemetry_attributes):
         configuration=CredentialConfiguration(client_id="client_123"),
     )
     attributes = telemetry_attributes.fromResponse(
-        response=response, credentials=credentials
+        response=response,
+        credentials=credentials,
+        start=start_time,
     )
 
     assert attributes[TelemetryAttributes.http_response_status_code] == 200
     assert attributes[TelemetryAttributes.fga_client_response_model_id] == "model_123"
     assert attributes[TelemetryAttributes.http_server_request_duration] == "50"
     assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_123"
+    assert TelemetryAttributes.http_client_request_duration in attributes
+    assert attributes[TelemetryAttributes.http_client_request_duration] > 0
 
 
 def test_from_response_with_rest_response(telemetry_attributes):
+    start_time = time.time() - 5
     response = MagicMock(spec=RESTResponse)
     response.status = 404
     response.headers = {
@@ -159,13 +165,17 @@ def test_from_response_with_rest_response(telemetry_attributes):
         configuration=CredentialConfiguration(client_id="client_456"),
     )
     attributes = telemetry_attributes.fromResponse(
-        response=response, credentials=credentials
+        response=response,
+        credentials=credentials,
+        start=start_time,
     )
 
     assert attributes[TelemetryAttributes.http_response_status_code] == 404
     assert attributes[TelemetryAttributes.fga_client_response_model_id] == "model_404"
     assert attributes[TelemetryAttributes.http_server_request_duration] == "100"
     assert attributes[TelemetryAttributes.fga_client_request_client_id] == "client_456"
+    assert TelemetryAttributes.http_client_request_duration in attributes
+    assert attributes[TelemetryAttributes.http_client_request_duration] > 0
 
 
 def test_from_body_with_batch_check(telemetry_attributes):
