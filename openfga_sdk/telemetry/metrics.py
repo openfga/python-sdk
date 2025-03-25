@@ -19,6 +19,7 @@ from openfga_sdk.telemetry.attributes import (
 from openfga_sdk.telemetry.configuration import (
     TelemetryConfiguration,
     TelemetryMetricConfiguration,
+    TelemetryMetricsConfiguration,
     isMetricEnabled,
 )
 from openfga_sdk.telemetry.counters import TelemetryCounter, TelemetryCounters
@@ -90,7 +91,7 @@ class TelemetryMetrics:
 
             if (
                 isinstance(configuration, TelemetryConfiguration)
-                and isinstance(configuration.metrics, TelemetryMetricConfiguration)
+                and isinstance(configuration.metrics, TelemetryMetricsConfiguration)
                 and isinstance(
                     configuration.metrics.fga_client_request,
                     TelemetryMetricConfiguration,
@@ -127,7 +128,7 @@ class TelemetryMetrics:
 
             if (
                 isinstance(configuration, TelemetryConfiguration)
-                and isinstance(configuration.metrics, TelemetryMetricConfiguration)
+                and isinstance(configuration.metrics, TelemetryMetricsConfiguration)
                 and isinstance(
                     configuration.metrics.fga_client_credentials_request,
                     TelemetryMetricConfiguration,
@@ -178,7 +179,7 @@ class TelemetryMetrics:
 
                 if (
                     isinstance(configuration, TelemetryConfiguration)
-                    and isinstance(configuration.metrics, TelemetryMetricConfiguration)
+                    and type(configuration.metrics) is TelemetryMetricsConfiguration
                     and isinstance(
                         configuration.metrics.fga_client_request_duration,
                         TelemetryMetricConfiguration,

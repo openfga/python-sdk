@@ -292,6 +292,7 @@ class ApiClient:
                         response=e.body.decode("utf-8"),
                         credentials=self.configuration.credentials,
                         attributes=_telemetry_attributes,
+                        start=start,
                     )
 
                     self._telemetry.metrics.request(
@@ -323,6 +324,7 @@ class ApiClient:
                     response=e,
                     credentials=self.configuration.credentials,
                     attributes=_telemetry_attributes,
+                    start=start,
                 )
 
                 self._telemetry.metrics.request(
@@ -349,6 +351,7 @@ class ApiClient:
                 response=response_data,
                 credentials=self.configuration.credentials,
                 attributes=_telemetry_attributes,
+                start=start,
             )
 
             self._telemetry.metrics.request(
