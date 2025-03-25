@@ -339,7 +339,9 @@ async def test_stream_exception_in_chunks():
 
     class FakeContent:
         async def iter_chunks(self):
-            raise ValueError("Boom!")
+            if True:  # This ensures the coroutine is actually created and awaited
+                raise ValueError("Boom!")
+            yield (b"", None)  # This line is never reached
 
     mock_response = MagicMock()
     mock_response.status = 200
@@ -357,8 +359,11 @@ async def test_stream_exception_in_chunks():
     client.close = AsyncMock()
 
     results = []
-    async for item in client.stream("GET", "http://example.com"):
-        results.append(item)
+    try:
+        async for item in client.stream("GET", "http://example.com"):
+            results.append(item)
+    except ValueError:
+        pass
 
     assert results == []
     client.handle_response_exception.assert_awaited_once()

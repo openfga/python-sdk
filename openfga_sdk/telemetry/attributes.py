@@ -287,6 +287,7 @@ class TelemetryAttributes:
         ) = None,
         credentials: Credentials | None = None,
         attributes: dict[TelemetryAttribute, str | bool | int | float] | None = None,
+        start: float | None = None,
     ) -> dict[TelemetryAttribute, str | bool | int | float]:
         response_model_id = None
         response_query_duration = None
@@ -294,6 +295,11 @@ class TelemetryAttributes:
 
         if attributes is not None:
             _attributes = attributes
+
+        if start is not None and start > 0:
+            _attributes[TelemetryAttributes.http_client_request_duration] = int(
+                (time.time() - start) * 1000
+            )
 
         if isinstance(response, ApiException):
             if response.status is not None:
