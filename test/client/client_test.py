@@ -2876,6 +2876,27 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
+    async def test_list_relations_errored(self, mock_request):
+        """Test case for list relations with undefined exception"""
+
+        mock_request.side_effect = ValueError()
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(ValueError):
+                await api_client.list_relations(
+                    body=ClientListRelationsRequest(
+                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                        relations=["reader", "owner", "viewer"],
+                        object="document:2021-budget",
+                    ),
+                    options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                )
+
+            mock_request.assert_called()
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
     async def test_list_users(self, mock_request):
         """
         Test case for list_users
