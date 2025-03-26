@@ -1,9 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.2...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.3...HEAD)
 
 ### [0.9.3](https://github.com/openfga/python-sdk/compare/v0.9.2...v0.9.3) (2025-03-26)
 
+- fix: ListRelations should not swallow errors (#183)
 - feat: feat: support List Stores name filter (#181)
 - fix: urllib3 compatibility < v2 (#179)
 
