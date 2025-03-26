@@ -125,7 +125,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         pass
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_check(self, mock_request):
+    def test_check(self, mock_request):
         """Test case for check
 
         Check whether a user is authorized to access an object
@@ -173,7 +173,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_create_store(self, mock_request):
+    def test_create_store(self, mock_request):
         """Test case for create_store
 
         Create a store
@@ -210,7 +210,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_delete_store(self, mock_request):
+    def test_delete_store(self, mock_request):
         """Test case for delete_store
 
         Delete a store
@@ -235,7 +235,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_expand(self, mock_request):
+    def test_expand(self, mock_request):
         """Test case for expand
 
         Expand all relationships in userset tree format, and following userset rewrite rules.  Useful to reason about and debug a certain relationship
@@ -281,7 +281,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_get_store(self, mock_request):
+    def test_get_store(self, mock_request):
         """Test case for get_store
 
         Get a store
@@ -316,7 +316,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_list_objects(self, mock_request):
+    def test_list_objects(self, mock_request):
         """Test case for list_objects
 
         List objects
@@ -361,7 +361,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_list_stores(self, mock_request):
+    def test_list_stores(self, mock_request):
         """Test case for list_stores
 
         Get all stores
@@ -434,7 +434,70 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_list_users(self, mock_request):
+    def test_list_stores_with_name(self, mock_request):
+        """Test case for list_stores with name parameter
+
+        Get stores filtered by name
+        """
+        response_body = """
+{
+  "stores": [
+    {
+      "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
+      "name": "test-store",
+      "created_at": "2022-07-25T21:15:37.524Z",
+      "updated_at": "2022-07-25T21:15:37.524Z",
+      "deleted_at": "2022-07-25T21:15:37.524Z"
+    },
+    {
+      "id": "01YCP46JKYM8FJCQ37NMBYHE6X",
+      "name": "other-store",
+      "created_at": "2022-07-25T21:15:37.524Z",
+      "updated_at": "2022-07-25T21:15:37.524Z",
+      "deleted_at": "2022-07-25T21:15:37.524Z"
+    }
+  ],
+  "continuation_token": "token123"
+}
+            """
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        with ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            # Get stores filtered by name
+            api_response = api_instance.list_stores(name="test-store")
+            self.assertIsInstance(api_response, ListStoresResponse)
+            self.assertEqual(api_response.continuation_token, "token123")
+            store1 = Store(
+                id="01YCP46JKYM8FJCQ37NMBYHE5X",
+                name="test-store",
+                created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+            )
+            store2 = Store(
+                id="01YCP46JKYM8FJCQ37NMBYHE6X",
+                name="other-store",
+                created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+            )
+            stores = [store1, store2]
+            self.assertEqual(api_response.stores, stores)
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores",
+                headers=ANY,
+                body=None,
+                query_params=[("name", "test-store")],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_list_users(self, mock_request):
         """
         Test case for list_users
         """
@@ -555,7 +618,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_read(self, mock_request):
+    def test_read(self, mock_request):
         """Test case for read
 
         Get tuples from the store that matches a query, without following userset rewrite rules
@@ -623,7 +686,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_read_assertions(self, mock_request):
+    def test_read_assertions(self, mock_request):
         """Test case for read_assertions
 
         Read assertions for an authorization model ID
@@ -676,7 +739,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_read_authorization_model(self, mock_request):
+    def test_read_authorization_model(self, mock_request):
         """Test case for read_authorization_model
 
         Return a particular version of an authorization model
@@ -768,7 +831,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_read_changes(self, mock_request):
+    def test_read_changes(self, mock_request):
         """Test case for read_changes
 
         Return a list of all the tuple changes
@@ -836,7 +899,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_write(self, mock_request):
+    def test_write(self, mock_request):
         """Test case for write
 
         Add tuples from the store
@@ -890,7 +953,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_write_delete(self, mock_request):
+    def test_write_delete(self, mock_request):
         """Test case for write
 
         Delete tuples from the store
@@ -944,7 +1007,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_write_assertions(self, mock_request):
+    def test_write_assertions(self, mock_request):
         """Test case for write_assertions
 
         Upsert assertions for an authorization model ID
@@ -999,7 +1062,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_write_authorization_model(self, mock_request):
+    def test_write_authorization_model(self, mock_request):
         """Test case for write_authorization_model
 
         Create a new authorization model
@@ -1177,7 +1240,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         self.assertEqual(configuration.timeout_millisec, 10000)
         configuration.is_valid()
 
-    async def test_bad_configuration_read_authorization_model(self):
+    def test_bad_configuration_read_authorization_model(self):
         """
         Test whether FgaValidationException is raised for API (reading authorization models)
         with configuration is having incorrect API scheme
@@ -1198,7 +1261,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                     page_size=1, continuation_token="abcdefg"
                 )
 
-    async def test_configuration_missing_storeid(self):
+    def test_configuration_missing_storeid(self):
         """
         Test whether FgaValidationException is raised for API (reading authorization models)
         required store ID but configuration is missing store ID
@@ -1220,7 +1283,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_400_error(self, mock_request):
+    def test_400_error(self, mock_request):
         """
         Test to ensure 400 errors are handled properly
         """
@@ -1265,7 +1328,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_404_error(self, mock_request):
+    def test_404_error(self, mock_request):
         """
         Test to ensure 404 errors are handled properly
         """
@@ -1307,7 +1370,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_429_error_no_retry(self, mock_request):
+    def test_429_error_no_retry(self, mock_request):
         """
         Test to ensure 429 errors are handled properly.
         For this case, there is no retry configured
@@ -1344,7 +1407,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertEqual(mock_request.call_count, 1)
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_429_error_first_error(self, mock_request):
+    def test_429_error_first_error(self, mock_request):
         """
         Test to ensure 429 errors are handled properly.
         For this case, retry is configured and only the first time has error
@@ -1385,7 +1448,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertEqual(mock_request.call_count, 2)
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_500_error(self, mock_request):
+    def test_500_error(self, mock_request):
         """
         Test to ensure 500 errors are handled properly
         """
@@ -1431,7 +1494,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertEqual(mock_request.call_count, 1)
 
         @patch.object(rest.RESTClientObject, "request")
-        async def test_500_error_retry(self, mock_request):
+        def test_500_error_retry(self, mock_request):
             """
             Test to ensure 5xx retries are handled properly
             """
@@ -1473,7 +1536,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 self.assertEqual(mock_request.call_count, 5)
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_501_error_retry(self, mock_request):
+    def test_501_error_retry(self, mock_request):
         """
         Test to ensure 501 responses are not auto-retried
         """
@@ -1512,7 +1575,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertEqual(mock_request.call_count, 1)
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_check_api_token(self, mock_request):
+    def test_check_api_token(self, mock_request):
         """Test case for API token
 
         Check whether API token is send when configuration specifies credential method as api_token
@@ -1569,7 +1632,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_check_custom_header(self, mock_request):
+    def test_check_custom_header(self, mock_request):
         """Test case for custom header
 
         Check whether custom header can be added
