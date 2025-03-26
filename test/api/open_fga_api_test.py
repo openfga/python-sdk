@@ -1622,6 +1622,197 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 _request_timeout=None,
             )
 
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_list_stores_with_name(self, mock_request):
+        """Test case for list_stores with name parameter
+
+        Get stores filtered by name
+        """
+        response_body = """
+{
+  "stores": [
+    {
+      "id": "01YCP46JKYM8FJCQ37NMBYHE5X",
+      "name": "test-store",
+      "created_at": "2022-07-25T21:15:37.524Z",
+      "updated_at": "2022-07-25T21:15:37.524Z",
+      "deleted_at": "2022-07-25T21:15:37.524Z"
+    },
+    {
+      "id": "01YCP46JKYM8FJCQ37NMBYHE6X",
+      "name": "other-store",
+      "created_at": "2022-07-25T21:15:37.524Z",
+      "updated_at": "2022-07-25T21:15:37.524Z",
+      "deleted_at": "2022-07-25T21:15:37.524Z"
+    }
+  ],
+  "continuation_token": "token123"
+}
+            """
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            # Get stores filtered by name
+            api_response = await api_instance.list_stores(name="test-store")
+            self.assertIsInstance(api_response, ListStoresResponse)
+            self.assertEqual(api_response.continuation_token, "token123")
+            store1 = Store(
+                id="01YCP46JKYM8FJCQ37NMBYHE5X",
+                name="test-store",
+                created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+            )
+            store2 = Store(
+                id="01YCP46JKYM8FJCQ37NMBYHE6X",
+                name="other-store",
+                created_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                updated_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+                deleted_at=datetime.fromisoformat("2022-07-25T21:15:37.524+00:00"),
+            )
+            stores = [store1, store2]
+            self.assertEqual(api_response.stores, stores)
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores",
+                headers=ANY,
+                body=None,
+                query_params=[("name", "test-store")],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_read_with_tuple_key_user(self, mock_request):
+        """Test case for read with tuple key containing user
+
+        Get tuples from the store that matches a query with user
+        """
+        response_body = """
+            {
+  "tuples": [
+    {
+      "key": {
+        "user": "user:bob",
+        "relation": "reader",
+        "object": "document:2021-budget"
+      },
+      "timestamp": "2021-10-06T15:32:11.128Z"
+    }
+  ],
+  "continuation_token": "token123"
+}
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            body = ReadRequest(
+                tuple_key=ReadRequestTupleKey(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:bob",
+                ),
+            )
+            api_response = await api_instance.read(body=body)
+            self.assertIsInstance(api_response, ReadResponse)
+            key = TupleKey(
+                user="user:bob",
+                relation="reader",
+                object="document:2021-budget",
+            )
+            timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)],
+                continuation_token="token123",
+            )
+            self.assertEqual(api_response, expected_data)
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/read",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:bob",
+                    }
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_read_with_type_only_object(self, mock_request):
+        """Test case for read with type-only object
+
+        Get tuples from the store that matches a query with type-only object
+        """
+        response_body = """
+            {
+  "tuples": [
+    {
+      "key": {
+        "user": "user:bob",
+        "relation": "reader",
+        "object": "document:2021-budget"
+      },
+      "timestamp": "2021-10-06T15:32:11.128Z"
+    }
+  ],
+  "continuation_token": "token123"
+}
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            body = ReadRequest(
+                tuple_key=ReadRequestTupleKey(
+                    object="document:",
+                    relation="reader",
+                    user="user:bob",
+                ),
+            )
+            api_response = await api_instance.read(body=body)
+            self.assertIsInstance(api_response, ReadResponse)
+            key = TupleKey(
+                user="user:bob",
+                relation="reader",
+                object="document:2021-budget",
+            )
+            timestamp = datetime.fromisoformat("2021-10-06T15:32:11.128+00:00")
+            expected_data = ReadResponse(
+                tuples=[Tuple(key=key, timestamp=timestamp)],
+                continuation_token="token123",
+            )
+            self.assertEqual(api_response, expected_data)
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/read",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:",
+                        "relation": "reader",
+                        "user": "user:bob",
+                    }
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
 
 if __name__ == "__main__":
     unittest.main()
