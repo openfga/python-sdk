@@ -120,6 +120,8 @@ def options_to_kwargs(
     """
     kwargs = {}
     if options is not None:
+        if options.get("name"):
+            kwargs["name"] = options["name"]
         if options.get("page_size"):
             kwargs["page_size"] = options["page_size"]
         if options.get("continuation_token"):
@@ -237,6 +239,7 @@ class OpenFgaClient:
     ):
         """
         List the stores in the system
+        :param name(options) - The name parameter instructs the API to only include results that match that name. Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated.
         :param page_size(options) - Number of items returned per request
         :param continuation_token(options) - No continuation_token by default
         :param header(options) - Custom headers to send alongside the request
