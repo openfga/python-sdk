@@ -41,22 +41,22 @@ class RESTResponse(io.IOBase):
     Represents an HTTP response object in the synchronous client.
     """
 
-    _response: urllib3.BaseHTTPResponse
+    _response: urllib3.HTTPResponse
     _data: bytes
     _status: int
     _reason: str | None
 
     def __init__(
         self,
-        response: urllib3.BaseHTTPResponse,
+        response: urllib3.HTTPResponse,
         data: bytes,
         status: int | None = None,
         reason: str | None = None,
     ) -> None:
         """
-        Initializes a RESTResponse with a urllib3.BaseHTTPResponse and corresponding data.
+        Initializes a RESTResponse with a urllib3.HTTPResponse and corresponding data.
 
-        :param resp: The urllib3.BaseHTTPResponse object.
+        :param resp: The urllib3.HTTPResponse object.
         :param data: The raw byte data read from the response.
         """
         self._response = response
@@ -65,16 +65,16 @@ class RESTResponse(io.IOBase):
         self._reason = reason or response.reason
 
     @property
-    def response(self) -> urllib3.BaseHTTPResponse:
+    def response(self) -> urllib3.HTTPResponse:
         """
-        Returns the underlying urllib3.BaseHTTPResponse object.
+        Returns the underlying urllib3.HTTPResponse object.
         """
         return self._response
 
     @response.setter
-    def response(self, value: urllib3.BaseHTTPResponse) -> None:
+    def response(self, value: urllib3.HTTPResponse) -> None:
         """
-        Sets the underlying urllib3.BaseHTTPResponse object.
+        Sets the underlying urllib3.HTTPResponse object.
         """
         self._response = value
 
@@ -318,7 +318,7 @@ class RESTClientObject:
         return args
 
     def handle_response_exception(
-        self, response: RESTResponse | urllib3.BaseHTTPResponse
+        self, response: RESTResponse | urllib3.HTTPResponse
     ) -> None:
         """
         Raises exceptions if response status indicates an error.
@@ -462,7 +462,7 @@ class RESTClientObject:
         post_params: dict | None = None,
         _preload_content: bool = True,
         _request_timeout: float | tuple | None = None,
-    ) -> RESTResponse | urllib3.BaseHTTPResponse:
+    ) -> RESTResponse | urllib3.HTTPResponse:
         """
         Executes a request and returns the response object.
 
@@ -493,7 +493,7 @@ class RESTClientObject:
 
         # Send request, collect response handler
         wrapped_response: RESTResponse | None = None
-        raw_response: urllib3.BaseHTTPResponse = self.pool_manager.request(**args)
+        raw_response: urllib3.HTTPResponse = self.pool_manager.request(**args)
 
         # If we want to preload the response, read it
         if _preload_content:
