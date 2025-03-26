@@ -39,7 +39,7 @@ from openfga_sdk.telemetry import Telemetry
 from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
 
 
-DEFAULT_USER_AGENT = "openfga-sdk python/0.9.2"
+DEFAULT_USER_AGENT = "openfga-sdk python/0.9.3"
 
 
 def random_time(loop_count, min_wait_in_ms):

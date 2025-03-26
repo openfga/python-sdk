@@ -18,7 +18,7 @@ from setuptools import find_packages, setup
 
 
 NAME = "openfga-sdk"
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 REQUIRES = []
 
 

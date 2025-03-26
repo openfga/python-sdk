@@ -2,10 +2,14 @@
 
 ## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.2...HEAD)
 
+### [0.9.3](https://github.com/openfga/python-sdk/compare/v0.9.2...v0.9.3) (2025-03-26)
+
+- fix: urllib3 compatibility < v2 (#179)
+
 ### [0.9.2](https://github.com/openfga/python-sdk/compare/v0.9.1...v0.9.2) (2025-03-25)
 
-- fix(telemetry): fixes for telemetry attributes and metrics tracking
-- fix: REST client should not close after `stream` request
+- fix(telemetry): fixes for telemetry attributes and metrics tracking (#177)
+- fix: REST client should not close after `stream` request (#172)
 
 ## v0.9.1
 
