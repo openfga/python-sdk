@@ -145,6 +145,13 @@ def options_to_transaction_info(
     return WriteTransactionOpts()
 
 
+def _check_errored(response: ClientBatchCheckClientResponse):
+    """
+    Helper function to return whether the response is errored
+    """
+    return response.error is not None
+
+
 def _check_allowed(response: ClientBatchCheckClientResponse):
     """
     Helper function to return whether the response is check is allowed
@@ -971,6 +978,13 @@ class OpenFgaClient:
             for i in body.relations
         ]
         result = self.client_batch_check(request_body, options)
+
+        # filter out any errored responses and raise the first error
+        errored_result_iterator = filter(_check_errored, result)
+        errored_result_list = list(errored_result_iterator)
+        if len(errored_result_list) > 0:
+            raise errored_result_list[0].error
+
         # need to filter with the allowed response
         result_iterator = filter(_check_allowed, result)
         result_list = list(result_iterator)
