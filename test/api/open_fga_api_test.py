@@ -1782,7 +1782,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.3",
+                    "User-Agent": "openfga-sdk python/0.9.4",
                     "Authorization": "Bearer TOKEN1",
                 }
             )
@@ -1836,7 +1836,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.3",
+                    "User-Agent": "openfga-sdk python/0.9.4",
                     "Custom Header": "custom value",
                 }
             )
