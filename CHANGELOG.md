@@ -1,10 +1,19 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.3...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.4...HEAD)
+
+### [0.9.4](https://github.com/openfga/python-sdk/compare/v0.9.3...0.9.4) (2025-04-30)
+
+- feat: support List Stores name filter (#181)
+- feat: fix and improve retries and rate limit handling. (#176) - thanks @GMorris-professional
+  The SDK now respects the rate limit headers (`Retry-After`) returned by the server and will retry the request after the specified time.
+  If the header is not sent or on network errors, it will fall back to exponential backoff.
+- feat: allow more user customizations for the token issuer (#186) - thanks @manuel-lang
 - fix: ListRelations should not swallow errors (#183)
-- feat: feat: support List Stores name filter (#181)
+- fix: urllib3 compatibility < v2 (#187)
 
 ### [0.9.3](https://github.com/openfga/python-sdk/compare/v0.9.2...v0.9.3) (2025-03-26)
+
 - fix: urllib3 compatibility < v2 (#179)
 
 ### [0.9.2](https://github.com/openfga/python-sdk/compare/v0.9.1...v0.9.2) (2025-03-25)

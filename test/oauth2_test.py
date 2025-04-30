@@ -84,7 +84,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.3",
+                "User-Agent": "openfga-sdk (python) 0.9.4",
             }
         )
         mock_request.assert_called_once_with(
@@ -310,7 +310,7 @@ This is not a JSON response
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.3",
+                "User-Agent": "openfga-sdk (python) 0.9.4",
             }
         )
         mock_request.assert_called_once_with(
@@ -365,7 +365,7 @@ This is not a JSON response
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.3",
+                "User-Agent": "openfga-sdk (python) 0.9.4",
             }
         )
         mock_request.assert_called_once_with(
@@ -420,7 +420,7 @@ This is not a JSON response
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.3",
+                "User-Agent": "openfga-sdk (python) 0.9.4",
             }
         )
         mock_request.assert_called_once_with(
@@ -475,7 +475,7 @@ This is not a JSON response
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.3",
+                "User-Agent": "openfga-sdk (python) 0.9.4",
             }
         )
         mock_request.assert_called_once_with(
