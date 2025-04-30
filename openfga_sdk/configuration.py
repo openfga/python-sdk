@@ -41,11 +41,13 @@ class RetryParams:
 
     :param max_retry: Maximum number of retry
     :param min_wait_in_ms: Minimum wait (in ms) between retry
+    :param max_wait_in_sec: Maximum wait (in seconds) between retry
     """
 
-    def __init__(self, max_retry=3, min_wait_in_ms=100):
+    def __init__(self, max_retry=3, min_wait_in_ms=100, max_wait_in_sec=120):
         self._max_retry = max_retry
         self._min_wait_in_ms = min_wait_in_ms
+        self._max_wait_in_sec = max_wait_in_sec
 
     @property
     def max_retry(self):
@@ -94,6 +96,25 @@ class RetryParams:
             )
 
         self._min_wait_in_ms = value
+
+    @property
+    def max_wait_in_sec(self):
+        """
+        Return the maximum allowed wait (in seconds) in between retry
+        """
+        return self._max_wait_in_sec
+
+    @max_wait_in_sec.setter
+    def max_wait_in_sec(self, value):
+        """
+        Update the maximum allowed wait (in seconds) in between retry
+        """
+        if not isinstance(value, int) or value < 0:
+            raise FgaValidationException(
+                "RetryParams.max_wait_in_sec must be an integer greater than or equal to 0"
+            )
+
+        self._max_wait_in_sec = value
 
 
 class Configuration:

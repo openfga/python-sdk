@@ -42,7 +42,7 @@ from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttrib
 DEFAULT_USER_AGENT = "openfga-sdk python/0.9.3"
 
 
-def random_time(loop_count, min_wait_in_ms):
+def random_time(loop_count, min_wait_in_ms) -> float:
     """
     Helper function to return the time (in s) to wait before retry
     """
@@ -253,11 +253,21 @@ class ApiClient:
             )
             else 0
         )
+        max_wait_in_sec = (
+            self.configuration.retry_params.max_wait_in_sec
+            if (
+                self.configuration.retry_params is not None
+                and self.configuration.retry_params.max_wait_in_sec is not None
+            )
+            else 120
+        )
         if _retry_params is not None:
             if _retry_params.max_retry is not None:
                 max_retry = _retry_params.max_retry
             if _retry_params.min_wait_in_ms is not None:
                 max_retry = _retry_params.min_wait_in_ms
+            if _retry_params.max_wait_in_sec is not None:
+                max_wait_in_sec = _retry_params.max_wait_in_sec
 
         _telemetry_attributes = TelemetryAttributes.fromRequest(
             user_agent=self.user_agent,
@@ -300,7 +310,14 @@ class ApiClient:
                         configuration=self.configuration.telemetry,
                     )
 
-                    await asyncio.sleep(random_time(retry, min_wait_in_ms))
+                    try:
+                        wait_time_in_sec = self._parse_retry_after_header(e.header)
+                    except ValueError:
+                        wait_time_in_sec = min(
+                            random_time(retry, min_wait_in_ms), max_wait_in_sec
+                        )
+
+                    await asyncio.sleep(wait_time_in_sec)
 
                     continue
                 e.body = e.body.decode("utf-8")
@@ -394,6 +411,25 @@ class ApiClient:
                 return return_data
             else:
                 return (return_data, response_data.status, response_data.headers)
+
+    def _parse_retry_after_header(self, headers) -> int:
+        retry_after_header = headers.get("retry-after")
+        if not retry_after_header:
+            raise ValueError("Retry-After header is not present")
+
+        try:
+            parsed_http_date = self.__deserialize_datetime(retry_after_header).replace(
+                tzinfo=datetime.timezone.utc
+            )
+            now = datetime.datetime.now(datetime.timezone.utc)
+            wait_time_in_sec = (parsed_http_date - now).total_seconds()
+        except ApiException:
+            wait_time_in_sec = int(retry_after_header)
+
+        if wait_time_in_sec > 1800 or wait_time_in_sec < 1:
+            raise ValueError("Retry-After header is invalid")
+
+        return math.ceil(wait_time_in_sec)
 
     def sanitize_for_serialization(self, obj):
         """Builds a JSON POST object.
@@ -825,7 +861,7 @@ class ApiClient:
             return parse(string)
         except ImportError:
             return string
-        except ValueError:
+        except (TypeError, ValueError):
             raise rest.ApiException(
                 status=0,
                 reason=(f"Failed to parse `{string}` as datetime object"),
