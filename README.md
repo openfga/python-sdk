@@ -724,6 +724,8 @@ Similar to [check](#check), but instead of checking a single user-object relatio
 
 [API Documentation](https://openfga.dev/api/service#/Relationship%20Queries/BatchCheck)
 
+> **Note**: The order of `batch_check` results is not guaranteed to match the order of the checks provided. Use `correlation_id` to pair responses with requests.
+
 ```python
 # from openfga_sdk import OpenFgaClient
 # from openfga_sdk.client.models import (

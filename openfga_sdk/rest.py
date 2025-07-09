@@ -278,8 +278,12 @@ class RESTClientObject:
         if 200 <= response.status <= 299:
             return
 
-        if isinstance(response, aiohttp.ClientResponse) and not hasattr(response, "data"):
+        if isinstance(response, aiohttp.ClientResponse) and not hasattr(
+            response, "data"
+        ):
+            # Read the body once and expose it for downstream error handlers
             response.data = await response.read()
+
         match response.status:
             case 400:
                 raise ValidationException(http_resp=response)
