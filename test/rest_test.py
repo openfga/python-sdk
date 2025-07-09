@@ -14,6 +14,7 @@ import json
 
 from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
 import pytest
 
 from openfga_sdk.exceptions import (
@@ -181,6 +182,31 @@ async def test_handle_response_exception_error(status, exc):
 
     with pytest.raises(exc):
         await client.handle_response_exception(mock_response)
+
+
+@pytest.mark.asyncio
+async def test_handle_response_exception_reads_data():
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+
+    mock_response = MagicMock(spec=aiohttp.ClientResponse)
+    mock_response.status = 400
+    mock_response.read = AsyncMock(return_value=b'{"error":"bad"}')
+
+    with pytest.raises(ValidationException):
+        await client.handle_response_exception(mock_response)
+
+    mock_response.read.assert_awaited_once()
+    assert mock_response.data == b'{"error":"bad"}'
 
 
 @pytest.mark.asyncio

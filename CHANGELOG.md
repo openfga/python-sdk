@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.4...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.5...HEAD)
+
+### [0.9.5](https://github.com/openfga/python-sdk/compare/v0.9.4...0.9.5) (2025-07-09)
+
+- fix: aiohttp.ClientResponse.data should be awaited (#197) - thanks @cmbernard333
 
 ### [0.9.4](https://github.com/openfga/python-sdk/compare/v0.9.3...0.9.4) (2025-04-30)
 
