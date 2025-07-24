@@ -1060,7 +1060,7 @@ List the users who have a certain relation to a particular type.
 ```python
 from openfga_sdk import OpenFgaClient
 from openfga_sdk.models.fga_object import FgaObject
-from openfga_sdk.client.models import ClientListUsersRequest, ClientTuple
+from openfga_sdk.client.models.list_users_request import ClientListUsersRequest, ClientTuple
 
 configuration = ClientConfiguration(
     api_url=FGA_API_URL,
