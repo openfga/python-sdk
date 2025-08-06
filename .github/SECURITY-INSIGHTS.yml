@@ -14,23 +14,23 @@ repository:
   accepts-automated-change-request: true
   no-third-party-packages: false
   core-team:
-  - name: Evan Sims
-    affiliation: Okta
-    email: evan.sims@okta.com
-    social: https://github.com/evansims
-    primary: true
-  - name: Adrian Tam
-    affiliation: Okta
-    email: adrian.tam@okta.com
-    social: https://github.com/adriantam
-  - name: Ewan Harris
-    affiliation: Okta
-    email: ewan.harris@okta.com
-    social: https://github.com/ewanharris
-  - name: Raghd Hamzeh
-    affiliation: Okta
-    email: raghd.hamzeh@okta.com
-    social: https://github.com/rhamzeh
+    - name: Evan Sims
+      affiliation: Okta
+      email: evan.sims@okta.com
+      social: https://github.com/evansims
+      primary: true
+    - name: Adrian Tam
+      affiliation: Okta
+      email: adrian.tam@okta.com
+      social: https://github.com/adriantam
+    - name: Ewan Harris
+      affiliation: Okta
+      email: ewan.harris@okta.com
+      social: https://github.com/ewanharris
+    - name: Raghd Hamzeh
+      affiliation: Okta
+      email: raghd.hamzeh@okta.com
+      social: https://github.com/rhamzeh
 
   license:
     url: https://raw.githubusercontent.com/openfga/python-sdk/main/LICENSE
