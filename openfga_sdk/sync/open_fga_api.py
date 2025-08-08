@@ -1253,8 +1253,6 @@ class OpenFgaApi:
         :type page_size: int, optional
         :param continuation_token:(optional)
         :type continuation_token: str, optional
-        :param name: The name parameter instructs the API to only include results that match that name.Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated(optional)
-        :type name: str, optional
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -1284,8 +1282,6 @@ class OpenFgaApi:
         :type page_size: int, optional
         :param continuation_token:(optional)
         :type continuation_token: str, optional
-        :param name: The name parameter instructs the API to only include results that match that name.Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated(optional)
-        :type name: str, optional
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _return_http_data_only: response data without head status code
@@ -1313,7 +1309,7 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["page_size", "continuation_token", "name"]
+        all_params = ["page_size", "continuation_token"]
         all_params.extend(
             [
                 "async_req",
@@ -1349,8 +1345,6 @@ class OpenFgaApi:
             query_params.append(
                 ("continuation_token", local_var_params["continuation_token"])
             )
-        if local_var_params.get("name") is not None:
-            query_params.append(("name", local_var_params["name"]))
 
         header_params = dict(local_var_params.get("_headers", {}))
 

@@ -643,11 +643,10 @@ async with openfga_sdk.ApiClient(configuration) as api_client:
     api_instance = openfga_sdk.OpenFgaApi(api_client)
     page_size = 56 # int |  (optional)
     continuation_token = 'continuation_token_example' # str |  (optional)
-    name = 'name_example' # str | The name parameter instructs the API to only include results that match that name.Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated (optional)
 
     try:
         # List all stores
-        api_response = await api_instance.api_instance.list_stores(page_size=page_size, continuation_token=continuation_token, name=name)
+        api_response = await api_instance.api_instance.list_stores(page_size=page_size, continuation_token=continuation_token)
         pprint(api_response)
     except ApiException as e:
         print("Exception when calling OpenFgaApi->list_stores: %s\n" % e)
@@ -661,7 +660,6 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **page_size** | **int**|  | [optional]
  **continuation_token** | **str**|  | [optional]
- **name** | **str**| The name parameter instructs the API to only include results that match that name.Multiple results may be returned. Only exact matches will be returned; substring matches and regexes will not be evaluated | [optional]
 
 ### Return type
 
