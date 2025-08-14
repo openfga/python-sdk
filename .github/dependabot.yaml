@@ -1,28 +1,32 @@
+# yaml-language-server: $schema=https://json.schemastore.org/dependabot-2.0.json
 version: 2
+
 updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "monthly"
     groups:
-     dependencies:
+      dependencies:
         patterns:
           - "*"
     ignore:
       - dependency-name: "urllib3"
+
   - package-ecosystem: "pip"
     directory: "/example/example1"
     schedule:
       interval: "monthly"
     groups:
-     dependencies:
+      dependencies:
         patterns:
           - "*"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
     groups:
-     dependencies:
+      dependencies:
         patterns:
           - "*"
