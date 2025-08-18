@@ -107,6 +107,42 @@ class TestCredentials(IsolatedAsyncioTestCase):
         credential.validate_credentials_config()
         self.assertEqual(credential.method, "client_credentials")
 
+    def test_configuration_client_credentials_with_scopes_list(self):
+        """
+        Test credential with method client_credentials and scopes as list is valid
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+                scopes=["read", "write", "admin"],
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertEqual(credential.method, "client_credentials")
+        self.assertEqual(credential.configuration.scopes, ["read", "write", "admin"])
+
+    def test_configuration_client_credentials_with_scopes_string(self):
+        """
+        Test credential with method client_credentials and scopes as string is valid
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+                scopes="read write admin",
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertEqual(credential.method, "client_credentials")
+        self.assertEqual(credential.configuration.scopes, "read write admin")
+
     def test_configuration_client_credentials_missing_config(self):
         """
         Test credential with method client_credentials and configuration is missing
