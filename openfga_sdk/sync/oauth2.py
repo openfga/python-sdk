@@ -79,6 +79,13 @@ class OAuth2Client:
             "grant_type": "client_credentials",
         }
 
+        # Add scope parameter if scopes are configured
+        if configuration.scopes is not None:
+            if isinstance(configuration.scopes, list):
+                post_params["scope"] = " ".join(configuration.scopes)
+            else:
+                post_params["scope"] = configuration.scopes
+
         headers = urllib3.response.HTTPHeaderDict(
             {
                 "Accept": "application/json",
