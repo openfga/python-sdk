@@ -30,6 +30,7 @@ class CredentialConfiguration:
     :param api_token: Bearer token to be sent for authentication
     :param api_audience: API audience used for OAuth2
     :param api_issuer: API issuer used for OAuth2
+    :param scopes: OAuth2 scopes to request, can be a list of strings or a space-separated string
     """
 
     def __init__(
@@ -39,12 +40,14 @@ class CredentialConfiguration:
         api_audience: str | None = None,
         api_issuer: str | None = None,
         api_token: str | None = None,
+        scopes: str | list[str] | None = None,
     ):
         self._client_id = client_id
         self._client_secret = client_secret
         self._api_audience = api_audience
         self._api_issuer = api_issuer
         self._api_token = api_token
+        self._scopes = scopes
 
     @property
     def client_id(self):
@@ -115,6 +118,20 @@ class CredentialConfiguration:
         Update the api token
         """
         self._api_token = value
+
+    @property
+    def scopes(self):
+        """
+        Return the scopes configured
+        """
+        return self._scopes
+
+    @scopes.setter
+    def scopes(self, value):
+        """
+        Update the scopes
+        """
+        self._scopes = value
 
 
 class Credentials:
