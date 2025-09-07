@@ -5,31 +5,29 @@ This module tests the ability to send custom HTTP headers with individual API re
 using the options["headers"] parameter that gets converted to headers internally.
 """
 
-import json
 import uuid
+
 from unittest import IsolatedAsyncioTestCase
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import urllib3
 
 from openfga_sdk import rest
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.client import OpenFgaClient
+from openfga_sdk.client.models.assertion import ClientAssertion
+from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
+from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
 from openfga_sdk.client.models.check_request import ClientCheckRequest
+from openfga_sdk.client.models.expand_request import ClientExpandRequest
+from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
-from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
-from openfga_sdk.client.models.expand_request import ClientExpandRequest
-from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
-from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
-from openfga_sdk.client.models.assertion import ClientAssertion
-from openfga_sdk.models.create_store_request import CreateStoreRequest
-from openfga_sdk.models.write_authorization_model_request import WriteAuthorizationModelRequest
 from openfga_sdk.models.read_request_tuple_key import ReadRequestTupleKey
 
 
 store_id = "01YCP46JKYM8FJCQ37NMBYHE5X"
-auth_model_id = "01YCP46JKYM8FJCQ37NMBYHE6X" 
+auth_model_id = "01YCP46JKYM8FJCQ37NMBYHE6X"
 request_id = "x1y2z3"
 
 
@@ -68,7 +66,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
 
         custom_headers = {
             "x-correlation-id": "test-correlation-123",
-            "x-trace-id": "trace-456", 
+            "x-trace-id": "trace-456",
             "x-custom-header": "custom-value"
         }
 
@@ -76,7 +74,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -88,10 +86,10 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             # Verify the request was made with custom headers
             mock_request.assert_called_once()
             call_args = mock_request.call_args
-            
+
             # Headers should be passed as 'headers' parameter in the call
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-correlation-id"], "test-correlation-123")
             self.assertEqual(headers["x-trace-id"], "trace-456")
@@ -112,12 +110,12 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientWriteRequest(
                 writes=[
                     ClientTuple(
                         user="user:test-user",
-                        relation="viewer", 
+                        relation="viewer",
                         object="document:test-doc",
                     )
                 ]
@@ -129,7 +127,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-request-id"], "write-request-789")
             self.assertEqual(headers["x-client-version"], "1.0.0")
@@ -149,7 +147,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientListObjectsRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -162,7 +160,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-service-name"], "authorization-service")
             self.assertEqual(headers["x-environment"], "test")
@@ -182,7 +180,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientExpandRequest(
                 relation="viewer",
                 object="document:test-doc",
@@ -194,7 +192,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-operation"], "expand-check")
             self.assertEqual(headers["x-user-id"], "admin-user")
@@ -222,7 +220,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             checks = [
                 ClientBatchCheckItem(
                     user="user:test-user",
@@ -239,7 +237,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-batch-id"], "batch-123")
             self.assertEqual(headers["x-priority"], "high")
@@ -253,7 +251,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
                 {
                     "key": {
                         "user": "user:test-user",
-                        "relation": "viewer", 
+                        "relation": "viewer",
                         "object": "document:test-doc"
                     },
                     "timestamp": "2023-01-01T00:00:00.000Z"
@@ -273,7 +271,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ReadRequestTupleKey(
                 user="user:test-user",
                 relation="viewer",
@@ -286,7 +284,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-read-operation"], "get-tuples")
             self.assertEqual(headers["x-source"], "admin-console")
@@ -323,7 +321,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-model-operation"], "list-models")
             self.assertEqual(headers["x-tenant"], "tenant-123")
@@ -343,7 +341,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = [
                 ClientAssertion(
                     user="user:test-user",
@@ -359,7 +357,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-assertion-batch"], "test-assertions")
             self.assertEqual(headers["x-test-run"], "automated")
@@ -380,7 +378,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
                 "headers": custom_headers,
                 "consistency": "strong"
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -393,10 +391,10 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-combined-test"], "headers-and-options")
-            
+
             # Verify other options were also applied (by checking the call args structure)
             self.assertIsNotNone(call_args)
 
@@ -410,7 +408,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": {}
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -423,11 +421,11 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Headers should contain defaults but not our custom headers
             self.assertEqual(len(headers), 3)  # Should contain default headers
             self.assertIn("Content-Type", headers)
-            self.assertIn("Accept", headers) 
+            self.assertIn("Accept", headers)
             self.assertIn("User-Agent", headers)
             # But should not contain custom headers
             self.assertNotIn("x-custom-header", headers)
@@ -451,7 +449,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             # Verify the request was made successfully
             mock_request.assert_called_once()
             call_args = mock_request.call_args
-            
+
             # When no headers provided, headers should still exist but be the default ones
             headers = call_args.kwargs.get("headers", {})
             # Default should include Content-Type but not our custom headers
@@ -474,7 +472,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -487,7 +485,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that all header values are strings
             for key, value in custom_headers.items():
                 self.assertEqual(headers[key], value)
@@ -510,7 +508,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -523,7 +521,7 @@ class TestPerRequestHeaders(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included exactly as provided
             for key, value in custom_headers.items():
                 self.assertEqual(headers[key], value)

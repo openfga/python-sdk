@@ -5,15 +5,18 @@ This module tests edge cases, invalid inputs, and error scenarios for the
 per-request headers feature to ensure robust handling.
 """
 
-import json
 from unittest import IsolatedAsyncioTestCase
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import urllib3
 
 from openfga_sdk import rest
 from openfga_sdk.client import ClientConfiguration
-from openfga_sdk.client.client import OpenFgaClient, options_to_kwargs, set_heading_if_not_set
+from openfga_sdk.client.client import (
+    OpenFgaClient,
+    options_to_kwargs,
+    set_heading_if_not_set,
+)
 from openfga_sdk.client.models.check_request import ClientCheckRequest
 
 
@@ -59,14 +62,14 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             "authorization_model_id": "test-model",
             "page_size": 25
         }
-        
+
         result = options_to_kwargs(options)
-        
+
         # Check that headers are converted to _headers
         self.assertIn("_headers", result)
         self.assertEqual(result["_headers"]["x-test-header"], "test-value")
         self.assertEqual(result["_headers"]["x-another"], "another-value")
-        
+
         # Check that other options are preserved
         self.assertEqual(result.get("page_size"), 25)
 
@@ -76,26 +79,26 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             "authorization_model_id": "test-model",
             "page_size": 25
         }
-        
+
         result = options_to_kwargs(options)
-        
+
         # Check that headers is not present when no headers option
         self.assertNotIn("headers", result)
-        
+
         # Check that other options are preserved
         self.assertEqual(result.get("page_size"), 25)
 
     def test_options_to_kwargs_with_none(self):
         """Test options_to_kwargs function handles None input"""
         result = options_to_kwargs(None)
-        
+
         # Should return empty dict
         self.assertEqual(result, {})
 
     def test_options_to_kwargs_with_empty_dict(self):
         """Test options_to_kwargs function handles empty dict input"""
         result = options_to_kwargs({})
-        
+
         # Should return empty dict
         self.assertEqual(result, {})
 
@@ -106,9 +109,9 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
                 "x-existing": "existing-value"
             }
         }
-        
+
         result = set_heading_if_not_set(options, "x-new-header", "new-value")
-        
+
         # Check that new header was added
         self.assertEqual(result["headers"]["x-new-header"], "new-value")
         # Check that existing header is preserved
@@ -119,9 +122,9 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
         options = {
             "other_option": "value"
         }
-        
+
         result = set_heading_if_not_set(options, "x-new-header", "new-value")
-        
+
         # Check that headers dict was created and header was added
         self.assertIn("headers", result)
         self.assertEqual(result["headers"]["x-new-header"], "new-value")
@@ -131,7 +134,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
     def test_set_heading_if_not_set_with_none_options(self):
         """Test set_heading_if_not_set function with None options"""
         result = set_heading_if_not_set(None, "x-new-header", "new-value")
-        
+
         # Check that options dict was created with headers
         self.assertIn("headers", result)
         self.assertEqual(result["headers"]["x-new-header"], "new-value")
@@ -143,9 +146,9 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
                 "x-existing": "original-value"
             }
         }
-        
+
         result = set_heading_if_not_set(options, "x-existing", "new-value")
-        
+
         # Check that original value is preserved (not overwritten)
         self.assertEqual(result["headers"]["x-existing"], "original-value")
 
@@ -154,9 +157,9 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
         options = {
             "headers": "not-a-dict"  # Invalid type
         }
-        
+
         result = set_heading_if_not_set(options, "x-new-header", "new-value")
-        
+
         # Function should create new headers dict, replacing the invalid one
         self.assertIsInstance(result["headers"], dict)
         self.assertEqual(result["headers"]["x-new-header"], "new-value")
@@ -198,7 +201,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             options = {
                 "headers": largeheaders
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -211,7 +214,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that all custom headers were included (plus system headers)
             self.assertGreaterEqual(len(headers), 100)
             for i in range(100):
@@ -233,7 +236,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             options = {
                 "headers": unicode_headers
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -246,7 +249,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that unicode headers were included
             self.assertEqual(headers["x-unicode-header"], "测试值")
             self.assertEqual(headers["x-emoji-header"], "🚀🔐")
@@ -260,7 +263,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
 
         # Create a very long header value
         long_value = "x" * 10000  # 10KB header value
-        
+
         longheaders = {
             "x-long-header": long_value,
             "x-normal-header": "normal-value"
@@ -270,7 +273,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             options = {
                 "headers": longheaders
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -283,7 +286,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that long header was included
             self.assertEqual(headers["x-long-header"], long_value)
             self.assertEqual(headers["x-normal-header"], "normal-value")
@@ -305,7 +308,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             options = {
                 "headers": case_sensitiveheaders
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -318,7 +321,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that header case was preserved
             self.assertEqual(headers["X-Upper-Case"], "upper-value")
             self.assertEqual(headers["x-lower-case"], "lower-value")
@@ -331,7 +334,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
         response_body = '{"allowed": true}'
         mock_request.return_value = mock_response(response_body, 200)
 
-        # Test with headers that can override defaults (User-Agent) 
+        # Test with headers that can override defaults (User-Agent)
         # Note: Accept and Content-Type are set by the API method and cannot be overridden
         override_headers = {
             "User-Agent": "custom-user-agent",
@@ -361,7 +364,7 @@ class TestPerRequestHeadersEdgeCases(IsolatedAsyncioTestCase):
             self.assertEqual(headers["User-Agent"], "custom-user-agent")
             self.assertEqual(headers["x-custom-header"], "custom-value")
             self.assertEqual(headers["Authorization"], "Bearer custom-token")
-            
+
             # System headers are still set by the API method
             self.assertEqual(headers["Accept"], "application/json")
             self.assertTrue("Content-Type" in headers)

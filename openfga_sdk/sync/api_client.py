@@ -398,7 +398,7 @@ class ApiClient:
                 if content_type is not None:
                     match = re.search(r"charset=([a-zA-Z\-\d]+)[\s\;]?", content_type)
                 encoding = match.group(1) if match else "utf-8"
-                if response_data.data is not None:
+                if response_data.data is not None and isinstance(response_data.data, bytes):
                     response_data.data = response_data.data.decode(encoding)
 
             # deserialize response data

@@ -5,18 +5,17 @@ This module tests the ability to send custom HTTP headers with individual API re
 using the synchronous client version.
 """
 
-import json
+
 from unittest import TestCase
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import urllib3
 
-from openfga_sdk import rest
 from openfga_sdk.client import ClientConfiguration
-from openfga_sdk.sync import OpenFgaClient
 from openfga_sdk.client.models.check_request import ClientCheckRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
+from openfga_sdk.sync import OpenFgaClient, rest
 
 
 store_id = "01YCP46JKYM8FJCQ37NMBYHE5X"
@@ -67,7 +66,7 @@ class TestSyncPerRequestHeaders(TestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -80,7 +79,7 @@ class TestSyncPerRequestHeaders(TestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-sync-correlation-id"], "sync-test-correlation-123")
             self.assertEqual(headers["x-sync-trace-id"], "sync-trace-456")
@@ -101,7 +100,7 @@ class TestSyncPerRequestHeaders(TestCase):
             options = {
                 "headers": custom_headers
             }
-            
+
             body = ClientWriteRequest(
                 writes=[
                     ClientTuple(
@@ -118,7 +117,7 @@ class TestSyncPerRequestHeaders(TestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that our custom headers were included
             self.assertEqual(headers["x-sync-request-id"], "sync-write-request-789")
             self.assertEqual(headers["x-sync-client-version"], "sync-1.0.0")
@@ -137,7 +136,7 @@ class TestSyncPerRequestHeaders(TestCase):
                     "x-operation": "first-check"
                 }
             }
-            
+
             body1 = ClientCheckRequest(
                 user="user:test-user-1",
                 relation="viewer",
@@ -153,7 +152,7 @@ class TestSyncPerRequestHeaders(TestCase):
                     "x-operation": "second-check"
                 }
             }
-            
+
             body2 = ClientCheckRequest(
                 user="user:test-user-2",
                 relation="editor",
@@ -164,13 +163,13 @@ class TestSyncPerRequestHeaders(TestCase):
 
             # Verify both requests were made
             self.assertEqual(mock_request.call_count, 2)
-            
+
             # Check first call headers
             first_call = mock_request.call_args_list[0]
             firstheaders = first_call.kwargs.get("headers", {})
             self.assertEqual(firstheaders["x-request-number"], "1")
             self.assertEqual(firstheaders["x-operation"], "first-check")
-            
+
             # Check second call headers
             second_call = mock_request.call_args_list[1]
             secondheaders = second_call.kwargs.get("headers", {})
@@ -196,7 +195,7 @@ class TestSyncPerRequestHeaders(TestCase):
             # Verify the request was made successfully
             mock_request.assert_called_once()
             call_args = mock_request.call_args
-            
+
             # When no headers provided, headers should still exist but be the default ones
             headers = call_args.kwargs.get("headers", {})
             # Default should include Content-Type but not our custom headers
@@ -212,7 +211,7 @@ class TestSyncPerRequestHeaders(TestCase):
             options = {
                 "headers": {}
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -225,11 +224,11 @@ class TestSyncPerRequestHeaders(TestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Headers should contain defaults but not our custom headers
             self.assertEqual(len(headers), 3)  # Should contain default headers
             self.assertIn("Content-Type", headers)
-            self.assertIn("Accept", headers) 
+            self.assertIn("Accept", headers)
             self.assertIn("User-Agent", headers)
             # But should not contain custom headers
             self.assertNotIn("x-custom-header", headers)
@@ -250,10 +249,10 @@ class TestSyncPerRequestHeaders(TestCase):
 
         with OpenFgaClient(self.configuration) as fga_client:
             options = {
-                "authorization_model_id": "custom-model-123",
+                "authorization_model_id": "01HVMMBCMGZNT3SED4Z17ECXCA",
                 "headers": custom_headers
             }
-            
+
             body = ClientCheckRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -266,12 +265,12 @@ class TestSyncPerRequestHeaders(TestCase):
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             headers = call_args.kwargs.get("headers", {})
-            
+
             # Check that all our custom headers were included
             self.assertEqual(headers["x-correlation-id"], "abc-123-def-456")
             self.assertEqual(headers["x-trace-id"], "trace-789")
             self.assertEqual(headers["x-custom-header"], "custom-value")
             self.assertEqual(headers["x-service-name"], "authorization-service")
-            
+
             # Verify other options were also applied
             self.assertIsNotNone(call_args)
