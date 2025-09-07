@@ -178,7 +178,10 @@ class ApiClient:
 
         # header parameters
         header_params = header_params or {}
-        header_params.update(self.default_headers)
+        # Merge headers with custom headers taking precedence over defaults
+        merged_headers = self.default_headers.copy()
+        merged_headers.update(header_params)
+        header_params = merged_headers
         if self.cookie:
             header_params["Cookie"] = self.cookie
         if header_params:
