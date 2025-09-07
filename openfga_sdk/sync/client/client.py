@@ -128,7 +128,12 @@ def options_to_kwargs(
         if options.get("continuation_token"):
             kwargs["continuation_token"] = options["continuation_token"]
         if options.get("headers"):
-            kwargs["_headers"] = options["headers"]
+            headers = options["headers"]
+            if isinstance(headers, dict):
+                kwargs["_headers"] = headers
+            else:
+                # Invalid headers type - skip it gracefully
+                pass
         if options.get("retry_params"):
             kwargs["_retry_params"] = options["retry_params"]
     return kwargs
