@@ -155,10 +155,18 @@ class RESTClientObject:
         :param pools_size: The number of connection pools to use.
         :param maxsize: The maximum number of connections per pool.
         """
-        if hasattr(configuration, "verify_ssl") and configuration.verify_ssl:
-            cert_reqs = ssl.CERT_REQUIRED
-        else:
-            cert_reqs = ssl.CERT_NONE
+        # Reuse SSL context to mitigate OpenSSL 3.0+ performance issues
+        # See: https://github.com/openssl/openssl/issues/17064
+        ssl_context = ssl.create_default_context(cafile=configuration.ssl_ca_cert)
+
+        if configuration.cert_file:
+            ssl_context.load_cert_chain(
+                configuration.cert_file, keyfile=configuration.key_file
+            )
+
+        if not configuration.verify_ssl:
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
 
         addition_pool_args = {}
 
@@ -193,10 +201,7 @@ class RESTClientObject:
                 urllib3.ProxyManager(
                     num_pools=pools_size,
                     maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=configuration.ssl_ca_cert,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
+                    ssl_context=ssl_context,
                     proxy_url=configuration.proxy,
                     proxy_headers=configuration.proxy_headers,
                     **addition_pool_args,
@@ -208,10 +213,7 @@ class RESTClientObject:
         self.pool_manager = urllib3.PoolManager(
             num_pools=pools_size,
             maxsize=maxsize,
-            cert_reqs=cert_reqs,
-            ca_certs=configuration.ssl_ca_cert,
-            cert_file=configuration.cert_file,
-            key_file=configuration.key_file,
+            ssl_context=ssl_context,
             **addition_pool_args,
         )
 
