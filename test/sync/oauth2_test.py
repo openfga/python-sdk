@@ -105,7 +105,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_get_authentication_obtain_client_credentials_with_scopes_list(self, mock_request):
+    def test_get_authentication_obtain_client_credentials_with_scopes_list(
+        self, mock_request
+    ):
         """
         Test getting authentication header when method is client credentials with scopes as list
         """
@@ -162,7 +164,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_get_authentication_obtain_client_credentials_with_scopes_string(self, mock_request):
+    def test_get_authentication_obtain_client_credentials_with_scopes_string(
+        self, mock_request
+    ):
         """
         Test getting authentication header when method is client credentials with scopes as string
         """
@@ -216,6 +220,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
                 "scope": "read write admin",
             },
         )
+        rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
     def test_get_authentication_obtain_client_credentials_failed(self, mock_request):
@@ -335,7 +340,7 @@ This is not a JSON response
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_get_authentication_retries_5xx_responses(self, mock_request):
+    def test_get_authentication_retries_5xx_responses(self, mock_request):
         """
         Receiving a 5xx response from the server should be retried
         """
