@@ -15,3 +15,6 @@ test/*
 .travis.yml
 tox.ini
 setup.cfg
+setup.py
+requirements.txt
+test-requirements.txt
