@@ -496,7 +496,9 @@ This is not a JSON response
         await rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_get_authentication_obtain_client_credentials_with_scopes_list(self, mock_request):
+    async def test_get_authentication_obtain_client_credentials_with_scopes_list(
+        self, mock_request
+    ):
         """
         Test getting authentication header when method is client credentials with scopes as list
         """
@@ -553,7 +555,9 @@ This is not a JSON response
         await rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_get_authentication_obtain_client_credentials_with_scopes_string(self, mock_request):
+    async def test_get_authentication_obtain_client_credentials_with_scopes_string(
+        self, mock_request
+    ):
         """
         Test getting authentication header when method is client credentials with scopes as string
         """
