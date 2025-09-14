@@ -274,3 +274,44 @@ class TestSyncPerRequestHeaders(TestCase):
 
             # Verify other options were also applied
             self.assertIsNotNone(call_args)
+
+    @patch("openfga_sdk.sync.open_fga_api.OpenFgaApi.streamed_list_objects")
+    def test_sync_streamed_list_objects_with_custom_headers(self, mock_streamed_list_objects):
+        """Test sync streamed_list_objects with custom headers to cover missing line"""
+        # Mock the streaming API response
+        mock_streamed_list_objects.return_value = [
+            {"result": {"object": "document:1"}},
+            {"result": {"object": "document:2"}},
+        ]
+
+        custom_headers = {
+            "x-stream-id": "stream-123",
+            "x-batch-size": "100"
+        }
+
+        with OpenFgaClient(self.configuration) as fga_client:
+            options = {
+                "headers": custom_headers
+            }
+
+            from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
+            body = ClientListObjectsRequest(
+                user="user:test-user",
+                relation="viewer",
+                type="document",
+            )
+
+            # This should call the streamed_list_objects method and cover line 932
+            results = list(fga_client.streamed_list_objects(body, options))
+
+            # Verify we got results
+            self.assertEqual(len(results), 2)
+            self.assertEqual(results[0].object, "document:1")
+            self.assertEqual(results[1].object, "document:2")
+            
+            # Verify the API was called with the expected parameters including headers
+            mock_streamed_list_objects.assert_called_once()
+            call_kwargs = mock_streamed_list_objects.call_args.kwargs
+            self.assertIn("_headers", call_kwargs)
+            self.assertEqual(call_kwargs["_headers"]["x-stream-id"], "stream-123")
+            self.assertEqual(call_kwargs["_headers"]["x-batch-size"], "100")
