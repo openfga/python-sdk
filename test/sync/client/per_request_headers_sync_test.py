@@ -13,6 +13,7 @@ import urllib3
 
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models.check_request import ClientCheckRequest
+from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.sync import OpenFgaClient, rest
@@ -294,7 +295,6 @@ class TestSyncPerRequestHeaders(TestCase):
                 "headers": custom_headers
             }
 
-            from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
             body = ClientListObjectsRequest(
                 user="user:test-user",
                 relation="viewer",
@@ -308,7 +308,7 @@ class TestSyncPerRequestHeaders(TestCase):
             self.assertEqual(len(results), 2)
             self.assertEqual(results[0].object, "document:1")
             self.assertEqual(results[1].object, "document:2")
-            
+
             # Verify the API was called with the expected parameters including headers
             mock_streamed_list_objects.assert_called_once()
             call_kwargs = mock_streamed_list_objects.call_args.kwargs
