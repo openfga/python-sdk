@@ -155,6 +155,7 @@ class RESTClientObject:
         :param pools_size: The number of connection pools to use.
         :param maxsize: The maximum number of connections per pool.
         """
+
         # Reuse SSL context to mitigate OpenSSL 3.0+ performance issues
         # See: https://github.com/openssl/openssl/issues/17064
         ssl_context = ssl.create_default_context(cafile=configuration.ssl_ca_cert)

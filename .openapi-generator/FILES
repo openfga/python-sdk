@@ -253,8 +253,6 @@ openfga_sdk/telemetry/metrics.py
 openfga_sdk/telemetry/telemetry.py
 openfga_sdk/validation.py
 pyproject.toml
-README.md
-test/__init__.py
 test/_/configuration_test.py
 test/_/credentials_test.py
 test/_/oauth2_test.py

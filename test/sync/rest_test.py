@@ -535,8 +535,8 @@ def test_stream_exception_in_chunks():
 
 
 # Tests for SSL Context Reuse (fix for OpenSSL 3.0+ performance issues)
-@patch('ssl.create_default_context')
-@patch('urllib3.PoolManager')
+@patch("ssl.create_default_context")
+@patch("urllib3.PoolManager")
 def test_ssl_context_created_with_ca_cert(mock_pool_manager, mock_create_context):
     """Test that SSL context is created with CA certificate file."""
     mock_ssl_context = MagicMock()
@@ -559,11 +559,11 @@ def test_ssl_context_created_with_ca_cert(mock_pool_manager, mock_create_context
     # Verify SSL context was passed to PoolManager
     mock_pool_manager.assert_called_once()
     call_kwargs = mock_pool_manager.call_args[1]
-    assert call_kwargs['ssl_context'] == mock_ssl_context
+    assert call_kwargs["ssl_context"] == mock_ssl_context
 
 
-@patch('ssl.create_default_context')
-@patch('urllib3.PoolManager')
+@patch("ssl.create_default_context")
+@patch("urllib3.PoolManager")
 def test_ssl_context_loads_client_certificate(mock_pool_manager, mock_create_context):
     """Test that SSL context loads client certificate and key when provided."""
     mock_ssl_context = MagicMock()
@@ -591,12 +591,14 @@ def test_ssl_context_loads_client_certificate(mock_pool_manager, mock_create_con
     # Verify SSL context was passed to PoolManager
     mock_pool_manager.assert_called_once()
     call_kwargs = mock_pool_manager.call_args[1]
-    assert call_kwargs['ssl_context'] == mock_ssl_context
+    assert call_kwargs["ssl_context"] == mock_ssl_context
 
 
-@patch('ssl.create_default_context')
-@patch('urllib3.PoolManager')
-def test_ssl_context_disables_verification_when_verify_ssl_false(mock_pool_manager, mock_create_context):
+@patch("ssl.create_default_context")
+@patch("urllib3.PoolManager")
+def test_ssl_context_disables_verification_when_verify_ssl_false(
+    mock_pool_manager, mock_create_context
+):
     """Test that SSL context disables verification when verify_ssl=False."""
     mock_ssl_context = MagicMock()
     mock_create_context.return_value = mock_ssl_context
@@ -622,11 +624,11 @@ def test_ssl_context_disables_verification_when_verify_ssl_false(mock_pool_manag
     # Verify SSL context was passed to PoolManager
     mock_pool_manager.assert_called_once()
     call_kwargs = mock_pool_manager.call_args[1]
-    assert call_kwargs['ssl_context'] == mock_ssl_context
+    assert call_kwargs["ssl_context"] == mock_ssl_context
 
 
-@patch('ssl.create_default_context')
-@patch('urllib3.ProxyManager')
+@patch("ssl.create_default_context")
+@patch("urllib3.ProxyManager")
 def test_ssl_context_used_with_proxy_manager(mock_proxy_manager, mock_create_context):
     """Test that SSL context is passed to ProxyManager when proxy is configured."""
     mock_ssl_context = MagicMock()
@@ -655,14 +657,16 @@ def test_ssl_context_used_with_proxy_manager(mock_proxy_manager, mock_create_con
     # Verify SSL context was passed to ProxyManager
     mock_proxy_manager.assert_called_once()
     call_kwargs = mock_proxy_manager.call_args[1]
-    assert call_kwargs['ssl_context'] == mock_ssl_context
-    assert call_kwargs['proxy_url'] == "http://proxy:8080"
-    assert call_kwargs['proxy_headers'] == {"Proxy-Auth": "token"}
+    assert call_kwargs["ssl_context"] == mock_ssl_context
+    assert call_kwargs["proxy_url"] == "http://proxy:8080"
+    assert call_kwargs["proxy_headers"] == {"Proxy-Auth": "token"}
 
 
-@patch('ssl.create_default_context')
-@patch('urllib3.PoolManager')
-def test_ssl_context_reuse_performance_optimization(mock_pool_manager, mock_create_context):
+@patch("ssl.create_default_context")
+@patch("urllib3.PoolManager")
+def test_ssl_context_reuse_performance_optimization(
+    mock_pool_manager, mock_create_context
+):
     """Test that SSL context creation is called only once per client instance."""
     mock_ssl_context = MagicMock()
     mock_create_context.return_value = mock_ssl_context
@@ -685,7 +689,7 @@ def test_ssl_context_reuse_performance_optimization(mock_pool_manager, mock_crea
     # Verify the same SSL context instance is reused
     mock_pool_manager.assert_called_once()
     call_kwargs = mock_pool_manager.call_args[1]
-    assert call_kwargs['ssl_context'] is mock_ssl_context
+    assert call_kwargs["ssl_context"] is mock_ssl_context
 
     # Verify context was not created again during subsequent operations
     mock_create_context.reset_mock()
@@ -697,8 +701,8 @@ def test_ssl_context_reuse_performance_optimization(mock_pool_manager, mock_crea
     mock_create_context.assert_not_called()
 
 
-@patch('ssl.create_default_context')
-@patch('urllib3.PoolManager')
+@patch("ssl.create_default_context")
+@patch("urllib3.PoolManager")
 def test_ssl_context_with_all_ssl_options(mock_pool_manager, mock_create_context):
     """Test SSL context creation with all SSL configuration options set."""
     mock_ssl_context = MagicMock()
@@ -725,11 +729,17 @@ def test_ssl_context_with_all_ssl_options(mock_pool_manager, mock_create_context
 
     # Verify SSL verification settings were NOT modified (verify_ssl=True)
     # check_hostname and verify_mode should remain at their default secure values
-    assert not hasattr(mock_ssl_context, 'check_hostname') or mock_ssl_context.check_hostname
-    assert not hasattr(mock_ssl_context, 'verify_mode') or mock_ssl_context.verify_mode != ssl.CERT_NONE
+    assert (
+        not hasattr(mock_ssl_context, "check_hostname")
+        or mock_ssl_context.check_hostname
+    )
+    assert (
+        not hasattr(mock_ssl_context, "verify_mode")
+        or mock_ssl_context.verify_mode != ssl.CERT_NONE
+    )
 
     # Verify SSL context was passed to PoolManager
     mock_pool_manager.assert_called_once()
     call_kwargs = mock_pool_manager.call_args[1]
-    assert call_kwargs['ssl_context'] == mock_ssl_context
-    assert call_kwargs['maxsize'] == 8
+    assert call_kwargs["ssl_context"] == mock_ssl_context
+    assert call_kwargs["maxsize"] == 8
