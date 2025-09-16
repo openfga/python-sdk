@@ -70,7 +70,7 @@ class OAuth2Client:
         """
         configuration = self._credentials.configuration
 
-        token_url = f"https://{configuration.api_issuer}/oauth/token"
+        token_url = self._credentials._parse_issuer(configuration.api_issuer)
 
         post_params = {
             "client_id": configuration.client_id,
@@ -90,7 +90,7 @@ class OAuth2Client:
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.5",
+                "User-Agent": "openfga-sdk (python) 0.9.6",
             }
         )
 

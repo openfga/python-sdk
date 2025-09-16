@@ -10,7 +10,7 @@
 
 [project]
 name = "openfga-sdk"
-version = "0.9.5"
+version = "0.9.6"
 description="A high performance and flexible authorization/permission engine built for developers and inspired by Google Zanzibar."
 authors = [
     { name = "OpenFGA (https://openfga.dev)", email = "community@openfga.dev"}

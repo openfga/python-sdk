@@ -1,8 +1,13 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.5...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.6...HEAD)
 
-### [0.9.5](https://github.com/openfga/python-sdk/compare/v0.9.4...0.9.5) (2025-07-09)
+### [0.9.6](https://github.com/openfga/python-sdk/compare/v0.9.5...0.9.6) (2025-09-15)
+
+- fix: reuse ssl context in the sync client (#222) - thanks @wadells!
+- feat: add OAuth2 scopes parameter support to CredentialConfiguration (#213) - thanks @SoulPancake
+
+### [v0.9.5](https://github.com/openfga/python-sdk/compare/v0.9.4...v0.9.5) (2025-07-09)
 
 - fix: aiohttp.ClientResponse.data should be awaited (#197) - thanks @cmbernard333
 
