@@ -178,7 +178,10 @@ class ApiClient:
 
         # header parameters
         header_params = header_params or {}
-        header_params.update(self.default_headers)
+        # Merge headers with custom headers taking precedence over defaults
+        merged_headers = self.default_headers.copy()
+        merged_headers.update(header_params)
+        header_params = merged_headers
         if self.cookie:
             header_params["Cookie"] = self.cookie
         if header_params:
@@ -395,7 +398,7 @@ class ApiClient:
                 if content_type is not None:
                     match = re.search(r"charset=([a-zA-Z\-\d]+)[\s\;]?", content_type)
                 encoding = match.group(1) if match else "utf-8"
-                if response_data.data is not None:
+                if response_data.data is not None and isinstance(response_data.data, bytes):
                     response_data.data = response_data.data.decode(encoding)
 
             # deserialize response data
