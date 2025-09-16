@@ -35,20 +35,23 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             **/pyproject.toml
-            **/requirements*.txt
-            **/test-requirements*.txt
 
       - name: Install dependencies
         run: |
-          pip install -r test-requirements.txt --upgrade pip
-          pip install "urllib3==${{ matrix.urllib3-version }}"
-
-      - if: matrix.python-version == '3.10' && matrix.urllib3-version == '1.26.19'
-        name: Run `ruff`
-        run: ruff check
+          pip install uv
+          export UV_LINK_MODE=copy && \
+            uv sync --group dev && \
+            uv run ruff check --select I --fix . && \
+            uv run ruff format . && \
+            uv build
 
       - name: Run tests and collect coverage
-        run: pytest --cov-fail-under 60 --cov openfga_sdk
+        run: |
+          export UV_LINK_MODE=copy && \
+            uv sync --group dev && \
+            uv run --with "urllib3==${{ matrix.urllib3-version }}" \
+              pytest --cov-report term-missing --cov=openfga_sdk --cov-fail-under=60 test/ && \
+            uv run ruff check .
 
       - if: matrix.python-version == '3.10' && matrix.urllib3-version == '1.26.19'
         name: Upload coverage to Codecov
