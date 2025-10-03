@@ -106,7 +106,7 @@ def set_heading_if_not_set(
         _options["headers"] = {}
 
     if type(_options["headers"]) is dict:
-        if type(_options["headers"].get(name)) not in [int, str]:
+        if _options["headers"].get(name) is None:
             _options["headers"][name] = value
 
     return _options

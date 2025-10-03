@@ -21,7 +21,7 @@ import urllib3
 
 from openfga_sdk import rest
 from openfga_sdk.client import ClientConfiguration
-from openfga_sdk.client.client import OpenFgaClient
+from openfga_sdk.client.client import OpenFgaClient, set_heading_if_not_set
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
@@ -3273,3 +3273,425 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             authorization_model_id="abcd",
         )
         self.assertRaises(FgaValidationException, configuration.is_valid)
+
+    def test_set_heading_if_not_set_when_none_provided(self):
+        """Should set header when no options provided"""
+        result = set_heading_if_not_set(None, "X-Test-Header", "default-value")
+
+        self.assertIsNotNone(result)
+        self.assertIn("headers", result)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_when_empty_options_provided(self):
+        """Should set header when empty options dict provided"""
+        result = set_heading_if_not_set({}, "X-Test-Header", "default-value")
+
+        self.assertIn("headers", result)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_when_no_headers_in_options(self):
+        """Should set header when options dict has no headers key"""
+        options = {"page_size": 10}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        self.assertIn("headers", result)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+        self.assertEqual(result["page_size"], 10)
+
+    def test_set_heading_if_not_set_when_headers_empty(self):
+        """Should set header when headers dict is empty"""
+        options = {"headers": {}}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_does_not_override_existing_custom_header(self):
+        """Should NOT override when custom header already exists - this is the critical test for the bug fix"""
+        options = {"headers": {"X-Test-Header": "custom-value"}}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        # Custom header should be preserved, NOT overridden by default
+        self.assertEqual(result["headers"]["X-Test-Header"], "custom-value")
+
+    def test_set_heading_if_not_set_preserves_other_headers_when_setting_new_header(
+        self,
+    ):
+        """Should preserve existing headers when setting a new one"""
+        options = {"headers": {"X-Existing-Header": "existing-value"}}
+        result = set_heading_if_not_set(options, "X-New-Header", "new-value")
+
+        self.assertEqual(result["headers"]["X-Existing-Header"], "existing-value")
+        self.assertEqual(result["headers"]["X-New-Header"], "new-value")
+
+    def test_set_heading_if_not_set_handles_integer_header_values(self):
+        """Should not override existing integer header values"""
+        options = {"headers": {"X-Retry-Count": 5}}
+        result = set_heading_if_not_set(options, "X-Retry-Count", 1)
+
+        # Existing integer value should be preserved
+        self.assertEqual(result["headers"]["X-Retry-Count"], 5)
+
+    def test_set_heading_if_not_set_handles_non_dict_headers_value(self):
+        """Should convert non-dict headers value to dict"""
+        options = {"headers": "invalid"}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        self.assertIsInstance(result["headers"], dict)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_does_not_mutate_when_header_exists(self):
+        """Should return same dict when header already exists"""
+        options = {"headers": {"X-Test-Header": "custom-value"}}
+        original_value = options["headers"]["X-Test-Header"]
+
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        # Should return the same modified dict
+        self.assertIs(result, options)
+        # Value should not have changed
+        self.assertEqual(result["headers"]["X-Test-Header"], original_value)
+
+    def test_set_heading_if_not_set_multiple_headers_with_mixed_states(self):
+        """Should handle multiple headers, some existing and some new"""
+        options = {
+            "headers": {
+                "X-Custom-Header": "custom-value",
+                "X-Another-Header": "another-value",
+            }
+        }
+
+        # Try to set a custom header (should not override)
+        result = set_heading_if_not_set(options, "X-Custom-Header", "default-value")
+        self.assertEqual(result["headers"]["X-Custom-Header"], "custom-value")
+
+        # Try to set a new header (should be added)
+        result = set_heading_if_not_set(result, "X-New-Header", "new-value")
+        self.assertEqual(result["headers"]["X-New-Header"], "new-value")
+
+        # Original headers should still exist
+        self.assertEqual(result["headers"]["X-Another-Header"], "another-value")
+
+    def test_set_heading_if_not_set_two_defaults_two_customs_one_override(self):
+        """Test setting two default headers when two custom headers exist, with one custom overriding one default"""
+        # Start with two custom headers
+        options = {
+            "headers": {
+                "X-Request-ID": "my-custom-request-id",  # This should override the default
+                "X-Tenant-ID": "tenant-123",  # This is custom-only
+            }
+        }
+
+        # Try to set two default headers
+        result = set_heading_if_not_set(options, "X-SDK-Version", "1.0.0")
+        result = set_heading_if_not_set(result, "X-Request-ID", "default-uuid")
+
+        # Verify all four headers exist with correct values
+        self.assertEqual(result["headers"]["X-SDK-Version"], "1.0.0")  # Default was set
+        self.assertEqual(
+            result["headers"]["X-Request-ID"], "my-custom-request-id"
+        )  # Custom overrode default
+        self.assertEqual(
+            result["headers"]["X-Tenant-ID"], "tenant-123"
+        )  # Custom preserved
+        self.assertEqual(len(result["headers"]), 3)  # Exactly 3 headers
+
+    def test_set_heading_if_not_set_with_empty_string_value(self):
+        """Test that empty string values in custom headers are preserved and not overridden."""
+        options = {"headers": {"X-Custom-Header": ""}}
+        result = set_heading_if_not_set(options, "X-Custom-Header", "default-value")
+        self.assertEqual(result["headers"]["X-Custom-Header"], "")
+
+    def test_set_heading_if_not_set_with_unicode_characters(self):
+        """Test that headers with Unicode characters are handled correctly."""
+        options = {"headers": {"X-Custom-Header": "日本語"}}
+        result = set_heading_if_not_set(options, "X-Custom-Header", "default-value")
+        self.assertEqual(result["headers"]["X-Custom-Header"], "日本語")
+
+        # Test setting a new header with Unicode
+        result = set_heading_if_not_set({}, "X-Unicode-Header", "🔒")
+        self.assertEqual(result["headers"]["X-Unicode-Header"], "🔒")
+
+    def test_set_heading_if_not_set_with_special_characters(self):
+        """Test that headers with special characters are handled correctly."""
+        options = {"headers": {"X-Custom-Header": "value-with-special!@#$%^&*()_+"}}
+        result = set_heading_if_not_set(options, "X-Custom-Header", "default")
+        self.assertEqual(
+            result["headers"]["X-Custom-Header"], "value-with-special!@#$%^&*()_+"
+        )
+
+    def test_set_heading_if_not_set_case_sensitivity(self):
+        """Test that header names are treated as case-sensitive by the helper function."""
+        options = {"headers": {"x-custom-header": "lowercase"}}
+        result = set_heading_if_not_set(options, "X-Custom-Header", "uppercase")
+        self.assertEqual(result["headers"]["X-Custom-Header"], "uppercase")
+        self.assertEqual(result["headers"]["x-custom-header"], "lowercase")
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_content_type_cannot_be_overridden_by_custom_headers(
+        self, mock_request
+    ):
+        """Test that Content-Type header cannot be overridden by custom headers."""
+        response_body = '{"allowed": true, "resolution": "1234"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            # Try to override Content-Type with a custom value
+            custom_options = {"headers": {"Content-Type": "text/plain"}}
+            await api_client.check(body=body, options=custom_options)
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+
+            # Content-Type should be application/json, NOT the custom text/plain
+            self.assertEqual(headers.get("Content-Type"), "application/json")
+            self.assertNotEqual(headers.get("Content-Type"), "text/plain")
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_check_with_custom_headers_override_defaults(self, mock_request):
+        """Test that custom headers in options override default headers for check API."""
+        response_body = '{"allowed": true, "resolution": "1234"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            custom_options = {"headers": {"X-Custom-Request-Id": "custom-request-123"}}
+            api_response = await api_client.check(body=body, options=custom_options)
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("X-Custom-Request-Id"), "custom-request-123")
+            self.assertIsInstance(api_response, CheckResponse)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_write_with_custom_headers(self, mock_request):
+        """Test that custom headers work correctly with write API."""
+        response_body = '{"writes": [], "deletes": []}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientWriteRequest(
+            writes=[
+                ClientTuple(
+                    object="document:budget",
+                    relation="reader",
+                    user="user:anne",
+                )
+            ]
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        async with OpenFgaClient(configuration) as api_client:
+            custom_options = {
+                "headers": {"X-Trace-Id": "trace-xyz-789"},
+                "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            }
+            await api_client.write(body=body, options=custom_options)
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("X-Trace-Id"), "trace-xyz-789")
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_expand_with_custom_headers(self, mock_request):
+        """Test that custom headers are passed correctly in expand API calls."""
+        response_body = '{"tree": {"root": {"name": "document:1#viewer", "leaf": {"users": {"users": ["user:anne"]}}}}}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientExpandRequest(
+            object="document:1",
+            relation="viewer",
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            custom_options = {"headers": {"X-Expand-Id": "expand-456"}}
+            api_response = await api_client.expand(body=body, options=custom_options)
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("X-Expand-Id"), "expand-456")
+            self.assertIsInstance(api_response, ExpandResponse)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_list_objects_with_custom_headers(self, mock_request):
+        """Test that custom headers are passed correctly in list_objects API calls."""
+        response_body = '{"objects": ["document:1", "document:2"]}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientListObjectsRequest(
+            type="document",
+            relation="viewer",
+            user="user:anne",
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            custom_options = {"headers": {"X-List-Objects-Id": "list-obj-999"}}
+            api_response = await api_client.list_objects(
+                body=body, options=custom_options
+            )
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("X-List-Objects-Id"), "list-obj-999")
+            self.assertIsInstance(api_response, ListObjectsResponse)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_list_users_with_custom_headers(self, mock_request):
+        """Test that custom headers are passed correctly in list_users API calls."""
+        response_body = '{"users": [{"object": {"type": "user", "id": "anne"}}, {"object": {"type": "user", "id": "bob"}}]}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientListUsersRequest(
+            object=FgaObject(type="document", id="1"),
+            relation="viewer",
+            user_filters=[{"type": "user"}],
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            custom_options = {"headers": {"X-List-Users-Id": "list-users-777"}}
+            api_response = await api_client.list_users(
+                body=body, options=custom_options
+            )
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("X-List-Users-Id"), "list-users-777")
+            self.assertIsInstance(api_response, ListUsersResponse)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_multiple_api_calls_with_different_custom_headers(self, mock_request):
+        """Test that different custom headers can be used for different API calls."""
+
+        def mock_side_effect(*args, **kwargs):
+            path = args[1]
+            if "check" in path:
+                return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+            elif "expand" in path:
+                return mock_response(
+                    '{"tree": {"root": {"name": "document:1#viewer", "leaf": {"users": {"users": ["user:anne"]}}}}}',
+                    200,
+                )
+            return mock_response("{}", 200)
+
+        mock_request.side_effect = mock_side_effect
+
+        check_body = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+
+        expand_body = ClientExpandRequest(
+            object="document:1",
+            relation="viewer",
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            # First call with custom header 1
+            check_options = {"headers": {"X-Request-Id": "check-request-111"}}
+            check_response = await api_client.check(
+                body=check_body, options=check_options
+            )
+
+            # Second call with custom header 2
+            expand_options = {"headers": {"X-Request-Id": "expand-request-222"}}
+            expand_response = await api_client.expand(
+                body=expand_body, options=expand_options
+            )
+
+            # Verify first call had correct header
+            first_call_args = mock_request.call_args_list[0]
+            first_headers = first_call_args[1]["headers"]
+            self.assertEqual(first_headers.get("X-Request-Id"), "check-request-111")
+
+            # Verify second call had correct header
+            second_call_args = mock_request.call_args_list[1]
+            second_headers = second_call_args[1]["headers"]
+            self.assertEqual(second_headers.get("X-Request-Id"), "expand-request-222")
+
+            self.assertIsInstance(check_response, CheckResponse)
+            self.assertIsInstance(expand_response, ExpandResponse)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_client_batch_check_with_custom_headers(self, mock_request):
+        """Test that custom headers work correctly in batch check operations."""
+
+        def mock_side_effect(*args, **kwargs):
+            body = kwargs.get("body", {})
+            user = body.get("tuple_key", {}).get("user", "")
+            if user == "user:anne":
+                return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+            elif user == "user:bob":
+                return mock_response('{"allowed": false, "resolution": "5678"}', 200)
+            return mock_response('{"allowed": false, "resolution": "0000"}', 200)
+
+        mock_request.side_effect = mock_side_effect
+
+        body = [
+            ClientCheckRequest(
+                object="document:budget",
+                relation="reader",
+                user="user:anne",
+            ),
+            ClientCheckRequest(
+                object="document:roadmap",
+                relation="writer",
+                user="user:bob",
+            ),
+        ]
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        async with OpenFgaClient(configuration) as api_client:
+            custom_options = {
+                "headers": {"X-Batch-Id": "batch-xyz-123"},
+                "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            }
+            api_response = await api_client.client_batch_check(
+                body=body, options=custom_options
+            )
+
+            # Verify all calls had the custom header
+            for call_args in mock_request.call_args_list:
+                headers = call_args[1]["headers"]
+                self.assertEqual(headers.get("X-Batch-Id"), "batch-xyz-123")
+
+            self.assertEqual(len(api_response), 2)
+            self.assertTrue(api_response[0].allowed)
+            self.assertFalse(api_response[1].allowed)

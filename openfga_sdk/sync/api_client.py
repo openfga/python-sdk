@@ -177,8 +177,7 @@ class ApiClient:
         start = float(time.time())
 
         # header parameters
-        header_params = header_params or {}
-        header_params.update(self.default_headers)
+        header_params = {**self.default_headers, **(header_params or {})}
         if self.cookie:
             header_params["Cookie"] = self.cookie
         if header_params:
