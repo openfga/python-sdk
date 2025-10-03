@@ -3371,6 +3371,30 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         # Original headers should still exist
         self.assertEqual(result["headers"]["X-Another-Header"], "another-value")
 
+    def test_set_heading_if_not_set_two_defaults_two_customs_one_override(self):
+        """Test setting two default headers when two custom headers exist, with one custom overriding one default"""
+        # Start with two custom headers
+        options = {
+            "headers": {
+                "X-Request-ID": "my-custom-request-id",  # This should override the default
+                "X-Tenant-ID": "tenant-123",  # This is custom-only
+            }
+        }
+
+        # Try to set two default headers
+        result = set_heading_if_not_set(options, "X-SDK-Version", "1.0.0")
+        result = set_heading_if_not_set(result, "X-Request-ID", "default-uuid")
+
+        # Verify all four headers exist with correct values
+        self.assertEqual(result["headers"]["X-SDK-Version"], "1.0.0")  # Default was set
+        self.assertEqual(
+            result["headers"]["X-Request-ID"], "my-custom-request-id"
+        )  # Custom overrode default
+        self.assertEqual(
+            result["headers"]["X-Tenant-ID"], "tenant-123"
+        )  # Custom preserved
+        self.assertEqual(len(result["headers"]), 3)  # Exactly 3 headers
+
     def test_set_heading_if_not_set_with_empty_string_value(self):
         """Test that empty string values in custom headers are preserved and not overridden."""
         options = {"headers": {"X-Custom-Header": ""}}
@@ -3401,6 +3425,36 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         result = set_heading_if_not_set(options, "X-Custom-Header", "uppercase")
         self.assertEqual(result["headers"]["X-Custom-Header"], "uppercase")
         self.assertEqual(result["headers"]["x-custom-header"], "lowercase")
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_content_type_cannot_be_overridden_by_custom_headers(
+        self, mock_request
+    ):
+        """Test that Content-Type header cannot be overridden by custom headers."""
+        response_body = '{"allowed": true, "resolution": "1234"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        body = ClientCheckRequest(
+            object="document:2021-budget",
+            relation="reader",
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+
+        async with OpenFgaClient(configuration) as api_client:
+            # Try to override Content-Type with a custom value
+            custom_options = {"headers": {"Content-Type": "text/plain"}}
+            await api_client.check(body=body, options=custom_options)
+
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+
+            # Content-Type should be application/json, NOT the custom text/plain
+            self.assertEqual(headers.get("Content-Type"), "application/json")
+            self.assertNotEqual(headers.get("Content-Type"), "text/plain")
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_check_with_custom_headers_override_defaults(self, mock_request):
