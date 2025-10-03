@@ -200,6 +200,66 @@ async def main():
         return api_response
 ```
 
+### Custom Headers
+
+#### Default Headers
+
+You can set default headers that will be sent with every request by accessing the API client and using the `set_default_header` method:
+
+```python
+from openfga_sdk import ClientConfiguration, OpenFgaClient
+
+
+async def main():
+    configuration = ClientConfiguration(
+        api_url=FGA_API_URL,
+        store_id=FGA_STORE_ID,
+        authorization_model_id=FGA_MODEL_ID,
+    )
+
+    async with OpenFgaClient(configuration) as fga_client:
+        # Set default headers that will be sent with every request
+        fga_client._api_client.set_default_header("X-Custom-Header", "default-value")
+        fga_client._api_client.set_default_header("X-Request-Source", "my-app")
+
+        api_response = await fga_client.read_authorization_models()
+        return api_response
+```
+
+#### Per-Request Headers
+
+You can also send custom headers on a per-request basis by using the `options` parameter. Per-request headers will override any default headers with the same name.
+
+```python
+from openfga_sdk import ClientConfiguration, OpenFgaClient
+from openfga_sdk.client.models import ClientCheckRequest
+
+
+async def main():
+    configuration = ClientConfiguration(
+        api_url=FGA_API_URL,
+        store_id=FGA_STORE_ID,
+        authorization_model_id=FGA_MODEL_ID,
+    )
+
+    async with OpenFgaClient(configuration) as fga_client:
+        # Add custom headers to a specific request
+        result = await fga_client.check(
+            body=ClientCheckRequest(
+                user="user:anne",
+                relation="viewer",
+                object="document:roadmap",
+            ),
+            options={
+                "headers": {
+                    "X-Request-ID": "123e4567-e89b-12d3-a456-426614174000",
+                    "X-Custom-Header": "custom-value",  # Overrides default header value
+                }
+            }
+        )
+        return result
+```
+
 #### Synchronous Client
 
 To run outside of an async context, the project exports a synchronous client
