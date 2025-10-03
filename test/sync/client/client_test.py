@@ -2044,12 +2044,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         Check whether a user is authorized to access an object
         """
 
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-            mock_response('{"allowed": false, "resolution": "1234"}', 200),
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-        ]
         body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
@@ -2065,6 +2059,20 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
         )
+
+        # Mock the response based on request body to avoid race conditions
+        def mock_side_effect(*args, **kwargs):
+            body = kwargs.get("body", {})
+            user = body.get("tuple_key", {}).get("user", "")
+            if user == "user:81684243-9356-4421-8fbf-a4f8d36aa31b":
+                return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+            elif user == "user:81684243-9356-4421-8fbf-a4f8d36aa31c":
+                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+            elif user == "user:81684243-9356-4421-8fbf-a4f8d36aa31d":
+                return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+            return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+
+        mock_request.side_effect = mock_side_effect
         configuration = self.configuration
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:
@@ -2153,12 +2161,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 }
         """
 
-        # First, mock the response
-        mock_request.side_effect = [
-            mock_response('{"allowed": true, "resolution": "1234"}', 200),
-            ValidationException(http_resp=http_mock_response(response_body, 400)),
-            mock_response('{"allowed": false, "resolution": "1234"}', 200),
-        ]
         body1 = ClientCheckRequest(
             object="document:2021-budget",
             relation="reader",
@@ -2174,6 +2176,22 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             relation="reader",
             user="user:81684243-9356-4421-8fbf-a4f8d36aa31d",
         )
+
+        # Mock the response based on request body to avoid race conditions
+        def mock_side_effect(*args, **kwargs):
+            body = kwargs.get("body", {})
+            user = body.get("tuple_key", {}).get("user", "")
+            if user == "user:81684243-9356-4421-8fbf-a4f8d36aa31b":
+                return mock_response('{"allowed": true, "resolution": "1234"}', 200)
+            elif user == "user:81684243-9356-4421-8fbf-a4f8d36aa31c":
+                raise ValidationException(
+                    http_resp=http_mock_response(response_body, 400)
+                )
+            elif user == "user:81684243-9356-4421-8fbf-a4f8d36aa31d":
+                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+            return mock_response('{"allowed": false, "resolution": "1234"}', 200)
+
+        mock_request.side_effect = mock_side_effect
         configuration = self.configuration
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:

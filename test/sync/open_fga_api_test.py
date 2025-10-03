@@ -1589,14 +1589,14 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                   "message": "Rate Limit exceeded"
                 }
             """
-        retry_after_in_sec = 5
-        five_seconds_from_now = (
+        retry_after_in_sec = 10
+        ten_seconds_from_now = (
             datetime.now(timezone.utc) + timedelta(seconds=retry_after_in_sec)
         ).strftime("%a, %d %b %Y %H:%M:%S GMT")
         mock_http_response = http_mock_response(
             body=error_response_body,
             status=429,
-            headers={"Retry-After": five_seconds_from_now},
+            headers={"Retry-After": ten_seconds_from_now},
         )
         mock_request.side_effect = [
             RateLimitExceededError(http_resp=mock_http_response),
@@ -1604,7 +1604,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
         ]
 
         retry = openfga_sdk.configuration.RetryParams(
-            max_retry=1, min_wait_in_ms=10, max_wait_in_sec=1
+            max_retry=1, min_wait_in_ms=10, max_wait_in_sec=15
         )
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1625,7 +1625,11 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             mock_request.assert_called()
             self.assertEqual(mock_request.call_count, 2)
-            self.assertEqual(mock_sleep.call_args[0][0], retry_after_in_sec)
+            self.assertTrue(
+                retry_after_in_sec - 2
+                <= mock_sleep.call_args[0][0]
+                <= retry_after_in_sec
+            )
 
     @patch("time.sleep")
     @patch.object(rest.RESTClientObject, "request")
