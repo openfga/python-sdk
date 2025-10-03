@@ -2048,6 +2048,123 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             )
             await api_client.close()
 
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_check_custom_header_override_default_header(self, mock_request):
+        """Test case for per-request custom header overriding default header
+
+        Per-request custom headers should override default headers with the same name
+        """
+
+        # First, mock the response
+        response_body = '{"allowed": true}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            # Set a default header
+            api_client.set_default_header("X-Custom-Header", "default-value")
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            body = CheckRequest(
+                tuple_key=TupleKey(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                ),
+            )
+            # Make request with per-request custom header that should override the default
+            api_response = await api_instance.check(
+                body=body,
+                _headers={"X-Custom-Header": "per-request-value"},
+            )
+            self.assertIsInstance(api_response, CheckResponse)
+            self.assertTrue(api_response.allowed)
+            # Make sure the API was called with the per-request header value, not the default
+            expected_headers = urllib3.response.HTTPHeaderDict(
+                {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "User-Agent": "openfga-sdk python/0.9.6",
+                    "X-Custom-Header": "per-request-value",  # Should be the per-request value
+                }
+            )
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check",
+                headers=expected_headers,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    }
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_check_per_request_header_and_default_header_coexist(
+        self, mock_request
+    ):
+        """Test case for per-request custom header and default header coexisting
+
+        Per-request custom headers should be merged with default headers
+        """
+
+        # First, mock the response
+        response_body = '{"allowed": true}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            # Set a default header
+            api_client.set_default_header("X-Default-Header", "default-value")
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            body = CheckRequest(
+                tuple_key=TupleKey(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                ),
+            )
+            # Make request with per-request custom header (different from default)
+            api_response = await api_instance.check(
+                body=body,
+                _headers={"X-Per-Request-Header": "per-request-value"},
+            )
+            self.assertIsInstance(api_response, CheckResponse)
+            self.assertTrue(api_response.allowed)
+            # Make sure both headers are present in the request
+            expected_headers = urllib3.response.HTTPHeaderDict(
+                {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "User-Agent": "openfga-sdk python/0.9.6",
+                    "X-Default-Header": "default-value",  # Default header preserved
+                    "X-Per-Request-Header": "per-request-value",  # Per-request header added
+                }
+            )
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/check",
+                headers=expected_headers,
+                query_params=[],
+                post_params=[],
+                body={
+                    "tuple_key": {
+                        "object": "document:2021-budget",
+                        "relation": "reader",
+                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    }
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

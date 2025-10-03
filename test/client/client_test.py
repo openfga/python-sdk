@@ -21,7 +21,7 @@ import urllib3
 
 from openfga_sdk import rest
 from openfga_sdk.client import ClientConfiguration
-from openfga_sdk.client.client import OpenFgaClient
+from openfga_sdk.client.client import OpenFgaClient, set_heading_if_not_set
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
@@ -3273,3 +3273,100 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             authorization_model_id="abcd",
         )
         self.assertRaises(FgaValidationException, configuration.is_valid)
+
+    def test_set_heading_if_not_set_when_none_provided(self):
+        """Should set header when no options provided"""
+        result = set_heading_if_not_set(None, "X-Test-Header", "default-value")
+
+        self.assertIsNotNone(result)
+        self.assertIn("headers", result)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_when_empty_options_provided(self):
+        """Should set header when empty options dict provided"""
+        result = set_heading_if_not_set({}, "X-Test-Header", "default-value")
+
+        self.assertIn("headers", result)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_when_no_headers_in_options(self):
+        """Should set header when options dict has no headers key"""
+        options = {"page_size": 10}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        self.assertIn("headers", result)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+        self.assertEqual(result["page_size"], 10)
+
+    def test_set_heading_if_not_set_when_headers_empty(self):
+        """Should set header when headers dict is empty"""
+        options = {"headers": {}}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_does_not_override_existing_custom_header(self):
+        """Should NOT override when custom header already exists - this is the critical test for the bug fix"""
+        options = {"headers": {"X-Test-Header": "custom-value"}}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        # Custom header should be preserved, NOT overridden by default
+        self.assertEqual(result["headers"]["X-Test-Header"], "custom-value")
+
+    def test_set_heading_if_not_set_preserves_other_headers_when_setting_new_header(
+        self,
+    ):
+        """Should preserve existing headers when setting a new one"""
+        options = {"headers": {"X-Existing-Header": "existing-value"}}
+        result = set_heading_if_not_set(options, "X-New-Header", "new-value")
+
+        self.assertEqual(result["headers"]["X-Existing-Header"], "existing-value")
+        self.assertEqual(result["headers"]["X-New-Header"], "new-value")
+
+    def test_set_heading_if_not_set_handles_integer_header_values(self):
+        """Should not override existing integer header values"""
+        options = {"headers": {"X-Retry-Count": 5}}
+        result = set_heading_if_not_set(options, "X-Retry-Count", 1)
+
+        # Existing integer value should be preserved
+        self.assertEqual(result["headers"]["X-Retry-Count"], 5)
+
+    def test_set_heading_if_not_set_handles_non_dict_headers_value(self):
+        """Should convert non-dict headers value to dict"""
+        options = {"headers": "invalid"}
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        self.assertIsInstance(result["headers"], dict)
+        self.assertEqual(result["headers"]["X-Test-Header"], "default-value")
+
+    def test_set_heading_if_not_set_does_not_mutate_when_header_exists(self):
+        """Should return same dict when header already exists"""
+        options = {"headers": {"X-Test-Header": "custom-value"}}
+        original_value = options["headers"]["X-Test-Header"]
+
+        result = set_heading_if_not_set(options, "X-Test-Header", "default-value")
+
+        # Should return the same modified dict
+        self.assertIs(result, options)
+        # Value should not have changed
+        self.assertEqual(result["headers"]["X-Test-Header"], original_value)
+
+    def test_set_heading_if_not_set_multiple_headers_with_mixed_states(self):
+        """Should handle multiple headers, some existing and some new"""
+        options = {
+            "headers": {
+                "X-Custom-Header": "custom-value",
+                "X-Another-Header": "another-value",
+            }
+        }
+
+        # Try to set a custom header (should not override)
+        result = set_heading_if_not_set(options, "X-Custom-Header", "default-value")
+        self.assertEqual(result["headers"]["X-Custom-Header"], "custom-value")
+
+        # Try to set a new header (should be added)
+        result = set_heading_if_not_set(result, "X-New-Header", "new-value")
+        self.assertEqual(result["headers"]["X-New-Header"], "new-value")
+
+        # Original headers should still exist
+        self.assertEqual(result["headers"]["X-Another-Header"], "another-value")
