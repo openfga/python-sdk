@@ -53,6 +53,7 @@ class ClientConfiguration(Configuration):
             ]
             | None
         ) = None,
+        headers: dict[str, str] | None = None,
     ):
         super().__init__(
             api_scheme,
@@ -64,6 +65,7 @@ class ClientConfiguration(Configuration):
             api_url=api_url,
             timeout_millisec=timeout_millisec,
             telemetry=telemetry,
+            headers=headers,
         )
         self._authorization_model_id = authorization_model_id
 

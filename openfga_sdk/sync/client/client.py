@@ -169,6 +169,11 @@ class OpenFgaClient:
         self._api_client = ApiClient(configuration)
         self._api = OpenFgaApi(self._api_client)
 
+        # Set default headers from configuration
+        if configuration.headers:
+            for header_name, header_value in configuration.headers.items():
+                self._api_client.set_default_header(header_name, header_value)
+
     def __enter__(self):
         return self
 

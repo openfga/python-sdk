@@ -204,7 +204,7 @@ async def main():
 
 #### Default Headers
 
-You can set default headers that will be sent with every request by accessing the API client and using the `set_default_header` method:
+You can configure default headers that will be sent with every request by passing them to the `ClientConfiguration`:
 
 ```python
 from openfga_sdk import ClientConfiguration, OpenFgaClient
@@ -215,13 +215,13 @@ async def main():
         api_url=FGA_API_URL,
         store_id=FGA_STORE_ID,
         authorization_model_id=FGA_MODEL_ID,
+        headers={
+            "X-Custom-Header": "default-value",
+            "X-Request-Source": "my-app",
+        },
     )
 
     async with OpenFgaClient(configuration) as fga_client:
-        # Set default headers that will be sent with every request
-        fga_client._api_client.set_default_header("X-Custom-Header", "default-value")
-        fga_client._api_client.set_default_header("X-Request-Source", "my-app")
-
         api_response = await fga_client.read_authorization_models()
         return api_response
 ```

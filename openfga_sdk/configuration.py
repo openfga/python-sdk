@@ -202,6 +202,7 @@ class Configuration:
             | None
         ) = None,
         timeout_millisec: int | None = None,
+        headers: dict[str, str] | None = None,
     ):
         """Constructor"""
         self._url = api_url
@@ -324,6 +325,10 @@ class Configuration:
             self._telemetry = telemetry
 
         """Telemetry configuration
+        """
+
+        self._headers = headers or {}
+        """Default headers to be sent with every request
         """
 
     def __deepcopy__(self, memo):
@@ -656,6 +661,17 @@ class Configuration:
                     f"timeout_millisec not within reasonable range (0,60000), {self._timeout_millisec}"
                 )
 
+        if self._headers is not None:
+            for key, value in self._headers.items():
+                if not isinstance(key, str):
+                    raise FgaValidationException(
+                        f"header keys must be strings, got {type(key).__name__} for key {key}"
+                    )
+                if not isinstance(value, str):
+                    raise FgaValidationException(
+                        f"header values must be strings, got {type(value).__name__} for key '{key}'"
+                    )
+
     @property
     def api_scheme(self):
         """Return connection is https or http."""
@@ -740,3 +756,31 @@ class Configuration:
         Update timeout milliseconds
         """
         self._timeout_millisec = value
+
+    @property
+    def headers(self) -> dict[str, str]:
+        """
+        Return default headers to be sent with every request.
+
+        Headers are key-value pairs that will be included in all API requests.
+        Common use cases include correlation IDs, API versioning, and tenant identification.
+        """
+        return self._headers
+
+    @headers.setter
+    def headers(self, value: dict[str, str] | None) -> None:
+        """
+        Update default headers to be sent with every request.
+
+        Args:
+            value: Dictionary of header names to values, or None to clear headers.
+                   Both keys and values must be strings.
+
+        Raises:
+            FgaValidationException: If value is not a dict or None.
+        """
+        if value is not None and not isinstance(value, dict):
+            raise FgaValidationException(
+                f"headers must be a dict or None, got {type(value).__name__}"
+            )
+        self._headers = value or {}
