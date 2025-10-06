@@ -287,6 +287,155 @@ class TestConfigurationHostSettings:
             configuration.get_host_from_settings(999, variables={"var": "value"})
 
 
+class TestConfigurationHeaders:
+    def test_configuration_headers_default_none(self, configuration):
+        """Test that headers default to an empty dict"""
+        assert configuration.headers == {}
+
+    def test_configuration_headers_initialization_with_dict(self):
+        """Test initializing Configuration with headers"""
+        headers = {
+            "X-Custom-Header": "custom-value",
+            "X-Request-Source": "test-app",
+        }
+        config = Configuration(
+            api_url="https://fga.example",
+            headers=headers,
+        )
+        assert config.headers == headers
+        assert config.headers["X-Custom-Header"] == "custom-value"
+        assert config.headers["X-Request-Source"] == "test-app"
+
+    def test_configuration_headers_initialization_with_none(self):
+        """Test initializing Configuration with headers=None"""
+        config = Configuration(
+            api_url="https://fga.example",
+            headers=None,
+        )
+        assert config.headers == {}
+
+    def test_configuration_headers_setter_with_dict(self, configuration):
+        """Test setting headers using the property setter"""
+        headers = {"X-Test": "test-value"}
+        configuration.headers = headers
+        assert configuration.headers == headers
+        assert configuration.headers["X-Test"] == "test-value"
+
+    def test_configuration_headers_setter_with_none(self, configuration):
+        """Test setting headers to None using the property setter"""
+        configuration.headers = {"X-Test": "value"}
+        assert configuration.headers == {"X-Test": "value"}
+
+        configuration.headers = None
+        assert configuration.headers == {}
+
+    def test_configuration_headers_modification(self, configuration):
+        """Test that headers can be modified after initialization"""
+        configuration.headers = {"X-Initial": "initial"}
+        assert configuration.headers["X-Initial"] == "initial"
+
+        configuration.headers["X-Additional"] = "additional"
+        assert configuration.headers["X-Additional"] == "additional"
+        assert len(configuration.headers) == 2
+
+    def test_configuration_headers_with_multiple_headers(self):
+        """Test Configuration with multiple custom headers"""
+        headers = {
+            "X-Request-ID": "123e4567-e89b-12d3-a456-426614174000",
+            "X-API-Key": "secret-key",
+            "X-Tenant-ID": "tenant-123",
+            "X-User-Agent": "custom-agent/1.0",
+        }
+        config = Configuration(
+            api_url="https://fga.example",
+            headers=headers,
+        )
+        assert config.headers == headers
+        assert len(config.headers) == 4
+
+    def test_configuration_headers_empty_dict(self):
+        """Test initializing Configuration with empty headers dict"""
+        config = Configuration(
+            api_url="https://fga.example",
+            headers={},
+        )
+        assert config.headers == {}
+
+    def test_configuration_headers_deepcopy(self):
+        """Test that headers are properly deep copied"""
+        headers = {"X-Test": "value"}
+        config = Configuration(
+            api_url="https://fga.example",
+            headers=headers,
+        )
+
+        copied_config = copy.deepcopy(config)
+
+        assert copied_config.headers == config.headers
+        assert copied_config.headers is not config.headers  # Different object
+
+        # Modify original and verify copy is unaffected
+        config.headers["X-New"] = "new-value"
+        assert "X-New" not in copied_config.headers
+
+    def test_configuration_headers_setter_validation_non_dict(self):
+        """Test that setting headers to non-dict raises FgaValidationException"""
+        from openfga_sdk.exceptions import FgaValidationException
+
+        config = Configuration(api_url="https://fga.example")
+
+        with pytest.raises(
+            FgaValidationException, match="headers must be a dict or None"
+        ):
+            config.headers = "not a dict"
+
+        with pytest.raises(
+            FgaValidationException, match="headers must be a dict or None"
+        ):
+            config.headers = ["list", "of", "values"]
+
+        with pytest.raises(
+            FgaValidationException, match="headers must be a dict or None"
+        ):
+            config.headers = 123
+
+    def test_configuration_headers_validation_non_string_keys(self):
+        """Test that headers with non-string keys fail validation"""
+        from openfga_sdk.exceptions import FgaValidationException
+
+        config = Configuration(
+            api_url="https://fga.example",
+            headers={123: "value", "valid": "value"},
+        )
+
+        with pytest.raises(FgaValidationException, match="header keys must be strings"):
+            config.is_valid()
+
+    def test_configuration_headers_validation_non_string_values(self):
+        """Test that headers with non-string values fail validation"""
+        from openfga_sdk.exceptions import FgaValidationException
+
+        config = Configuration(
+            api_url="https://fga.example",
+            headers={"key": 456, "valid": "value"},
+        )
+
+        with pytest.raises(
+            FgaValidationException, match="header values must be strings"
+        ):
+            config.is_valid()
+
+    def test_configuration_headers_validation_passes_with_valid_headers(self):
+        """Test that valid headers pass validation"""
+        config = Configuration(
+            api_url="https://fga.example",
+            headers={"X-Custom": "value", "X-Another": "another-value"},
+        )
+
+        # Should not raise any exception
+        config.is_valid()
+
+
 class TestConfigurationMiscellaneous:
     def test_configuration_get_api_key_with_prefix(self, configuration):
         configuration.api_key = {"api_key": "123"}
