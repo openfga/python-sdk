@@ -25,6 +25,7 @@ from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
+from openfga_sdk.constants import USER_AGENT
 
 
 def jitter(loop_count, min_wait_in_ms):
@@ -90,7 +91,7 @@ class OAuth2Client:
             {
                 "Accept": "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "openfga-sdk (python) 0.9.7",
+                "User-Agent": USER_AGENT,
             }
         )
 

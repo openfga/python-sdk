@@ -91,6 +91,7 @@ from openfga_sdk.models.write_authorization_model_response import (
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.write_request_writes import WriteRequestWrites
+from openfga_sdk.constants import USER_AGENT
 
 
 store_id = "01H0H015178Y2V4CX10C2KGHF4"
@@ -1782,7 +1783,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "Authorization": "Bearer TOKEN1",
                 }
             )
@@ -1836,7 +1837,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "Custom Header": "custom value",
                 }
             )
@@ -2084,7 +2085,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "X-Custom-Header": "per-request-value",  # Should be the per-request value
                 }
             )
@@ -2143,7 +2144,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "X-Default-Header": "default-value",  # Default header preserved
                     "X-Per-Request-Header": "per-request-value",  # Per-request header added
                 }

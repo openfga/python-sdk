@@ -19,6 +19,7 @@ from unittest.mock import ANY, patch
 import urllib3
 
 import openfga_sdk.sync
+from openfga_sdk.constants import USER_AGENT
 
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
@@ -1845,7 +1846,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "Authorization": "Bearer TOKEN1",
                 }
             )
@@ -1899,7 +1900,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "Custom Header": "custom value",
                 }
             )
@@ -1956,7 +1957,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "X-Custom-Header": "per-request-value",  # Should be the per-request value
                 }
             )
@@ -2013,7 +2014,7 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
                 {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "User-Agent": "openfga-sdk python/0.9.7",
+                    "User-Agent": USER_AGENT,
                     "X-Default-Header": "default-value",  # Default header preserved
                     "X-Per-Request-Header": "per-request-value",  # Per-request header added
                 }

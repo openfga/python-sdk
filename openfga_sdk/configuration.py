@@ -29,6 +29,13 @@ from openfga_sdk.telemetry.configuration import (
 from openfga_sdk.telemetry.counters import TelemetryCounter
 from openfga_sdk.telemetry.histograms import TelemetryHistogram
 from openfga_sdk.validation import is_well_formed_ulid_string
+from openfga_sdk.constants import (
+    DEFAULT_MAX_RETRY,
+    DEFAULT_MIN_WAIT_IN_MS,
+    MAX_BACKOFF_TIME_IN_SEC,
+    RETRY_MAX_ALLOWED_NUMBER,
+    SDK_VERSION,
+)
 
 
 class RetryParams:
@@ -44,7 +51,7 @@ class RetryParams:
     :param max_wait_in_sec: Maximum wait (in seconds) between retry
     """
 
-    def __init__(self, max_retry=3, min_wait_in_ms=100, max_wait_in_sec=120):
+    def __init__(self, max_retry=DEFAULT_MAX_RETRY, min_wait_in_ms=DEFAULT_MIN_WAIT_IN_MS, max_wait_in_sec=MAX_BACKOFF_TIME_IN_SEC):
         self._max_retry = max_retry
         self._min_wait_in_ms = min_wait_in_ms
         self._max_wait_in_sec = max_wait_in_sec
@@ -54,9 +61,9 @@ class RetryParams:
         """
         Return the maximum number of retry
         """
-        if self._max_retry > 15:
+        if self._max_retry > RETRY_MAX_ALLOWED_NUMBER:
             raise FgaValidationException(
-                "RetryParams.max_retry exceeds maximum allowed limit of 15"
+                f"RetryParams.max_retry exceeds maximum allowed limit of {RETRY_MAX_ALLOWED_NUMBER}"
             )
 
         return self._max_retry
@@ -71,9 +78,9 @@ class RetryParams:
                 "RetryParams.max_retry must be an integer greater than or equal to 0"
             )
 
-        if value > 15:
+        if value > RETRY_MAX_ALLOWED_NUMBER:
             raise FgaValidationException(
-                "RetryParams.max_retry exceeds maximum allowed limit of 15"
+                f"RetryParams.max_retry exceeds maximum allowed limit of {RETRY_MAX_ALLOWED_NUMBER}"
             )
 
         self._max_retry = value
@@ -197,7 +204,7 @@ class Configuration:
                     | dict[TelemetryAttribute | str, bool]
                     | None,
                 ]
-                | None,
+                | None
             ]
             | None
         ) = None,
@@ -543,7 +550,7 @@ class Configuration:
             f"OS: {sys.platform}\n"
             f"Python Version: {sys.version}\n"
             "Version of the API: 1.x\n"
-            "SDK Package Version: 0.9.7"
+            f"SDK Package Version: {SDK_VERSION}"
         )
 
     def get_host_settings(self):

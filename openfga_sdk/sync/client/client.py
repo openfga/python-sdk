@@ -75,10 +75,12 @@ from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.sync.api_client import ApiClient
 from openfga_sdk.sync.open_fga_api import OpenFgaApi
 from openfga_sdk.validation import is_well_formed_ulid_string
-
-
-CLIENT_METHOD_HEADER = "X-OpenFGA-Client-Method"
-CLIENT_BULK_REQUEST_ID_HEADER = "X-OpenFGA-Client-Bulk-Request-Id"
+from openfga_sdk.constants import (
+    CLIENT_METHOD_HEADER,
+    CLIENT_BULK_REQUEST_ID_HEADER,
+    CLIENT_MAX_METHOD_PARALLEL_REQUESTS,
+    CLIENT_MAX_BATCH_SIZE,
+)
 
 
 def _chuck_array(array, max_size):
@@ -711,7 +713,7 @@ class OpenFgaClient:
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
 
-        max_parallel_requests = 10
+        max_parallel_requests = CLIENT_MAX_METHOD_PARALLEL_REQUESTS
         if options is not None and "max_parallel_requests" in options:
             if (
                 isinstance(options["max_parallel_requests"], str)
@@ -770,7 +772,7 @@ class OpenFgaClient:
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
 
-        max_parallel_requests = 10
+        max_parallel_requests = CLIENT_MAX_METHOD_PARALLEL_REQUESTS
         if options is not None and "max_parallel_requests" in options:
             if (
                 isinstance(options["max_parallel_requests"], str)
@@ -780,7 +782,7 @@ class OpenFgaClient:
             elif isinstance(options["max_parallel_requests"], int):
                 max_parallel_requests = options["max_parallel_requests"]
 
-        max_batch_size = 50
+        max_batch_size = CLIENT_MAX_BATCH_SIZE
         if options is not None and "max_batch_size" in options:
             if (
                 isinstance(options["max_batch_size"], str)
