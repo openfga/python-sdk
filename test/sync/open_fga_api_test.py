@@ -1729,47 +1729,45 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
             mock_request.assert_called()
             self.assertEqual(mock_request.call_count, 1)
 
-        @patch.object(rest.RESTClientObject, "request")
-        def test_500_error_retry(self, mock_request):
-            """
-            Test to ensure 5xx retries are handled properly
-            """
-            response_body = """
-    {
-      "code": "internal_error",
-      "message": "Internal Server Error"
-    }
-            """
-            mock_request.side_effect = [
-                ServiceException(http_resp=http_mock_response(response_body, 500)),
-                ServiceException(http_resp=http_mock_response(response_body, 502)),
-                ServiceException(http_resp=http_mock_response(response_body, 503)),
-                ServiceException(http_resp=http_mock_response(response_body, 504)),
-                mock_response(response_body, 200),
-            ]
+    @patch.object(rest.RESTClientObject, "request")
+    def test_500_error_retry(self, mock_request):
+        """Test to ensure 5xx retries are handled properly"""
+        response_body = """
+{
+  "code": "internal_error",
+  "message": "Internal Server Error"
+}
+        """
+        mock_request.side_effect = [
+            ServiceException(http_resp=http_mock_response(response_body, 500)),
+            ServiceException(http_resp=http_mock_response(response_body, 502)),
+            ServiceException(http_resp=http_mock_response(response_body, 503)),
+            ServiceException(http_resp=http_mock_response(response_body, 504)),
+            mock_response(response_body, 200),
+        ]
 
-            retry = openfga_sdk.configuration.RetryParams(5, 10)
-            configuration = self.configuration
-            configuration.store_id = store_id
-            configuration.retry_params = retry
+        retry = openfga_sdk.configuration.RetryParams(5, 10)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.retry_params = retry
 
-            with ApiClient(configuration) as api_client:
-                api_instance = open_fga_api.OpenFgaApi(api_client)
-                body = CheckRequest(
-                    tuple_key=TupleKey(
-                        object="document:2021-budget",
-                        relation="reader",
-                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    ),
-                )
+        with ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            body = CheckRequest(
+                tuple_key=TupleKey(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                ),
+            )
 
-                api_response = api_instance.check(
-                    body=body,
-                )
+            api_response = api_instance.check(
+                body=body,
+            )
 
-                self.assertIsInstance(api_response, CheckResponse)
-                mock_request.assert_called()
-                self.assertEqual(mock_request.call_count, 5)
+            self.assertIsInstance(api_response, CheckResponse)
+            mock_request.assert_called()
+            self.assertEqual(mock_request.call_count, 5)
 
     @patch.object(rest.RESTClientObject, "request")
     def test_501_error_retry(self, mock_request):
