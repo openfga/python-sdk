@@ -71,6 +71,8 @@ from openfga_sdk.models.nodes import Nodes
 from openfga_sdk.models.not_found_error_code import NotFoundErrorCode
 from openfga_sdk.models.null_value import NullValue
 from openfga_sdk.models.object_relation import ObjectRelation
+from openfga_sdk.models.on_duplicate_writes import OnDuplicateWrites
+from openfga_sdk.models.on_missing_deletes import OnMissingDeletes
 from openfga_sdk.models.path_unknown_error_message_response import (
     PathUnknownErrorMessageResponse,
 )
@@ -200,6 +202,8 @@ __all__ = [
     "NotFoundErrorCode",
     "NullValue",
     "ObjectRelation",
+    "OnDuplicateWrites",
+    "OnMissingDeletes",
     "PathUnknownErrorMessageResponse",
     "ReadAssertionsResponse",
     "ReadAuthorizationModelResponse",

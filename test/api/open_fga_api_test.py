@@ -946,6 +946,78 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
+    async def test_write_with_conflict_options(self, mock_request):
+        """Test case for write with conflict options
+
+        Add tuples from the store with conflict options
+        """
+        response_body = "{}"
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+
+            body = WriteRequest(
+                writes=WriteRequestWrites(
+                    tuple_keys=[
+                        TupleKey(
+                            object="document:2021-budget",
+                            relation="reader",
+                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                        )
+                    ],
+                ),
+                deletes=WriteRequestDeletes(
+                    tuple_keys=[
+                        TupleKey(
+                            object="document:2020-budget",
+                            relation="reader",
+                            user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                        )
+                    ],
+                ),
+                authorization_model_id="01G5JAVJ41T49E9TT3SKVS7X1J",
+                on_duplicate_writes="IGNORE",
+                on_missing_deletes="IGNORE",
+            )
+            await api_instance.write(
+                body,
+            )
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01H0H015178Y2V4CX10C2KGHF4/write",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "writes": {
+                        "tuple_keys": [
+                            {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            }
+                        ]
+                    },
+                    "deletes": {
+                        "tuple_keys": [
+                            {
+                                "object": "document:2020-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                            }
+                        ]
+                    },
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "on_duplicate_writes": "IGNORE",
+                    "on_missing_deletes": "IGNORE",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
     async def test_write_assertions(self, mock_request):
         """Test case for write_assertions
 

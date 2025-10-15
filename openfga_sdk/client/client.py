@@ -133,6 +133,22 @@ def options_to_kwargs(
     return kwargs
 
 
+def options_to_conflict(
+    options: dict[str, int | str | dict[str, int | str]] | None = None,
+) -> tuple[str | None, str | None]:
+    """
+    Extract conflict options from options dict
+    """
+    if options is not None and options.get("conflict"):
+        conflict = options["conflict"]
+        if isinstance(conflict, dict):
+            return (
+                conflict.get("on_duplicate_writes"),
+                conflict.get("on_missing_deletes"),
+            )
+    return (None, None)
+
+
 def options_to_transaction_info(
     options: dict[str, int | str | dict[str, int | str]] | None = None,
 ):
@@ -537,11 +553,15 @@ class OpenFgaClient:
         if body.deletes_tuple_keys:
             deletes_tuple_keys = body.deletes_tuple_keys
 
+        on_duplicate_writes, on_missing_deletes = options_to_conflict(options)
+
         await self._api.write(
             WriteRequest(
                 writes=writes_tuple_keys,
                 deletes=deletes_tuple_keys,
                 authorization_model_id=self._get_authorization_model_id(options),
+                on_duplicate_writes=on_duplicate_writes,
+                on_missing_deletes=on_missing_deletes,
             ),
             **kwargs,
         )
