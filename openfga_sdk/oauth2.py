@@ -9,11 +9,11 @@ from datetime import datetime, timedelta
 import urllib3
 
 from openfga_sdk.configuration import Configuration
+from openfga_sdk.constants import USER_AGENT
 from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
-from openfga_sdk.constants import USER_AGENT
 
 
 def jitter(loop_count, min_wait_in_ms):

@@ -33,6 +33,12 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.constants import (
+    CLIENT_BULK_REQUEST_ID_HEADER,
+    CLIENT_MAX_BATCH_SIZE,
+    CLIENT_MAX_METHOD_PARALLEL_REQUESTS,
+    CLIENT_METHOD_HEADER,
+)
 from openfga_sdk.exceptions import (
     AuthenticationError,
     FgaValidationException,
@@ -62,12 +68,6 @@ from openfga_sdk.models.write_authorization_model_request import (
 )
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.validation import is_well_formed_ulid_string
-from openfga_sdk.constants import (
-    CLIENT_METHOD_HEADER,
-    CLIENT_BULK_REQUEST_ID_HEADER,
-    CLIENT_MAX_METHOD_PARALLEL_REQUESTS,
-    CLIENT_MAX_BATCH_SIZE,
-)
 
 
 def _chuck_array(array, max_size):

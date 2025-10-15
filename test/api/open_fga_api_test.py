@@ -10,6 +10,7 @@ import openfga_sdk
 
 from openfga_sdk import rest
 from openfga_sdk.api import open_fga_api
+from openfga_sdk.constants import USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import (
     FGA_REQUEST_ID,
@@ -79,7 +80,6 @@ from openfga_sdk.models.write_authorization_model_response import (
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.models.write_request_deletes import WriteRequestDeletes
 from openfga_sdk.models.write_request_writes import WriteRequestWrites
-from openfga_sdk.constants import USER_AGENT
 
 
 store_id = "01H0H015178Y2V4CX10C2KGHF4"

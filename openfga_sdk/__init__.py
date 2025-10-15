@@ -1,10 +1,9 @@
-from openfga_sdk.constants import SDK_VERSION as __version__
-
 from openfga_sdk.api.open_fga_api import OpenFgaApi
 from openfga_sdk.api_client import ApiClient
 from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.configuration import Configuration
+from openfga_sdk.constants import SDK_VERSION
 from openfga_sdk.exceptions import (
     ApiAttributeError,
     ApiException,
@@ -131,6 +130,8 @@ from openfga_sdk.telemetry.configuration import (
     TelemetryMetricsConfiguration,
 )
 
+
+__version__ = SDK_VERSION
 
 __all__ = [
     "OpenFgaClient",

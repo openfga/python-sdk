@@ -7,9 +7,9 @@ from unittest.mock import ANY, patch
 import urllib3
 
 import openfga_sdk.sync
-from openfga_sdk.constants import USER_AGENT
 
 from openfga_sdk.configuration import Configuration
+from openfga_sdk.constants import USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import (
     FGA_REQUEST_ID,

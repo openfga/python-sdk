@@ -16,6 +16,11 @@ import openfga_sdk.models
 
 from openfga_sdk import oauth2, rest
 from openfga_sdk.configuration import Configuration
+from openfga_sdk.constants import (
+    MAX_BACKOFF_TIME_IN_SEC,
+    RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC,
+)
+from openfga_sdk.constants import USER_AGENT as DEFAULT_USER_AGENT
 from openfga_sdk.exceptions import (
     ApiException,
     ApiValueError,
@@ -25,11 +30,6 @@ from openfga_sdk.exceptions import (
 )
 from openfga_sdk.telemetry import Telemetry
 from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
-from openfga_sdk.constants import USER_AGENT as DEFAULT_USER_AGENT
-from openfga_sdk.constants import (
-    MAX_BACKOFF_TIME_IN_SEC,
-    RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC,
-)
 
 
 def random_time(loop_count, min_wait_in_ms) -> float:
@@ -415,7 +415,10 @@ class ApiClient:
         except ApiException:
             wait_time_in_sec = int(retry_after_header)
 
-        if wait_time_in_sec > RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC or wait_time_in_sec < 1:
+        if (
+            wait_time_in_sec > RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC
+            or wait_time_in_sec < 1
+        ):
             raise ValueError("Retry-After header is invalid")
 
         return math.ceil(wait_time_in_sec)

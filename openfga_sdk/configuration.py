@@ -6,6 +6,13 @@ import urllib
 
 import urllib3
 
+from openfga_sdk.constants import (
+    DEFAULT_MAX_RETRY,
+    DEFAULT_MIN_WAIT_IN_MS,
+    MAX_BACKOFF_TIME_IN_SEC,
+    RETRY_MAX_ALLOWED_NUMBER,
+    SDK_VERSION,
+)
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
 from openfga_sdk.telemetry.attributes import TelemetryAttribute
 from openfga_sdk.telemetry.configuration import (
@@ -17,13 +24,6 @@ from openfga_sdk.telemetry.configuration import (
 from openfga_sdk.telemetry.counters import TelemetryCounter
 from openfga_sdk.telemetry.histograms import TelemetryHistogram
 from openfga_sdk.validation import is_well_formed_ulid_string
-from openfga_sdk.constants import (
-    DEFAULT_MAX_RETRY,
-    DEFAULT_MIN_WAIT_IN_MS,
-    MAX_BACKOFF_TIME_IN_SEC,
-    RETRY_MAX_ALLOWED_NUMBER,
-    SDK_VERSION,
-)
 
 
 class RetryParams:
@@ -39,7 +39,12 @@ class RetryParams:
     :param max_wait_in_sec: Maximum wait (in seconds) between retry
     """
 
-    def __init__(self, max_retry=DEFAULT_MAX_RETRY, min_wait_in_ms=DEFAULT_MIN_WAIT_IN_MS, max_wait_in_sec=MAX_BACKOFF_TIME_IN_SEC):
+    def __init__(
+        self,
+        max_retry=DEFAULT_MAX_RETRY,
+        min_wait_in_ms=DEFAULT_MIN_WAIT_IN_MS,
+        max_wait_in_sec=MAX_BACKOFF_TIME_IN_SEC,
+    ):
         self._max_retry = max_retry
         self._min_wait_in_ms = min_wait_in_ms
         self._max_wait_in_sec = max_wait_in_sec
@@ -192,7 +197,7 @@ class Configuration:
                     | dict[TelemetryAttribute | str, bool]
                     | None,
                 ]
-                | None
+                | None,
             ]
             | None
         ) = None,
