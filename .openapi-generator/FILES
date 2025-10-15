@@ -98,6 +98,7 @@ docs/WriteRequest.md
 docs/WriteRequestDeletes.md
 docs/WriteRequestWrites.md
 openfga_sdk/api/open_fga_api.py
+openfga_sdk/constants.py
 openfga_sdk/models/__init__.py
 openfga_sdk/models/aborted_message_response.py
 openfga_sdk/models/any.py
