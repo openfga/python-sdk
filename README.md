@@ -747,6 +747,132 @@ body = ClientWriteRequest(
 
 response = await fga_client.write(body, options)
 ```
+###### Conflict Options
+
+OpenFGA v1.10.0 introduced support for write conflict options to handle duplicate writes and missing deletes gracefully. These options help avoid unnecessary error handling logic in client code.
+
+**Available Options:**
+
+- `on_duplicate` - Controls behavior when writing a tuple that already exists:
+  - `ERROR` (default): Returns an error if an identical tuple already exists
+  - `IGNORE`: Silently ignores duplicate writes (treats as no-op)
+
+- `on_missing` - Controls behavior when deleting a tuple that doesn't exist:
+  - `ERROR` (default): Returns an error if the tuple doesn't exist
+  - `IGNORE`: Silently ignores deletes of non-existent tuples (treats as no-op)
+
+**Example: Ignoring duplicate writes**
+
+```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
+# from openfga_sdk.client.models.write_conflict_opts import (
+#     ClientWriteRequestOnDuplicateWrites,
+#     ConflictOptions,
+# )
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
+options = {
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    "conflict": ConflictOptions(
+        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE
+    )
+}
+
+body = ClientWriteRequest(
+    writes=[
+        ClientTuple(
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="viewer",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        ),
+    ],
+)
+
+# This will succeed even if the tuple already exists
+response = await fga_client.write(body, options)
+```
+
+**Example: Ignoring missing deletes**
+
+```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
+# from openfga_sdk.client.models.write_conflict_opts import (
+#     ClientWriteRequestOnMissingDeletes,
+#     ConflictOptions,
+# )
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
+options = {
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    "conflict": ConflictOptions(
+        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE
+    )
+}
+
+body = ClientWriteRequest(
+    deletes=[
+        ClientTuple(
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="writer",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        ),
+    ],
+)
+
+# This will succeed even if the tuple doesn't exist
+response = await fga_client.write(body, options)
+```
+
+**Example: Using both conflict options together**
+
+```python
+# from openfga_sdk import OpenFgaClient
+# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
+# from openfga_sdk.client.models.write_conflict_opts import (
+#     ClientWriteRequestOnDuplicateWrites,
+#     ClientWriteRequestOnMissingDeletes,
+#     ConflictOptions,
+# )
+
+# Initialize the fga_client
+# fga_client = OpenFgaClient(configuration)
+
+options = {
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    "conflict": ConflictOptions(
+        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE,
+        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE,
+    )
+}
+
+body = ClientWriteRequest(
+    writes=[
+        ClientTuple(
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="viewer",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        ),
+    ],
+    deletes=[
+        ClientTuple(
+            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+            relation="writer",
+            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+        ),
+    ],
+)
+
+# Both operations will succeed regardless of tuple existence
+response = await fga_client.write(body, options)
+```
+
+For a complete working example, see the [conflict-options example](https://github.com/openfga/python-sdk/tree/main/example/conflict-options).
 
 #### Relationship Queries
 
