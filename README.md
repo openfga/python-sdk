@@ -747,6 +747,7 @@ body = ClientWriteRequest(
 
 response = await fga_client.write(body, options)
 ```
+
 ###### Conflict Options
 
 OpenFGA v1.10.0 introduced support for write conflict options to handle duplicate writes and missing deletes gracefully. These options help avoid unnecessary error handling logic in client code.
