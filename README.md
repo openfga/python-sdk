@@ -748,9 +748,9 @@ body = ClientWriteRequest(
 response = await fga_client.write(body, options)
 ```
 
-###### Conflict Options
+###### Conflict Options for Write Operations
 
-OpenFGA v1.10.0 introduced support for write conflict options to handle duplicate writes and missing deletes gracefully. These options help avoid unnecessary error handling logic in client code.
+With OpenFGA [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) and later, support for write conflict options to handle duplicate writes and missing deletes gracefully has been added.
 
 **Available Options:**
 
@@ -778,7 +778,8 @@ OpenFGA v1.10.0 introduced support for write conflict options to handle duplicat
 options = {
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
     "conflict": ConflictOptions(
-        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE
+        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE, // or ERROR to retain default behaviour
+        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE  // or ERROR to retain default behaviour
     )
 }
 

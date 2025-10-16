@@ -1,7 +1,9 @@
 # Changelog
 
 ## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.7...HEAD)
-- feat: The SDK supports OpenFGA v1.10.0+ conflict options:
+- feat: add support for conflict options for Write operations: (#235)
+  The client now supports setting `ConflictOptions` on `ClientWriteOptions` to control behavior when writing duplicate tuples or deleting non-existent tuples. This feature requires OpenFGA server [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
+  See [Conflict Options for Write Operations](./README.md#conflict-options-for-write-operations) for more.
   - `on_duplicate` for handling duplicate tuple writes (ERROR or IGNORE)
   - `on_missing` for handling deletes of non-existent tuples (ERROR or IGNORE)
 - docs: added documentation for write conflict options in README
