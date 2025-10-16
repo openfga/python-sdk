@@ -106,9 +106,7 @@ class WriteRequestWrites:
             and on_duplicate not in allowed_values
         ):
             raise ValueError(
-                "Invalid value for `on_duplicate` ({0}), must be one of {1}".format(
-                    on_duplicate, allowed_values
-                )
+                f"Invalid value for `on_duplicate` ({on_duplicate}), must be one of {allowed_values}"
             )
 
         self._on_duplicate = on_duplicate

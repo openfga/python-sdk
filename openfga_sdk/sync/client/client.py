@@ -38,12 +38,6 @@ from openfga_sdk.client.models.list_relations_request import ClientListRelations
 from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
-from openfga_sdk.client.models.write_conflict_opts import (
-    ClientWriteRequestOnDuplicateWrites,
-    ClientWriteRequestOnMissingDeletes,
-    ConflictOptions,
-)
-from openfga_sdk.client.models.write_options import ClientWriteOptions
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_response import ClientWriteResponse
 from openfga_sdk.client.models.write_single_response import (

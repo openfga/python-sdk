@@ -3901,16 +3901,8 @@ def client_configuration():
     )
 
 
-class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
+class TestClientConfigurationHeaders:
     """Tests for ClientConfiguration headers parameter"""
-
-    def setUp(self):
-        self.configuration = ClientConfiguration(
-            api_url="http://api.fga.example",
-        )
-
-    def tearDown(self):
-        pass
 
     def test_client_configuration_headers_default_none(self, client_configuration):
         """Test that headers default to an empty dict in ClientConfiguration"""
@@ -3975,6 +3967,7 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         assert "X-New" not in copied_config.headers
 
     @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
     async def test_write_with_conflict_options_ignore_duplicates(self, mock_request):
         """Test case for write with conflict options - ignore duplicates"""
         from openfga_sdk.client.models.write_conflict_opts import (
@@ -3984,6 +3977,9 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
 
         response_body = "{}"
         mock_request.return_value = mock_response(response_body, 200)
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
@@ -4029,6 +4025,7 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
     async def test_write_with_conflict_options_ignore_missing_deletes(
         self, mock_request
     ):
@@ -4040,6 +4037,9 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
 
         response_body = "{}"
         mock_request.return_value = mock_response(response_body, 200)
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
@@ -4085,6 +4085,7 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
     async def test_write_with_conflict_options_both(self, mock_request):
         """Test case for write with both conflict options"""
         from openfga_sdk.client.models.write_conflict_opts import (
@@ -4095,6 +4096,9 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
 
         response_body = "{}"
         mock_request.return_value = mock_response(response_body, 200)
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
