@@ -3880,8 +3880,16 @@ def client_configuration():
     )
 
 
-class TestSyncClientConfigurationHeaders:
+class TestSyncClientConfigurationHeaders(IsolatedAsyncioTestCase):
     """Tests for ClientConfiguration headers parameter in sync client"""
+
+    def setUp(self):
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
+
+    def tearDown(self):
+        pass
 
     def test_sync_client_configuration_headers_default_none(self, client_configuration):
         """Test that headers default to an empty dict in ClientConfiguration"""
