@@ -543,19 +543,21 @@ class OpenFgaClient:
         kwargs = options_to_kwargs(options)
         conflict_options = options_to_conflict_info(options)
 
-        # Set conflict options on the body if provided
+        # Extract conflict options to pass to the tuple key methods
+        on_duplicate = None
+        on_missing = None
         if conflict_options:
             if conflict_options.on_duplicate_writes:
-                body.on_duplicate = conflict_options.on_duplicate_writes.value
+                on_duplicate = conflict_options.on_duplicate_writes.value
             if conflict_options.on_missing_deletes:
-                body.on_missing = conflict_options.on_missing_deletes.value
+                on_missing = conflict_options.on_missing_deletes.value
 
         writes_tuple_keys = None
         deletes_tuple_keys = None
-        if body.writes_tuple_keys:
-            writes_tuple_keys = body.writes_tuple_keys
-        if body.deletes_tuple_keys:
-            deletes_tuple_keys = body.deletes_tuple_keys
+        if body.writes:
+            writes_tuple_keys = body.writes_tuple_keys(on_duplicate=on_duplicate)
+        if body.deletes:
+            deletes_tuple_keys = body.deletes_tuple_keys(on_missing=on_missing)
 
         await self._api.write(
             WriteRequest(
