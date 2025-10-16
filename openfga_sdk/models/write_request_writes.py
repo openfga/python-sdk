@@ -31,20 +31,31 @@ class WriteRequestWrites:
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    openapi_types: dict[str, str] = {"tuple_keys": "list[TupleKey]"}
+    openapi_types: dict[str, str] = {
+        "tuple_keys": "list[TupleKey]",
+        "on_duplicate": "str",
+    }
 
-    attribute_map: dict[str, str] = {"tuple_keys": "tuple_keys"}
+    attribute_map: dict[str, str] = {
+        "tuple_keys": "tuple_keys",
+        "on_duplicate": "on_duplicate",
+    }
 
-    def __init__(self, tuple_keys=None, local_vars_configuration=None):
+    def __init__(
+        self, tuple_keys=None, on_duplicate="error", local_vars_configuration=None
+    ):
         """WriteRequestWrites - a model defined in OpenAPI"""
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
         self._tuple_keys = None
+        self._on_duplicate = None
         self.discriminator = None
 
         self.tuple_keys = tuple_keys
+        if on_duplicate is not None:
+            self.on_duplicate = on_duplicate
 
     @property
     def tuple_keys(self):
@@ -68,6 +79,39 @@ class WriteRequestWrites:
             raise ValueError("Invalid value for `tuple_keys`, must not be `None`")
 
         self._tuple_keys = tuple_keys
+
+    @property
+    def on_duplicate(self):
+        """Gets the on_duplicate of this WriteRequestWrites.
+
+        On 'error' ( or unspecified ), the API returns an error if an identical tuple already exists. On 'ignore', identical writes are treated as no-ops (matching on user, relation, object, and RelationshipCondition).
+
+        :return: The on_duplicate of this WriteRequestWrites.
+        :rtype: str
+        """
+        return self._on_duplicate
+
+    @on_duplicate.setter
+    def on_duplicate(self, on_duplicate):
+        """Sets the on_duplicate of this WriteRequestWrites.
+
+        On 'error' ( or unspecified ), the API returns an error if an identical tuple already exists. On 'ignore', identical writes are treated as no-ops (matching on user, relation, object, and RelationshipCondition).
+
+        :param on_duplicate: The on_duplicate of this WriteRequestWrites.
+        :type on_duplicate: str
+        """
+        allowed_values = ["error", "ignore"]
+        if (
+            self.local_vars_configuration.client_side_validation
+            and on_duplicate not in allowed_values
+        ):
+            raise ValueError(
+                "Invalid value for `on_duplicate` ({0}), must be one of {1}".format(
+                    on_duplicate, allowed_values
+                )
+            )
+
+        self._on_duplicate = on_duplicate
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

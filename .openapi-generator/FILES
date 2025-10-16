@@ -139,6 +139,8 @@ openfga_sdk/client/models/list_relations_request.py
 openfga_sdk/client/models/list_users_request.py
 openfga_sdk/client/models/read_changes_request.py
 openfga_sdk/client/models/tuple.py
+openfga_sdk/client/models/write_conflict_opts.py
+openfga_sdk/client/models/write_options.py
 openfga_sdk/client/models/write_request.py
 openfga_sdk/client/models/write_response.py
 openfga_sdk/client/models/write_single_response.py

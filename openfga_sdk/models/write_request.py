@@ -35,16 +35,12 @@ class WriteRequest:
         "writes": "WriteRequestWrites",
         "deletes": "WriteRequestDeletes",
         "authorization_model_id": "str",
-        "on_duplicate_writes": "str",
-        "on_missing_deletes": "str",
     }
 
     attribute_map: dict[str, str] = {
         "writes": "writes",
         "deletes": "deletes",
         "authorization_model_id": "authorization_model_id",
-        "on_duplicate_writes": "on_duplicate_writes",
-        "on_missing_deletes": "on_missing_deletes",
     }
 
     def __init__(
@@ -52,8 +48,6 @@ class WriteRequest:
         writes=None,
         deletes=None,
         authorization_model_id=None,
-        on_duplicate_writes=None,
-        on_missing_deletes=None,
         local_vars_configuration=None,
     ):
         """WriteRequest - a model defined in OpenAPI"""
@@ -64,8 +58,6 @@ class WriteRequest:
         self._writes = None
         self._deletes = None
         self._authorization_model_id = None
-        self._on_duplicate_writes = None
-        self._on_missing_deletes = None
         self.discriminator = None
 
         if writes is not None:
@@ -74,10 +66,6 @@ class WriteRequest:
             self.deletes = deletes
         if authorization_model_id is not None:
             self.authorization_model_id = authorization_model_id
-        if on_duplicate_writes is not None:
-            self.on_duplicate_writes = on_duplicate_writes
-        if on_missing_deletes is not None:
-            self.on_missing_deletes = on_missing_deletes
 
     @property
     def writes(self):
@@ -141,48 +129,6 @@ class WriteRequest:
         """
 
         self._authorization_model_id = authorization_model_id
-
-    @property
-    def on_duplicate_writes(self):
-        """Gets the on_duplicate_writes of this WriteRequest.
-
-
-        :return: The on_duplicate_writes of this WriteRequest.
-        :rtype: str
-        """
-        return self._on_duplicate_writes
-
-    @on_duplicate_writes.setter
-    def on_duplicate_writes(self, on_duplicate_writes):
-        """Sets the on_duplicate_writes of this WriteRequest.
-
-
-        :param on_duplicate_writes: The on_duplicate_writes of this WriteRequest.
-        :type on_duplicate_writes: str
-        """
-
-        self._on_duplicate_writes = on_duplicate_writes
-
-    @property
-    def on_missing_deletes(self):
-        """Gets the on_missing_deletes of this WriteRequest.
-
-
-        :return: The on_missing_deletes of this WriteRequest.
-        :rtype: str
-        """
-        return self._on_missing_deletes
-
-    @on_missing_deletes.setter
-    def on_missing_deletes(self, on_missing_deletes):
-        """Sets the on_missing_deletes of this WriteRequest.
-
-
-        :param on_missing_deletes: The on_missing_deletes of this WriteRequest.
-        :type on_missing_deletes: str
-        """
-
-        self._on_missing_deletes = on_missing_deletes
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""

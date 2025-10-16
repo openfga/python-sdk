@@ -24,9 +24,13 @@ class ClientWriteRequest:
         self,
         writes: list[ClientTuple] | None = None,
         deletes: list[ClientTuple] | None = None,
+        on_duplicate: str | None = None,
+        on_missing: str | None = None,
     ) -> None:
         self._writes = writes
         self._deletes = deletes
+        self._on_duplicate = on_duplicate
+        self._on_missing = on_missing
 
     @property
     def writes(self) -> list[ClientTuple] | None:
@@ -57,6 +61,34 @@ class ClientWriteRequest:
         self._deletes = value
 
     @property
+    def on_duplicate(self) -> str | None:
+        """
+        Return on_duplicate
+        """
+        return self._on_duplicate
+
+    @on_duplicate.setter
+    def on_duplicate(self, value: str | None) -> None:
+        """
+        Set on_duplicate
+        """
+        self._on_duplicate = value
+
+    @property
+    def on_missing(self) -> str | None:
+        """
+        Return on_missing
+        """
+        return self._on_missing
+
+    @on_missing.setter
+    def on_missing(self, value: str | None) -> None:
+        """
+        Set on_missing
+        """
+        self._on_missing = value
+
+    @property
     def writes_tuple_keys(self) -> WriteRequestWrites | None:
         """
         Return the writes as tuple keys
@@ -69,7 +101,7 @@ class ClientWriteRequest:
         if keys is None:
             return None
 
-        return WriteRequestWrites(tuple_keys=keys)
+        return WriteRequestWrites(tuple_keys=keys, on_duplicate=self._on_duplicate)
 
     @property
     def deletes_tuple_keys(self) -> WriteRequestDeletes | None:
@@ -84,4 +116,4 @@ class ClientWriteRequest:
         if keys is None:
             return None
 
-        return WriteRequestDeletes(tuple_keys=keys)
+        return WriteRequestDeletes(tuple_keys=keys, on_missing=self._on_missing)
