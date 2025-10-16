@@ -752,16 +752,6 @@ response = await fga_client.write(body, options)
 
 With OpenFGA [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) and later, support for write conflict options to handle duplicate writes and missing deletes gracefully has been added.
 
-**Available Options:**
-
-- `on_duplicate` - Controls behavior when writing a tuple that already exists:
-  - `ERROR` (default): Returns an error if an identical tuple already exists
-  - `IGNORE`: Silently ignores duplicate writes (treats as no-op)
-
-- `on_missing` - Controls behavior when deleting a tuple that doesn't exist:
-  - `ERROR` (default): Returns an error if the tuple doesn't exist
-  - `IGNORE`: Silently ignores deletes of non-existent tuples (treats as no-op)
-
 **Example: Ignoring duplicate writes**
 
 ```python
