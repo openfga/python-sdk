@@ -106,7 +106,7 @@ class WriteRequestDeletes:
             and on_missing not in allowed_values
         ):
             raise ValueError(
-                f"Invalid value for `on_missing` ({on_missing}), must be one of {allowed_values}"
+                f"Invalid value for `on_missing` (on_missing), must be one of {allowed_values}"
             )
 
         self._on_missing = on_missing
