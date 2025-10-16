@@ -4093,7 +4093,7 @@ class TestClientConfigurationHeaders:
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                             },
                         ],
-                        "on_missing": "error",
+                        "on_missing": "ignore",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
