@@ -791,8 +791,6 @@ body = ClientWriteRequest(
 response = await fga_client.write(body, options)
 ```
 
-
-
 #### Relationship Queries
 
 ##### Check
