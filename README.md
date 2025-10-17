@@ -750,78 +750,9 @@ response = await fga_client.write(body, options)
 
 ###### Conflict Options for Write Operations
 
-With OpenFGA [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) and later, support for write conflict options to handle duplicate writes and missing deletes gracefully has been added.
+OpenFGA v1.10.0+ supports conflict options for write operations to handle duplicate writes and missing deletes gracefully.
 
-**Example: Ignoring duplicate writes**
-
-```python
-# from openfga_sdk import OpenFgaClient
-# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
-# from openfga_sdk.client.models.write_conflict_opts import (
-#     ClientWriteRequestOnDuplicateWrites,
-#     ConflictOptions,
-# )
-
-# Initialize the fga_client
-# fga_client = OpenFgaClient(configuration)
-
-options = {
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-    "conflict": ConflictOptions(
-        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE, // or ERROR to retain default behaviour
-        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE  // or ERROR to retain default behaviour
-    )
-}
-
-body = ClientWriteRequest(
-    writes=[
-        ClientTuple(
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="viewer",
-            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-        ),
-    ],
-)
-
-# This will succeed even if the tuple already exists
-response = await fga_client.write(body, options)
-```
-
-**Example: Ignoring missing deletes**
-
-```python
-# from openfga_sdk import OpenFgaClient
-# from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
-# from openfga_sdk.client.models.write_conflict_opts import (
-#     ClientWriteRequestOnMissingDeletes,
-#     ConflictOptions,
-# )
-
-# Initialize the fga_client
-# fga_client = OpenFgaClient(configuration)
-
-options = {
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-    "conflict": ConflictOptions(
-        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE
-    )
-}
-
-body = ClientWriteRequest(
-    deletes=[
-        ClientTuple(
-            user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-            relation="writer",
-            object="document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
-        ),
-    ],
-)
-
-# This will succeed even if the tuple doesn't exist
-response = await fga_client.write(body, options)
-```
-
-**Example: Using both conflict options together**
+**Example: Ignore duplicate writes and missing deletes**
 
 ```python
 # from openfga_sdk import OpenFgaClient
@@ -832,14 +763,11 @@ response = await fga_client.write(body, options)
 #     ConflictOptions,
 # )
 
-# Initialize the fga_client
-# fga_client = OpenFgaClient(configuration)
-
 options = {
     "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
     "conflict": ConflictOptions(
-        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE,
-        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE,
+        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE, # Available options: ERROR, IGNORE
+        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE, # Available options: ERROR, IGNORE
     )
 }
 
@@ -860,11 +788,10 @@ body = ClientWriteRequest(
     ],
 )
 
-# Both operations will succeed regardless of tuple existence
 response = await fga_client.write(body, options)
 ```
 
-For a complete working example, see the [conflict-options example](https://github.com/openfga/python-sdk/tree/main/example/conflict-options).
+
 
 #### Relationship Queries
 
