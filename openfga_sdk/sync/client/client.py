@@ -555,9 +555,9 @@ class OpenFgaClient:
         writes_tuple_keys = None
         deletes_tuple_keys = None
         if body.writes:
-            writes_tuple_keys = body.writes_tuple_keys(on_duplicate=on_duplicate)
+            writes_tuple_keys = body.get_writes_tuple_keys(on_duplicate=on_duplicate)
         if body.deletes:
-            deletes_tuple_keys = body.deletes_tuple_keys(on_missing=on_missing)
+            deletes_tuple_keys = body.get_deletes_tuple_keys(on_missing=on_missing)
 
         self._api.write(
             WriteRequest(
