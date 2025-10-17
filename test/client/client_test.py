@@ -1026,7 +1026,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             },
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1071,7 +1072,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                             }
-                        ]
+                        ],
+                        "on_missing": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1171,7 +1173,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1192,7 +1195,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1213,7 +1217,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1313,7 +1318,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1334,7 +1340,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1355,7 +1362,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1459,7 +1467,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
                             },
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1480,7 +1489,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1594,7 +1604,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1615,7 +1626,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1636,7 +1648,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1690,7 +1703,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
                             }
-                        ]
+                        ],
+                        "on_missing": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1753,7 +1767,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             },
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1816,7 +1831,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31d",
                             },
-                        ]
+                        ],
+                        "on_missing": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -1872,7 +1888,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                                 "relation": "reader",
                                 "object": "document:2021-budget",
                             }
-                        ]
+                        ],
+                        "on_duplicate": "error",
                     },
                     "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
                 },
@@ -3965,3 +3982,198 @@ class TestClientConfigurationHeaders:
 
         config.headers["X-New"] = "new-value"
         assert "X-New" not in copied_config.headers
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_write_with_conflict_options_ignore_duplicates(self, mock_request):
+        """Test case for write with conflict options - ignore duplicates"""
+        from openfga_sdk.client.models.write_conflict_opts import (
+            ClientWriteRequestOnDuplicateWrites,
+            ConflictOptions,
+        )
+
+        response_body = "{}"
+        mock_request.return_value = mock_response(response_body, 200)
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            body = ClientWriteRequest(
+                writes=[
+                    ClientTuple(
+                        object="document:2021-budget",
+                        relation="reader",
+                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    ),
+                ],
+            )
+            await api_client.write(
+                body,
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "conflict": ConflictOptions(
+                        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE
+                    ),
+                },
+            )
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "writes": {
+                        "tuple_keys": [
+                            {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                        ],
+                        "on_duplicate": "ignore",
+                    },
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_write_with_conflict_options_ignore_missing_deletes(
+        self, mock_request
+    ):
+        """Test case for write with conflict options - ignore missing deletes"""
+        from openfga_sdk.client.models.write_conflict_opts import (
+            ClientWriteRequestOnMissingDeletes,
+            ConflictOptions,
+        )
+
+        response_body = "{}"
+        mock_request.return_value = mock_response(response_body, 200)
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            body = ClientWriteRequest(
+                deletes=[
+                    ClientTuple(
+                        object="document:2021-budget",
+                        relation="reader",
+                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    )
+                ],
+            )
+            await api_client.write(
+                body,
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "conflict": ConflictOptions(
+                        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE
+                    ),
+                },
+            )
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "deletes": {
+                        "tuple_keys": [
+                            {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                        ],
+                        "on_missing": "ignore",
+                    },
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_write_with_conflict_options_both(self, mock_request):
+        """Test case for write with both conflict options"""
+        from openfga_sdk.client.models.write_conflict_opts import (
+            ClientWriteRequestOnDuplicateWrites,
+            ClientWriteRequestOnMissingDeletes,
+            ConflictOptions,
+        )
+
+        response_body = "{}"
+        mock_request.return_value = mock_response(response_body, 200)
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            body = ClientWriteRequest(
+                writes=[
+                    ClientTuple(
+                        object="document:2021-budget",
+                        relation="reader",
+                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                    ),
+                ],
+                deletes=[
+                    ClientTuple(
+                        object="document:2021-report",
+                        relation="reader",
+                        user="user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                    )
+                ],
+            )
+            await api_client.write(
+                body,
+                options={
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                    "conflict": ConflictOptions(
+                        on_duplicate_writes=ClientWriteRequestOnDuplicateWrites.IGNORE,
+                        on_missing_deletes=ClientWriteRequestOnMissingDeletes.IGNORE,
+                    ),
+                },
+            )
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/write",
+                headers=ANY,
+                query_params=[],
+                post_params=[],
+                body={
+                    "writes": {
+                        "tuple_keys": [
+                            {
+                                "object": "document:2021-budget",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                            },
+                        ],
+                        "on_duplicate": "ignore",
+                    },
+                    "deletes": {
+                        "tuple_keys": [
+                            {
+                                "object": "document:2021-report",
+                                "relation": "reader",
+                                "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31c",
+                            },
+                        ],
+                        "on_missing": "ignore",
+                    },
+                    "authorization_model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                },
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
