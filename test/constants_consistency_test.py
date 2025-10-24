@@ -2,8 +2,8 @@
 
 Covers:
 - Version consistency between openfga_sdk.__version__ and SDK_VERSION constant
-- RetryParams default values match exported retry constants1
-- ApiClient (async and sync) user agent constants1 match USER_AGENT constant
+- RetryParams default values match exported retry constants
+- ApiClient (async and sync) user agent constants match USER_AGENT constant
 - USER_AGENT embeds the SDK_VERSION
 """
 
