@@ -134,6 +134,17 @@ def options_to_transaction_info(
     return WriteTransactionOpts()
 
 
+def options_to_conflict_info(
+    options: dict[str, int | str | dict[str, int | str]] | None = None,
+):
+    """
+    Return the conflict info
+    """
+    if options is not None and options.get("conflict"):
+        return options["conflict"]
+    return None
+
+
 def _check_errored(response: ClientBatchCheckClientResponse):
     """
     Helper function to return whether the response is errored
@@ -520,12 +531,23 @@ class OpenFgaClient:
         Write or deletes tuples
         """
         kwargs = options_to_kwargs(options)
+        conflict_options = options_to_conflict_info(options)
+
+        # Extract conflict options to pass to the tuple key methods
+        on_duplicate = None
+        on_missing = None
+        if conflict_options:
+            if conflict_options.on_duplicate_writes:
+                on_duplicate = conflict_options.on_duplicate_writes.value
+            if conflict_options.on_missing_deletes:
+                on_missing = conflict_options.on_missing_deletes.value
+
         writes_tuple_keys = None
         deletes_tuple_keys = None
-        if body.writes_tuple_keys:
-            writes_tuple_keys = body.writes_tuple_keys
-        if body.deletes_tuple_keys:
-            deletes_tuple_keys = body.deletes_tuple_keys
+        if body.writes:
+            writes_tuple_keys = body.get_writes_tuple_keys(on_duplicate=on_duplicate)
+        if body.deletes:
+            deletes_tuple_keys = body.get_deletes_tuple_keys(on_missing=on_missing)
 
         await self._api.write(
             WriteRequest(
