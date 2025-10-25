@@ -19,7 +19,7 @@ fmt:
 	uv run ruff format .
 
 # Run checks (lint + test)
-check: test test
+check: lint test
 
 # Show help
 doc:
