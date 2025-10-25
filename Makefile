@@ -1,4 +1,4 @@
-.PHONY: sync test lint fmt check
+.PHONY: sync test lint fmt fix check doc
 
 # Install/update dependencies
 sync:
@@ -18,8 +18,13 @@ lint:
 fmt:
 	uv run ruff format .
 
+# Fix fixable linting and formatting issues
+fix:
+	uv run ruff check --fix .
+	uv run ruff format .
+
 # Run checks (lint + test)
-check: lint test
+check: lint fmt test
 
 # Show help
 doc:
@@ -28,5 +33,6 @@ doc:
 	@echo "  test    - Run tests with coverage (use TEST=path.to.test to run specific tests)"
 	@echo "  lint    - Run linter checks"
 	@echo "  fmt     - Format code"
+	@echo "  fix     - Fix fixable linting and formatting issues"
 	@echo "  check   - Run both linting and tests"
 	@echo "  doc     - Show this help message"
