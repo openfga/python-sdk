@@ -14,6 +14,12 @@ from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequ
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple
+from openfga_sdk.client.models.write_conflict_opts import (
+    ClientWriteRequestOnDuplicateWrites,
+    ClientWriteRequestOnMissingDeletes,
+    ConflictOptions,
+)
+from openfga_sdk.client.models.write_options import ClientWriteOptions
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_response import ClientWriteResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
@@ -35,4 +41,8 @@ __all__ = [
     "ClientWriteRequest",
     "ClientWriteResponse",
     "WriteTransactionOpts",
+    "ClientWriteRequestOnDuplicateWrites",
+    "ClientWriteRequestOnMissingDeletes",
+    "ConflictOptions",
+    "ClientWriteOptions",
 ]

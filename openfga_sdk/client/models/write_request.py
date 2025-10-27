@@ -47,7 +47,28 @@ class ClientWriteRequest:
     @property
     def writes_tuple_keys(self) -> WriteRequestWrites | None:
         """
-        Return the writes as tuple keys
+        Return the writes as tuple keys (backward compatibility property)
+        """
+        return self.get_writes_tuple_keys()
+
+    @property
+    def deletes_tuple_keys(self) -> WriteRequestDeletes | None:
+        """
+        Return the deletes as tuple keys (backward compatibility property)
+        """
+        return self.get_deletes_tuple_keys()
+
+    def get_writes_tuple_keys(
+        self, on_duplicate: str | None = None
+    ) -> WriteRequestWrites | None:
+        """
+        Return the writes as tuple keys with optional conflict handling
+
+        Args:
+            on_duplicate: Optional conflict resolution strategy for duplicate writes
+
+        Returns:
+            WriteRequestWrites object with tuple keys and optional on_duplicate setting
         """
         if self._writes is None:
             return None
@@ -57,12 +78,21 @@ class ClientWriteRequest:
         if keys is None:
             return None
 
+        if on_duplicate is not None:
+            return WriteRequestWrites(tuple_keys=keys, on_duplicate=on_duplicate)
         return WriteRequestWrites(tuple_keys=keys)
 
-    @property
-    def deletes_tuple_keys(self) -> WriteRequestDeletes | None:
+    def get_deletes_tuple_keys(
+        self, on_missing: str | None = None
+    ) -> WriteRequestDeletes | None:
         """
-        Return the delete as tuple keys
+        Return the deletes as tuple keys with optional conflict handling
+
+        Args:
+            on_missing: Optional conflict resolution strategy for missing deletes
+
+        Returns:
+            WriteRequestDeletes object with tuple keys and optional on_missing setting
         """
         if self._deletes is None:
             return None
@@ -72,4 +102,6 @@ class ClientWriteRequest:
         if keys is None:
             return None
 
+        if on_missing is not None:
+            return WriteRequestDeletes(tuple_keys=keys, on_missing=on_missing)
         return WriteRequestDeletes(tuple_keys=keys)

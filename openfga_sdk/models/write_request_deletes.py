@@ -31,20 +31,31 @@ class WriteRequestDeletes:
       attribute_map (dict): The key is attribute name
                             and the value is json key in definition.
     """
-    openapi_types: dict[str, str] = {"tuple_keys": "list[TupleKeyWithoutCondition]"}
+    openapi_types: dict[str, str] = {
+        "tuple_keys": "list[TupleKeyWithoutCondition]",
+        "on_missing": "str",
+    }
 
-    attribute_map: dict[str, str] = {"tuple_keys": "tuple_keys"}
+    attribute_map: dict[str, str] = {
+        "tuple_keys": "tuple_keys",
+        "on_missing": "on_missing",
+    }
 
-    def __init__(self, tuple_keys=None, local_vars_configuration=None):
+    def __init__(
+        self, tuple_keys=None, on_missing="error", local_vars_configuration=None
+    ):
         """WriteRequestDeletes - a model defined in OpenAPI"""
         if local_vars_configuration is None:
             local_vars_configuration = Configuration.get_default_copy()
         self.local_vars_configuration = local_vars_configuration
 
         self._tuple_keys = None
+        self._on_missing = None
         self.discriminator = None
 
         self.tuple_keys = tuple_keys
+        if on_missing is not None:
+            self.on_missing = on_missing
 
     @property
     def tuple_keys(self):
@@ -68,6 +79,37 @@ class WriteRequestDeletes:
             raise ValueError("Invalid value for `tuple_keys`, must not be `None`")
 
         self._tuple_keys = tuple_keys
+
+    @property
+    def on_missing(self):
+        """Gets the on_missing of this WriteRequestDeletes.
+
+        On 'error', the API returns an error when deleting a tuple that does not exist. On 'ignore', deletes of non-existent tuples are treated as no-ops.
+
+        :return: The on_missing of this WriteRequestDeletes.
+        :rtype: str
+        """
+        return self._on_missing
+
+    @on_missing.setter
+    def on_missing(self, on_missing):
+        """Sets the on_missing of this WriteRequestDeletes.
+
+        On 'error', the API returns an error when deleting a tuple that does not exist. On 'ignore', deletes of non-existent tuples are treated as no-ops.
+
+        :param on_missing: The on_missing of this WriteRequestDeletes.
+        :type on_missing: str
+        """
+        allowed_values = ["error", "ignore"]
+        if (
+            self.local_vars_configuration.client_side_validation
+            and on_missing not in allowed_values
+        ):
+            raise ValueError(
+                f"Invalid value for `on_missing` ({{{on_missing}}}), must be one of {allowed_values}"
+            )
+
+        self._on_missing = on_missing
 
     def to_dict(self, serialize=False):
         """Returns the model properties as a dict"""
