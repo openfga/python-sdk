@@ -1407,6 +1407,30 @@ Class | Method | HTTP request | Description
 
 This SDK supports producing metrics that can be consumed as part of an [OpenTelemetry](https://opentelemetry.io/) setup. For more information, please see [the documentation](https://github.com/openfga/python-sdk/blob/main/docs/opentelemetry.md)
 
+### Error Handling
+
+The SDK provides comprehensive error handling with detailed error information and convenient helper methods. For more information, please see [the error handling documentation](https://github.com/openfga/python-sdk/blob/main/docs/error_handling.md).
+
+Key features:
+- Operation context in error messages (e.g., `[write]`, `[check]`)
+- Detailed error codes and messages from the API
+- Request IDs for debugging and support
+- Helper methods for error categorization (`is_validation_error()`, `is_retryable()`, etc.)
+
+```python
+from openfga_sdk.exceptions import ApiException
+
+try:
+    await client.write([tuple])
+except ApiException as e:
+    print(f"Error: {e}")  # [write] HTTP 400 type 'invalid_type' not found (validation_error) [request-id: abc-123]
+    
+    if e.is_validation_error():
+        print(f"Validation error: {e.error_message}")
+    elif e.is_retryable():
+        print(f"Temporary error - retrying... (Request ID: {e.request_id})")
+```
+
 ## Contributing
 
 See [CONTRIBUTING](./CONTRIBUTING.md) for details.

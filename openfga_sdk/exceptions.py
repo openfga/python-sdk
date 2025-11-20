@@ -116,7 +116,7 @@ class ApiKeyError(OpenApiException, KeyError):
 
 
 class ApiException(OpenApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
         if http_resp:
             try:
                 headers = http_resp.headers.items()
@@ -138,14 +138,37 @@ class ApiException(OpenApiException):
             self._parsed_exception = None
             self.header = dict()
 
+        self.operation_name = operation_name
+
     def __str__(self):
-        """Custom error messages for exception"""
-        error_message = f"({self.status})\nReason: {self.reason}\n"
+        """
+        Format error with operation context and structured details.
+        Returns formatted string like:
+            [write] HTTP 400 type 'invalid_type' not found (validation_error) [request-id: abc-123]
+        """
+        parts = []
 
-        if self.body:
-            error_message += f"HTTP response body: {self.body}\n"
+        # Add operation context
+        if self.operation_name:
+            parts.append(f"[{self.operation_name}]")
 
-        return error_message
+        # Add error type/status
+        if self.status:
+            parts.append(f"HTTP {self.status}")
+
+        # Add error message (parsed or reason)
+        if self.error_message:
+            parts.append(self.error_message)
+
+        # Add error code in parentheses
+        if self.code:
+            parts.append(f"({self.code})")
+
+        # Add request ID for debugging
+        if self.request_id:
+            parts.append(f"[request-id: {self.request_id}]")
+
+        return " ".join(parts) if parts else "Unknown API error"
 
     @property
     def parsed_exception(self):
@@ -161,40 +184,155 @@ class ApiException(OpenApiException):
         """
         self._parsed_exception = content
 
+    @property
+    def code(self):
+        """
+        Get the error code from the parsed exception.
+
+        Returns:
+            Error code string (e.g., "validation_error") or None
+        """
+        if self._parsed_exception and hasattr(self._parsed_exception, 'code'):
+            code_value = self._parsed_exception.code
+            # Handle enum types
+            if hasattr(code_value, 'value'):
+                return code_value.value
+            return str(code_value) if code_value is not None else None
+        return None
+
+    @property
+    def error_message(self):
+        """
+        Get the human-readable error message.
+
+        Returns:
+            Error message from API or HTTP reason phrase
+        """
+        if self._parsed_exception and hasattr(self._parsed_exception, 'message'):
+            message = self._parsed_exception.message
+            if message:
+                return message
+        return self.reason or "Unknown error"
+
+    @property
+    def request_id(self):
+        """
+        Get the request ID for debugging and support.
+
+        Returns:
+            FGA request ID from response headers or None
+        """
+        if not self.header:
+            return None
+        # HTTP headers are case-insensitive, try different cases
+        for key in self.header:
+            if key.lower() == FGA_REQUEST_ID:
+                return self.header[key]
+        return None
+
+    def is_validation_error(self):
+        """
+        Check if this is a validation error.
+
+        Returns:
+            True if error code indicates validation failure
+        """
+        return (
+            isinstance(self, ValidationException) or
+            (self.code and 'validation' in self.code.lower())
+        )
+
+    def is_not_found_error(self):
+        """
+        Check if this is a not found (404) error.
+
+        Returns:
+            True if HTTP status is 404
+        """
+        return isinstance(self, NotFoundException) or self.status == 404
+
+    def is_authentication_error(self):
+        """
+        Check if this is an authentication (401) error.
+
+        Returns:
+            True if HTTP status is 401
+        """
+        return self.status == 401
+
+    def is_rate_limit_error(self):
+        """
+        Check if this is a rate limit (429) error.
+
+        Returns:
+            True if HTTP status is 429 or error code indicates rate limiting
+        """
+        return (
+            self.status == 429 or
+            (self.code and 'rate_limit' in self.code.lower())
+        )
+
+    def is_retryable(self):
+        """
+        Check if this error should be retried.
+
+        Returns:
+            True if error is temporary and retrying may succeed
+        """
+        return self.status in [429, 500, 502, 503, 504] if self.status else False
+
+    def is_client_error(self):
+        """
+        Check if this is a client error (4xx).
+
+        Returns:
+            True if HTTP status is in 400-499 range
+        """
+        return 400 <= self.status < 500 if self.status else False
+
+    def is_server_error(self):
+        """
+        Check if this is a server error (5xx).
+
+        Returns:
+            True if HTTP status is in 500-599 range
+        """
+        return 500 <= self.status < 600 if self.status else False
+
 
 class NotFoundException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 class UnauthorizedException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 class ForbiddenException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 class ServiceException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 class ValidationException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 class AuthenticationError(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 class RateLimitExceededError(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None):
-        super().__init__(status, reason, http_resp)
+    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+        super().__init__(status, reason, http_resp, operation_name)
 
 
 def render_path(path_to_item):
