@@ -7,13 +7,12 @@ These tests verify that:
 3. Helper methods work correctly
 """
 
-import pytest
 from openfga_sdk.exceptions import (
     ApiException,
-    ValidationException,
     NotFoundException,
-    ServiceException,
     RateLimitExceededError,
+    ServiceException,
+    ValidationException,
 )
 from openfga_sdk.models import ValidationErrorMessageResponse
 from openfga_sdk.models.error_code import ErrorCode
@@ -53,7 +52,7 @@ class TestEnhancedErrorHandling:
             status=400,
             reason="Bad Request",
             data=b'{"code": "validation_error", "message": "type \'invalid_type\' not found"}',
-            headers={"fga-request-id": "test-request-123"}
+            headers={"fga-request-id": "test-request-123"},
         )
 
         # Create exception
@@ -61,8 +60,7 @@ class TestEnhancedErrorHandling:
 
         # Set parsed exception
         parsed = ValidationErrorMessageResponse(
-            code=ErrorCode.VALIDATION_ERROR,
-            message="type 'invalid_type' not found"
+            code=ErrorCode.VALIDATION_ERROR, message="type 'invalid_type' not found"
         )
         exc.parsed_exception = parsed
 
@@ -79,14 +77,13 @@ class TestEnhancedErrorHandling:
         response = MockHTTPResponse(
             status=400,
             reason="Bad Request",
-            data=b'{}',
-            headers={"fga-request-id": "test-request-456"}
+            data=b"{}",
+            headers={"fga-request-id": "test-request-456"},
         )
 
         exc = ValidationException(http_resp=response, operation_name="check")
         parsed = ValidationErrorMessageResponse(
-            code=ErrorCode.VALIDATION_ERROR,
-            message="Invalid relation"
+            code=ErrorCode.VALIDATION_ERROR, message="Invalid relation"
         )
         exc.parsed_exception = parsed
 
@@ -99,7 +96,7 @@ class TestEnhancedErrorHandling:
 
     def test_is_validation_error_helper(self):
         """Test is_validation_error() helper method."""
-        response = MockHTTPResponse(400, "Bad Request", b'{}')
+        response = MockHTTPResponse(400, "Bad Request", b"{}")
         exc = ValidationException(http_resp=response)
         parsed = ValidationErrorMessageResponse(code=ErrorCode.VALIDATION_ERROR)
         exc.parsed_exception = parsed
@@ -111,7 +108,7 @@ class TestEnhancedErrorHandling:
 
     def test_is_not_found_error_helper(self):
         """Test is_not_found_error() helper method."""
-        response = MockHTTPResponse(404, "Not Found", b'{}')
+        response = MockHTTPResponse(404, "Not Found", b"{}")
         exc = NotFoundException(http_resp=response)
 
         assert exc.is_not_found_error() is True
@@ -121,7 +118,7 @@ class TestEnhancedErrorHandling:
 
     def test_is_authentication_error_helper(self):
         """Test is_authentication_error() helper method."""
-        response = MockHTTPResponse(401, "Unauthorized", b'{}')
+        response = MockHTTPResponse(401, "Unauthorized", b"{}")
         exc = ApiException(http_resp=response)
 
         assert exc.is_authentication_error() is True
@@ -129,7 +126,7 @@ class TestEnhancedErrorHandling:
 
     def test_is_rate_limit_error_helper(self):
         """Test is_rate_limit_error() helper method."""
-        response = MockHTTPResponse(429, "Too Many Requests", b'{}')
+        response = MockHTTPResponse(429, "Too Many Requests", b"{}")
         exc = RateLimitExceededError(http_resp=response)
 
         assert exc.is_rate_limit_error() is True
@@ -138,7 +135,7 @@ class TestEnhancedErrorHandling:
 
     def test_is_server_error_helper(self):
         """Test is_server_error() helper method."""
-        response = MockHTTPResponse(500, "Internal Server Error", b'{}')
+        response = MockHTTPResponse(500, "Internal Server Error", b"{}")
         exc = ServiceException(http_resp=response)
 
         assert exc.is_server_error() is True
@@ -149,19 +146,21 @@ class TestEnhancedErrorHandling:
         """Test is_retryable() helper for various status codes."""
         # Retryable errors
         for status in [429, 500, 502, 503, 504]:
-            response = MockHTTPResponse(status, "Error", b'{}')
+            response = MockHTTPResponse(status, "Error", b"{}")
             exc = ApiException(http_resp=response)
             assert exc.is_retryable() is True, f"Status {status} should be retryable"
 
         # Non-retryable errors
         for status in [400, 401, 403, 404]:
-            response = MockHTTPResponse(status, "Error", b'{}')
+            response = MockHTTPResponse(status, "Error", b"{}")
             exc = ApiException(http_resp=response)
-            assert exc.is_retryable() is False, f"Status {status} should not be retryable"
+            assert exc.is_retryable() is False, (
+                f"Status {status} should not be retryable"
+            )
 
     def test_error_without_parsed_exception(self):
         """Test error handling when parsed_exception is not set."""
-        response = MockHTTPResponse(400, "Bad Request", b'{}')
+        response = MockHTTPResponse(400, "Bad Request", b"{}")
         exc = ValidationException(http_resp=response, operation_name="write")
 
         # Should use reason as fallback
@@ -176,11 +175,10 @@ class TestEnhancedErrorHandling:
 
     def test_error_without_operation_name(self):
         """Test error handling when operation_name is not set."""
-        response = MockHTTPResponse(400, "Bad Request", b'{}')
+        response = MockHTTPResponse(400, "Bad Request", b"{}")
         exc = ApiException(http_resp=response)
         parsed = ValidationErrorMessageResponse(
-            code=ErrorCode.VALIDATION_ERROR,
-            message="Test error"
+            code=ErrorCode.VALIDATION_ERROR, message="Test error"
         )
         exc.parsed_exception = parsed
 
@@ -192,7 +190,7 @@ class TestEnhancedErrorHandling:
 
     def test_error_without_request_id(self):
         """Test error handling when request_id is not available."""
-        response = MockHTTPResponse(400, "Bad Request", b'{}', headers={})
+        response = MockHTTPResponse(400, "Bad Request", b"{}", headers={})
         exc = ValidationException(http_resp=response, operation_name="write")
 
         assert exc.request_id is None
@@ -203,7 +201,7 @@ class TestEnhancedErrorHandling:
 
     def test_error_code_with_enum(self):
         """Test that error code property handles enum values."""
-        response = MockHTTPResponse(400, "Bad Request", b'{}')
+        response = MockHTTPResponse(400, "Bad Request", b"{}")
         exc = ValidationException(http_resp=response)
 
         # Create parsed exception with enum
@@ -217,20 +215,19 @@ class TestEnhancedErrorHandling:
     def test_multiple_errors_have_unique_messages(self):
         """Test that different errors have different details."""
         # Error 1: Invalid type
-        response1 = MockHTTPResponse(400, "Bad Request", b'{}')
+        response1 = MockHTTPResponse(400, "Bad Request", b"{}")
         exc1 = ValidationException(http_resp=response1, operation_name="write")
         parsed1 = ValidationErrorMessageResponse(
-            code=ErrorCode.VALIDATION_ERROR,
-            message="type 'invalid_type' not found"
+            code=ErrorCode.VALIDATION_ERROR, message="type 'invalid_type' not found"
         )
         exc1.parsed_exception = parsed1
 
         # Error 2: Invalid relation
-        response2 = MockHTTPResponse(400, "Bad Request", b'{}')
+        response2 = MockHTTPResponse(400, "Bad Request", b"{}")
         exc2 = ValidationException(http_resp=response2, operation_name="write")
         parsed2 = ValidationErrorMessageResponse(
             code=ErrorCode.VALIDATION_ERROR,
-            message="relation 'invalid_relation' not found"
+            message="relation 'invalid_relation' not found",
         )
         exc2.parsed_exception = parsed2
 
@@ -242,7 +239,7 @@ class TestEnhancedErrorHandling:
 
     def test_operation_context_preserved(self):
         """Test that operation name is preserved in exception."""
-        response = MockHTTPResponse(400, "Bad Request", b'{}')
+        response = MockHTTPResponse(400, "Bad Request", b"{}")
 
         write_exc = ValidationException(http_resp=response, operation_name="write")
         assert write_exc.operation_name == "write"
@@ -258,13 +255,11 @@ class TestEnhancedErrorHandling:
         import re
 
         response = MockHTTPResponse(
-            400, "Bad Request", b'{}',
-            headers={"fga-request-id": "req-123"}
+            400, "Bad Request", b"{}", headers={"fga-request-id": "req-123"}
         )
         exc = ValidationException(http_resp=response, operation_name="write")
         parsed = ValidationErrorMessageResponse(
-            code=ErrorCode.VALIDATION_ERROR,
-            message="Test error"
+            code=ErrorCode.VALIDATION_ERROR, message="Test error"
         )
         exc.parsed_exception = parsed
 
@@ -272,20 +267,22 @@ class TestEnhancedErrorHandling:
 
         # Should match pattern: [operation] HTTP status message (code) [request-id: id]
         pattern = r"^\[write\] HTTP 400 Test error \(validation_error\) \[request-id: req-123\]$"
-        assert re.match(pattern, error_str), f"Error string '{error_str}' doesn't match expected pattern"
+        assert re.match(pattern, error_str), (
+            f"Error string '{error_str}' doesn't match expected pattern"
+        )
 
     def test_client_vs_server_error_categorization(self):
         """Test that client and server errors are properly categorized."""
         # Client errors (4xx)
         for status in [400, 401, 403, 404, 429]:
-            response = MockHTTPResponse(status, "Error", b'{}')
+            response = MockHTTPResponse(status, "Error", b"{}")
             exc = ApiException(http_resp=response)
             assert exc.is_client_error() is True
             assert exc.is_server_error() is False
 
         # Server errors (5xx)
         for status in [500, 502, 503, 504]:
-            response = MockHTTPResponse(status, "Error", b'{}')
+            response = MockHTTPResponse(status, "Error", b"{}")
             exc = ApiException(http_resp=response)
             assert exc.is_server_error() is True
             assert exc.is_client_error() is False
@@ -293,22 +290,21 @@ class TestEnhancedErrorHandling:
     def test_exception_subclass_helpers(self):
         """Test that helper methods work for exception subclasses."""
         # ValidationException
-        response = MockHTTPResponse(400, "Bad Request", b'{}')
+        response = MockHTTPResponse(400, "Bad Request", b"{}")
         exc = ValidationException(http_resp=response)
         assert exc.is_validation_error() is True
 
         # NotFoundException
-        response = MockHTTPResponse(404, "Not Found", b'{}')
+        response = MockHTTPResponse(404, "Not Found", b"{}")
         exc = NotFoundException(http_resp=response)
         assert exc.is_not_found_error() is True
 
         # ServiceException
-        response = MockHTTPResponse(500, "Internal Server Error", b'{}')
+        response = MockHTTPResponse(500, "Internal Server Error", b"{}")
         exc = ServiceException(http_resp=response)
         assert exc.is_server_error() is True
 
         # RateLimitExceededError
-        response = MockHTTPResponse(429, "Too Many Requests", b'{}')
+        response = MockHTTPResponse(429, "Too Many Requests", b"{}")
         exc = RateLimitExceededError(http_resp=response)
         assert exc.is_rate_limit_error() is True
-

@@ -192,10 +192,10 @@ class ApiException(OpenApiException):
         Returns:
             Error code string (e.g., "validation_error") or None
         """
-        if self._parsed_exception and hasattr(self._parsed_exception, 'code'):
+        if self._parsed_exception and hasattr(self._parsed_exception, "code"):
             code_value = self._parsed_exception.code
             # Handle enum types
-            if hasattr(code_value, 'value'):
+            if hasattr(code_value, "value"):
                 return code_value.value
             return str(code_value) if code_value is not None else None
         return None
@@ -208,7 +208,7 @@ class ApiException(OpenApiException):
         Returns:
             Error message from API or HTTP reason phrase
         """
-        if self._parsed_exception and hasattr(self._parsed_exception, 'message'):
+        if self._parsed_exception and hasattr(self._parsed_exception, "message"):
             message = self._parsed_exception.message
             if message:
                 return message
@@ -237,9 +237,8 @@ class ApiException(OpenApiException):
         Returns:
             True if error code indicates validation failure
         """
-        return (
-            isinstance(self, ValidationException) or
-            (self.code and 'validation' in self.code.lower())
+        return isinstance(self, ValidationException) or (
+            self.code and "validation" in self.code.lower()
         )
 
     def is_not_found_error(self):
@@ -267,10 +266,7 @@ class ApiException(OpenApiException):
         Returns:
             True if HTTP status is 429 or error code indicates rate limiting
         """
-        return (
-            self.status == 429 or
-            (self.code and 'rate_limit' in self.code.lower())
-        )
+        return self.status == 429 or (self.code and "rate_limit" in self.code.lower())
 
     def is_retryable(self):
         """

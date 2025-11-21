@@ -16,17 +16,19 @@ To run these tests with a local OpenFGA instance:
 """
 
 import os
+
 import pytest
 import pytest_asyncio
 
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.client import OpenFgaClient
-from openfga_sdk.exceptions import ValidationException, NotFoundException
+from openfga_sdk.exceptions import NotFoundException, ValidationException
+
 
 # Skip all tests if FGA_API_URL is not set (for CI/CD environments without OpenFGA)
 pytestmark = pytest.mark.skipif(
     not os.environ.get("FGA_API_URL") and not os.path.exists("/.dockerenv"),
-    reason="OpenFGA server not available. Set FGA_API_URL to run integration tests."
+    reason="OpenFGA server not available. Set FGA_API_URL to run integration tests.",
 )
 
 
@@ -256,7 +258,11 @@ class TestErrorIntegration:
 
     async def test_error_message_format_consistency(self, fga_client):
         """Test that error messages follow consistent format across operations."""
-        from openfga_sdk.client.models import ClientTuple, ClientCheckRequest, ClientWriteRequest
+        from openfga_sdk.client.models import (
+            ClientCheckRequest,
+            ClientTuple,
+            ClientWriteRequest,
+        )
 
         # Test write error format
         with pytest.raises(ValidationException) as write_exc:
@@ -296,6 +302,7 @@ class TestErrorIntegration:
 
         # Both should follow same pattern (with or without request-id)
         import re
+
         # Pattern with optional request-id at the end
         pattern = r"^\[\w+\] HTTP \d{3} .+ \(.+\)( \[request-id: .+\])?$"
         assert re.match(pattern, write_error)
@@ -334,9 +341,12 @@ class TestErrorIntegration:
         # Request ID should match expected format if present
         if exception.request_id:
             import re
+
             assert re.match(r"[a-zA-Z0-9-]+", exception.request_id)
 
-    async def test_different_validation_errors_have_different_messages(self, fga_client):
+    async def test_different_validation_errors_have_different_messages(
+        self, fga_client
+    ):
         """Test that different validation errors surface different messages."""
         from openfga_sdk.client.models import ClientTuple, ClientWriteRequest
 
@@ -423,8 +433,8 @@ class TestErrorIntegrationSync:
 
         Note: This requires a running OpenFGA server.
         """
-        from openfga_sdk.sync.client.client import OpenFgaClient as SyncOpenFgaClient
         from openfga_sdk.models import CreateStoreRequest
+        from openfga_sdk.sync.client.client import OpenFgaClient as SyncOpenFgaClient
 
         api_url = os.environ.get("FGA_API_URL", "http://localhost:8080")
 
@@ -503,4 +513,3 @@ class TestErrorIntegrationSync:
         assert exception.is_client_error()
         assert not exception.is_server_error()
         assert not exception.is_retryable()
-
