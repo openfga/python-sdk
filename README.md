@@ -1414,7 +1414,6 @@ The SDK provides comprehensive error handling with detailed error information an
 Key features:
 - Operation context in error messages (e.g., `[write]`, `[check]`)
 - Detailed error codes and messages from the API
-- Request IDs for debugging and support
 - Helper methods for error categorization (`is_validation_error()`, `is_retryable()`, etc.)
 
 ```python
