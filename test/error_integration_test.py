@@ -92,6 +92,7 @@ class TestErrorIntegration:
         try:
             await client.delete_store()
         except Exception:
+            # Ignore exceptions during cleanup (e.g., store may already be deleted or server unavailable)
             pass  # Ignore cleanup errors
 
     async def test_write_validation_error_invalid_type(self, fga_client):

@@ -116,7 +116,9 @@ class ApiKeyError(OpenApiException, KeyError):
 
 
 class ApiException(OpenApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
         if http_resp:
             try:
                 headers = http_resp.headers.items()
@@ -297,38 +299,52 @@ class ApiException(OpenApiException):
 
 
 class NotFoundException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 class UnauthorizedException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 class ForbiddenException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 class ServiceException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 class ValidationException(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 class AuthenticationError(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 class RateLimitExceededError(ApiException):
-    def __init__(self, status=None, reason=None, http_resp=None, operation_name=None):
-        super().__init__(status, reason, http_resp, operation_name)
+    def __init__(
+        self, status=None, reason=None, http_resp=None, *, operation_name=None
+    ):
+        super().__init__(status, reason, http_resp, operation_name=operation_name)
 
 
 def render_path(path_to_item):

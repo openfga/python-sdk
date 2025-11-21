@@ -320,11 +320,12 @@ class ApiClient:
                     and TelemetryAttributes.fga_client_request_method
                     in _telemetry_attributes
                 ):
-                    # Convert operation name to lowercase for consistency
-                    e.operation_name = _telemetry_attributes[
+                    operation_name = _telemetry_attributes.get(
                         TelemetryAttributes.fga_client_request_method
-                    ].lower()
-                raise e
+                    )
+                    if isinstance(operation_name, str):
+                        e.operation_name = operation_name.lower()
+                raise
             except ApiException as e:
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
@@ -362,9 +363,11 @@ class ApiClient:
                     and TelemetryAttributes.fga_client_request_method
                     in _telemetry_attributes
                 ):
-                    e.operation_name = _telemetry_attributes[
+                    operation_name = _telemetry_attributes.get(
                         TelemetryAttributes.fga_client_request_method
-                    ].lower()
+                    )
+                    if isinstance(operation_name, str):
+                        e.operation_name = operation_name.lower()
                 raise
 
             self.last_response = response_data
