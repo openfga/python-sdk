@@ -1409,7 +1409,7 @@ This SDK supports producing metrics that can be consumed as part of an [OpenTele
 
 ### Error Handling
 
-The SDK provides comprehensive error handling with detailed error information and convenient helper methods. For more information, please see [the error handling documentation](https://github.com/openfga/python-sdk/blob/main/docs/error_handling.md).
+The SDK provides comprehensive error handling with detailed error information and convenient helper methods.
 
 Key features:
 - Operation context in error messages (e.g., `[write]`, `[check]`)
