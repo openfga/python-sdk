@@ -316,6 +316,16 @@ class ApiClient:
                         json.loads(e.body), response_type
                     )
                     e.body = None
+                if (
+                    isinstance(e, ApiException)
+                    and TelemetryAttributes.fga_client_request_method
+                    in _telemetry_attributes
+                ):
+                    operation_name = _telemetry_attributes.get(
+                        TelemetryAttributes.fga_client_request_method
+                    )
+                    if isinstance(operation_name, str):
+                        e.operation_name = operation_name.lower()
                 raise e
             except ApiException as e:
                 e.body = e.body.decode("utf-8")
@@ -347,7 +357,18 @@ class ApiClient:
                     attributes=_telemetry_attributes,
                     configuration=self.configuration.telemetry,
                 )
-                raise e
+
+                if (
+                    isinstance(e, ApiException)
+                    and TelemetryAttributes.fga_client_request_method
+                    in _telemetry_attributes
+                ):
+                    operation_name = _telemetry_attributes.get(
+                        TelemetryAttributes.fga_client_request_method
+                    )
+                    if isinstance(operation_name, str):
+                        e.operation_name = operation_name.lower()
+                raise
 
             self.last_response = response_data
 
