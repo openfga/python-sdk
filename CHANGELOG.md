@@ -1,6 +1,9 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.8...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.9...HEAD)
+
+### [0.9.9](https://github.com/openfga/python-sdk/compare/v0.9.8...0.9.9) (2025-12-09)
+- feat: improve error messaging (#245)
 
 ### [0.9.8](https://github.com/openfga/python-sdk/compare/v0.9.7...0.9.8) (2025-11-04)
 - feat: add support for conflict options for Write operations: (#235)
