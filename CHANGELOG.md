@@ -2,17 +2,17 @@
 
 ## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.9...HEAD)
 
-### [0.9.9](https://github.com/openfga/python-sdk/compare/v0.9.8...0.9.9) (2025-12-09)
+### [0.9.9](https://github.com/openfga/python-sdk/compare/v0.9.8...v0.9.9) (2025-12-09)
 - feat: improve error messaging (#245)
 
-### [0.9.8](https://github.com/openfga/python-sdk/compare/v0.9.7...0.9.8) (2025-11-04)
+### [0.9.8](https://github.com/openfga/python-sdk/compare/v0.9.7...v0.9.8) (2025-11-04)
 - feat: add support for conflict options for Write operations: (#235)
   The client now supports setting `ConflictOptions` on `ClientWriteOptions` to control behavior when writing duplicate tuples or deleting non-existent tuples. This feature requires OpenFGA server [v1.10.0](https://github.com/openfga/openfga/releases/tag/v1.10.0) or later.
   See [Conflict Options for Write Operations](./README.md#conflict-options-for-write-operations) for more.
   - `on_duplicate` for handling duplicate tuple writes (ERROR or IGNORE)
   - `on_missing` for handling deletes of non-existent tuples (ERROR or IGNORE)
 
-### [0.9.7](https://github.com/openfga/python-sdk/compare/v0.9.6...0.9.7) (2025-10-06)
+### [0.9.7](https://github.com/openfga/python-sdk/compare/v0.9.6...v0.9.7) (2025-10-06)
 
 - feat: `headers` configuration property (#233)
 - fix: per-request custom header precedence (#230)
