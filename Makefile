@@ -10,6 +10,9 @@ sync:
 test:
 	uv run pytest --cov-report term-missing --cov=openfga_sdk $(if $(TEST),$(TEST),test/)
 
+test-integration:
+	uv run pytest -m integration --cov-report term-missing --cov=openfga_sdk $(if $(TEST),$(TEST),test/)
+
 # Run linter
 lint:
 	uv run ruff check .

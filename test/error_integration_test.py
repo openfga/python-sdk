@@ -53,7 +53,7 @@ AUTH_MODEL = {
     ],
 }
 
-
+@pytest.mark.integration
 @pytest.mark.asyncio
 class TestErrorIntegration:
     """Integration tests for enhanced error handling."""
@@ -424,6 +424,7 @@ class TestErrorIntegration:
 
 
 # Sync version of tests
+@pytest.mark.integration
 class TestErrorIntegrationSync:
     """Synchronous integration tests for enhanced error handling."""
 
