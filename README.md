@@ -935,6 +935,9 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 # ]
 ```
 
+##### Client Batch Check
+
+
 If you are using an OpenFGA version less than 1.8.0, you can use `client_batch_check`,
 which calls `check` in parallel. It will return `allowed: false` if it encounters an error, and will return the error in the body.
 If 429s or 5xxs are encountered, the underlying check will retry up to 3 times before giving up.
