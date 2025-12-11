@@ -53,6 +53,7 @@ AUTH_MODEL = {
     ],
 }
 
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 class TestErrorIntegration:
