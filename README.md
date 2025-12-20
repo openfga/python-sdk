@@ -144,7 +144,6 @@ async def main():
     # Enter a context with an instance of the OpenFgaClient
     async with OpenFgaClient(configuration) as fga_client:
         api_response = await fga_client.read_authorization_models()
-        await fga_client.close()
         return api_response
 ```
 
@@ -170,7 +169,6 @@ async def main():
     # Enter a context with an instance of the OpenFgaClient
     async with OpenFgaClient(configuration) as fga_client:
         api_response = await fga_client.read_authorization_models()
-        await fga_client.close()
         return api_response
 ```
 
@@ -199,7 +197,6 @@ async def main():
     # Enter a context with an instance of the OpenFgaClient
     async with OpenFgaClient(configuration) as fga_client:
         api_response = await fga_client.read_authorization_models()
-        await fga_client.close()
         return api_response
 ```
 
