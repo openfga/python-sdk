@@ -295,7 +295,7 @@ class TelemetryAttributes:
                     response.status
                 )
 
-            if response.body is not None:
+            if response.body is not None and isinstance(response.body, dict):
                 response_model_id = response.body.get(
                     "openfga-authorization-model-id"
                 ) or response.body.get("openfga_authorization_model_id")

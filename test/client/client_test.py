@@ -25,6 +25,7 @@ from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.configuration import RetryParams
 from openfga_sdk.exceptions import (
     FgaValidationException,
@@ -4165,3 +4166,310 @@ class TestClientConfigurationHeaders:
                 _preload_content=ANY,
                 _request_timeout=None,
             )
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_post_with_body(self, mock_request):
+        """Test case for raw_request
+
+        Make a raw POST request with JSON body
+        """
+        response_body = '{"result": "success", "data": {"id": "123"}}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="CustomEndpoint",
+                method="POST",
+                path="/stores/{store_id}/custom-endpoint",
+                body={"user": "user:bob", "action": "custom_action"},
+                query_params={"page_size": "20"},
+                headers={"X-Experimental-Feature": "enabled"},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+            self.assertIsNotNone(response.headers)
+            self.assertIsNotNone(response.body)
+            self.assertIsInstance(response.body, dict)
+            self.assertEqual(response.body["result"], "success")
+
+            # Verify response helper methods
+            json_data = response.json()
+            self.assertIsNotNone(json_data)
+            self.assertEqual(json_data["result"], "success")
+
+            text_data = response.text()
+            self.assertIsNotNone(text_data)
+            self.assertIn("success", text_data)
+
+            # Verify the API was called with correct parameters
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/custom-endpoint",
+                headers=ANY,
+                body={"user": "user:bob", "action": "custom_action"},
+                query_params=[("page_size", "20")],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_get_with_query_params(self, mock_request):
+        """Test case for raw_request
+
+        Make a raw GET request with query parameters
+        """
+        response_body = '{"stores": [{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}]}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="ListStores",
+                method="GET",
+                path="/stores",
+                query_params={
+                    "page_size": 10,
+                    "continuation_token": "eyJwayI6...",
+                },
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+            self.assertIsNotNone(response.body)
+            self.assertIsInstance(response.body, dict)
+            self.assertIn("stores", response.body)
+
+            # Verify the API was called with correct parameters
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores",
+                headers=ANY,
+                body=None,
+                query_params=[("page_size", "10"), ("continuation_token", "eyJwayI6...")],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_with_path_params(self, mock_request):
+        """Test case for raw_request
+
+        Make a raw request with path parameters
+        """
+        response_body = '{"authorization_model": {"id": "01G5JAVJ41T49E9TT3SKVS7X1J"}}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="ReadAuthorizationModel",
+                method="GET",
+                path="/stores/{store_id}/authorization-models/{model_id}",
+                path_params={"model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+            self.assertIsNotNone(response.body)
+
+            # Verify the API was called with correct path (store_id auto-substituted)
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
+                headers=ANY,
+                body=None,
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_auto_store_id_substitution(self, mock_request):
+        """Test case for raw_request
+
+        Test automatic store_id substitution when not provided in path_params
+        """
+        response_body = '{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="GetStore",
+                method="GET",
+                path="/stores/{store_id}",
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+
+            # Verify store_id was automatically substituted
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
+                headers=ANY,
+                body=None,
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    async def test_raw_request_missing_operation_name(self):
+        """Test case for raw_request
+
+        Test that operation_name is required
+        """
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(FgaValidationException) as error:
+                await api_client.raw_request(
+                    method="GET",
+                    path="/stores",
+                )
+            self.assertIn("operation_name is required", str(error.exception))
+            await api_client.close()
+
+    async def test_raw_request_missing_store_id(self):
+        """Test case for raw_request
+
+        Test that store_id is required when path contains {store_id}
+        """
+        configuration = self.configuration
+        # Don't set store_id
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(FgaValidationException) as error:
+                await api_client.raw_request(
+                    operation_name="GetStore",
+                    method="GET",
+                    path="/stores/{store_id}",
+                )
+            self.assertIn("store_id is not configured", str(error.exception))
+            await api_client.close()
+
+    async def test_raw_request_missing_path_params(self):
+        """Test case for raw_request
+
+        Test that all path parameters must be provided
+        """
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(FgaValidationException) as error:
+                await api_client.raw_request(
+                    operation_name="ReadAuthorizationModel",
+                    method="GET",
+                    path="/stores/{store_id}/authorization-models/{model_id}",
+                    # Missing model_id in path_params
+                )
+            self.assertIn("Not all path parameters were provided", str(error.exception))
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_with_list_query_params(self, mock_request):
+        """Test case for raw_request
+
+        Test query parameters with list values
+        """
+        response_body = '{"results": []}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="ListStores",
+                method="GET",
+                path="/stores",
+                query_params={"ids": ["id1", "id2", "id3"]},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+
+            # Verify list query params are expanded
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores",
+                headers=ANY,
+                body=None,
+                query_params=[("ids", "id1"), ("ids", "id2"), ("ids", "id3")],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_default_headers(self, mock_request):
+        """Test case for raw_request
+
+        Test that default headers (Content-Type, Accept) are set
+        """
+        response_body = '{"result": "success"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="CustomEndpoint",
+                method="POST",
+                path="/stores/{store_id}/custom-endpoint",
+                body={"test": "data"},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+
+            # Verify default headers are set
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("Content-Type"), "application/json")
+            self.assertEqual(headers.get("Accept"), "application/json")
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_raw_request_url_encoded_path_params(self, mock_request):
+        """Test case for raw_request
+
+        Test that path parameters are URL encoded
+        """
+        response_body = '{"result": "success"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.raw_request(
+                operation_name="CustomEndpoint",
+                method="GET",
+                path="/stores/{store_id}/custom/{param}",
+                path_params={"param": "value with spaces & special chars"},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/custom/value%20with%20spaces%20%26%20special%20chars",
+                headers=ANY,
+                body=None,
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            await api_client.close()

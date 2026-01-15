@@ -1,5 +1,8 @@
 import asyncio
 import uuid
+import urllib.parse
+from typing import Any
+import json
 
 from openfga_sdk.api.open_fga_api import OpenFgaApi
 from openfga_sdk.api_client import ApiClient
@@ -33,6 +36,7 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.constants import (
     CLIENT_BULK_REQUEST_ID_HEADER,
     CLIENT_MAX_BATCH_SIZE,
@@ -40,6 +44,7 @@ from openfga_sdk.constants import (
     CLIENT_METHOD_HEADER,
 )
 from openfga_sdk.exceptions import (
+    ApiException,
     AuthenticationError,
     FgaValidationException,
     UnauthorizedException,
@@ -68,6 +73,7 @@ from openfga_sdk.models.write_authorization_model_request import (
 )
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.validation import is_well_formed_ulid_string
+from openfga_sdk.rest import RESTResponse
 
 
 def _chuck_array(array, max_size):
@@ -1096,3 +1102,164 @@ class OpenFgaClient:
             authorization_model_id, api_request_body, **kwargs
         )
         return api_response
+
+    #######################
+    # Raw Request
+    #######################
+    async def raw_request(
+        self,
+        method: str,
+        path: str,
+        query_params: dict[str, str | int | list[str | int]] | None = None,
+        path_params: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        body: dict[str, Any] | list[Any] | str | bytes | None = None,
+        operation_name: str | None = None,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ) -> RawResponse:
+        """
+        Make a raw HTTP request to any OpenFGA API endpoint.
+
+        :param method: HTTP method (GET, POST, PUT, DELETE, PATCH, etc.)
+        :param path: API endpoint path (e.g., "/stores/{store_id}/check" or "/stores")
+        :param query_params: Optional query parameters as a dictionary
+        :param path_params: Optional path parameters to replace placeholders in path
+            (e.g., {"store_id": "abc", "model_id": "xyz"})
+        :param headers: Optional request headers (will be merged with default headers)
+        :param body: Optional request body (dict/list will be JSON serialized, str/bytes sent as-is)
+        :param operation_name: Required operation name for telemetry/logging (e.g., "Check", "Write", "CustomEndpoint")
+        :param options: Optional request options:
+            - headers: Additional headers (merged with headers parameter)
+            - retry_params: Override retry parameters for this request
+            - authorization_model_id: Not used in raw_request, but kept for consistency
+        :return: RawResponse object with status, headers, and body
+        :raises FgaValidationException: If path contains {store_id} but store_id is not configured
+        :raises ApiException: For HTTP errors (with SDK error handling applied)
+        """
+
+        request_headers = dict(headers) if headers else {}
+        if options and options.get("headers"):
+            request_headers.update(options["headers"])
+
+        if not operation_name:
+            raise FgaValidationException("operation_name is required for raw_request")
+
+        resource_path = path
+        path_params_dict = dict(path_params) if path_params else {}
+        
+        if "{store_id}" in resource_path and "store_id" not in path_params_dict:
+            store_id = self.get_store_id()
+            if store_id is None or store_id == "":
+                raise FgaValidationException(
+                    "Path contains {store_id} but store_id is not configured. "
+                    "Set store_id in ClientConfiguration, use set_store_id(), or provide it in path_params."
+                )
+            path_params_dict["store_id"] = store_id
+        
+        for param_name, param_value in path_params_dict.items():
+            placeholder = f"{{{param_name}}}"
+            if placeholder in resource_path:
+                encoded_value = urllib.parse.quote(str(param_value), safe="")
+                resource_path = resource_path.replace(placeholder, encoded_value)
+        if "{" in resource_path or "}" in resource_path:
+            raise FgaValidationException(
+                f"Not all path parameters were provided for path: {path}"
+            )
+
+        query_params_list = []
+        if query_params:
+            for key, value in query_params.items():
+                if value is None:
+                    continue
+                if isinstance(value, list):
+                    for item in value:
+                        if item is not None:
+                            query_params_list.append((key, str(item)))
+                    continue
+                query_params_list.append((key, str(value)))
+
+        body_params = None
+        if body is not None:
+            if isinstance(body, (dict, list)):
+                body_params = json.dumps(body)
+            elif isinstance(body, str):
+                body_params = body
+            elif isinstance(body, bytes):
+                body_params = body
+            else:
+                body_params = json.dumps(body)
+
+        retry_params = None
+        if options and options.get("retry_params"):
+            retry_params = options["retry_params"]
+
+        if "Content-Type" not in request_headers:
+            request_headers["Content-Type"] = "application/json"
+        if "Accept" not in request_headers:
+            request_headers["Accept"] = "application/json"
+
+        auth_headers = dict(request_headers) if request_headers else {}
+        await self._api_client.update_params_for_auth(
+            auth_headers,
+            query_params_list,
+            auth_settings=[],
+            oauth2_client=self._api._oauth2_client,
+        )
+
+        telemetry_attributes = None
+        if operation_name:
+            from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
+            telemetry_attributes = {
+                TelemetryAttributes.fga_client_request_method: operation_name.lower(),
+            }
+            if self.get_store_id():
+                telemetry_attributes[TelemetryAttributes.fga_client_request_store_id] = self.get_store_id()
+
+        try:
+            _, http_status, http_headers = await self._api_client.call_api(
+                resource_path=resource_path,
+                method=method.upper(),
+                query_params=query_params_list if query_params_list else None,
+                header_params=auth_headers if auth_headers else None,
+                body=body_params,
+                response_types_map={},
+                auth_settings=[],
+                _return_http_data_only=False,
+                _preload_content=True,
+                _retry_params=retry_params,
+                _oauth2_client=self._api._oauth2_client,
+                _telemetry_attributes=telemetry_attributes,
+            )
+        except ApiException as e:
+            raise
+        rest_response: RESTResponse | None = getattr(
+            self._api_client, "last_response", None
+        )
+
+        if rest_response is None:
+            raise RuntimeError("Failed to get response from API client")
+
+        response_body: bytes | str | dict[str, Any] | None = None
+        if rest_response.data is not None:
+            if isinstance(rest_response.data, str):
+                try:
+                    response_body = json.loads(rest_response.data)
+                except (json.JSONDecodeError, ValueError):
+                    response_body = rest_response.data
+            elif isinstance(rest_response.data, bytes):
+                try:
+                    decoded = rest_response.data.decode("utf-8")
+                    try:
+                        response_body = json.loads(decoded)
+                    except (json.JSONDecodeError, ValueError):
+                        response_body = decoded
+                except UnicodeDecodeError:
+                    response_body = rest_response.data
+            else:
+                response_body = rest_response.data
+
+        return RawResponse(
+            status=http_status,
+            headers=http_headers if http_headers else {},
+            body=response_body,
+        )

@@ -23,6 +23,7 @@ from openfga_sdk.client.models.write_options import ClientWriteOptions
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_response import ClientWriteResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.models.raw_response import RawResponse
 
 
 __all__ = [
@@ -45,4 +46,5 @@ __all__ = [
     "ClientWriteRequestOnMissingDeletes",
     "ConflictOptions",
     "ClientWriteOptions",
+    "RawResponse",
 ]
