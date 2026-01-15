@@ -1178,23 +1178,20 @@ class OpenFgaClient:
                     continue
                 query_params_list.append((key, str(value)))
 
-        body_params = None
-        if body is not None:
-            if isinstance(body, (dict, list)):
-                body_params = json.dumps(body)
+        body_params = body
+        if "Content-Type" not in request_headers:
+            if isinstance(body, (dict, list)) or body is None:
+                request_headers["Content-Type"] = "application/json"
             elif isinstance(body, str):
-                body_params = body
+                request_headers["Content-Type"] = "text/plain"
             elif isinstance(body, bytes):
-                body_params = body
+                request_headers["Content-Type"] = "application/octet-stream"
             else:
-                body_params = json.dumps(body)
+                request_headers["Content-Type"] = "application/json"
 
         retry_params = None
         if options and options.get("retry_params"):
             retry_params = options["retry_params"]
-
-        if "Content-Type" not in request_headers:
-            request_headers["Content-Type"] = "application/json"
         if "Accept" not in request_headers:
             request_headers["Accept"] = "application/json"
 
