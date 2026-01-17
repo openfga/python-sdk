@@ -23,10 +23,10 @@ class RawResponse:
 
     status: int
     """HTTP status code"""
-    
+
     headers: dict[str, str]
     """Response headers as a dictionary"""
-    
+
     body: bytes | str | dict[str, Any] | None = None
     """Response body (already parsed as dict if JSON, otherwise str or bytes)"""
 

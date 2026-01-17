@@ -3,7 +3,7 @@ import json
 import uuid
 
 from datetime import datetime
-from unittest import IsolatedAsyncioTestCase
+from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import ANY, patch
 
 import pytest
@@ -18,12 +18,12 @@ from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
+from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
-from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.exceptions import (
     FgaValidationException,
     UnauthorizedException,
@@ -3886,12 +3886,19 @@ def client_configuration():
     )
 
 
-class TestSyncClientConfigurationHeaders:
+class TestSyncClientConfigurationHeaders(TestCase):
     """Tests for ClientConfiguration headers parameter in sync client"""
 
-    def test_sync_client_configuration_headers_default_none(self, client_configuration):
+    def setUp(self):
+        from openfga_sdk.client.configuration import ClientConfiguration
+
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
+
+    def test_sync_client_configuration_headers_default_none(self):
         """Test that headers default to an empty dict in ClientConfiguration"""
-        assert client_configuration.headers == {}
+        assert self.configuration.headers == {}
 
     def test_sync_client_configuration_headers_initialization_with_dict(self):
         """Test initializing ClientConfiguration with headers"""
@@ -3920,11 +3927,11 @@ class TestSyncClientConfigurationHeaders:
         )
         assert config.headers == {}
 
-    def test_sync_client_configuration_headers_setter(self, client_configuration):
+    def test_sync_client_configuration_headers_setter(self):
         """Test setting headers via property setter"""
         headers = {"X-Test": "test-value"}
-        client_configuration.headers = headers
-        assert client_configuration.headers == headers
+        self.configuration.headers = headers
+        assert self.configuration.headers == headers
 
     def test_sync_client_configuration_headers_with_authorization_model_id(self):
         """Test ClientConfiguration with headers and authorization_model_id"""
@@ -4189,11 +4196,11 @@ class TestSyncClientConfigurationHeaders:
             mock_request.assert_called_once_with(
                 "POST",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/custom-endpoint",
-                headers=ANY,
-                body={"user": "user:bob", "action": "custom_action"},
                 query_params=[("page_size", "20")],
-                post_params=[],
-                _preload_content=ANY,
+                headers=ANY,
+                post_params=None,
+                body={"user": "user:bob", "action": "custom_action"},
+                _preload_content=True,
                 _request_timeout=None,
             )
             api_client.close()
@@ -4204,7 +4211,9 @@ class TestSyncClientConfigurationHeaders:
 
         Make a raw GET request with query parameters
         """
-        response_body = '{"stores": [{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}]}'
+        response_body = (
+            '{"stores": [{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}]}'
+        )
         mock_request.return_value = mock_response(response_body, 200)
 
         configuration = self.configuration
@@ -4229,11 +4238,14 @@ class TestSyncClientConfigurationHeaders:
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores",
+                query_params=[
+                    ("page_size", "10"),
+                    ("continuation_token", "eyJwayI6..."),
+                ],
                 headers=ANY,
+                post_params=None,
                 body=None,
-                query_params=[("page_size", "10"), ("continuation_token", "eyJwayI6...")],
-                post_params=[],
-                _preload_content=ANY,
+                _preload_content=True,
                 _request_timeout=None,
             )
             api_client.close()
@@ -4265,11 +4277,11 @@ class TestSyncClientConfigurationHeaders:
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
+                query_params=None,
                 headers=ANY,
+                post_params=None,
                 body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
+                _preload_content=True,
                 _request_timeout=None,
             )
             api_client.close()
@@ -4299,11 +4311,11 @@ class TestSyncClientConfigurationHeaders:
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
+                query_params=None,
                 headers=ANY,
+                post_params=None,
                 body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
+                _preload_content=True,
                 _request_timeout=None,
             )
             api_client.close()
@@ -4383,11 +4395,11 @@ class TestSyncClientConfigurationHeaders:
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores",
-                headers=ANY,
-                body=None,
                 query_params=[("ids", "id1"), ("ids", "id2"), ("ids", "id3")],
-                post_params=[],
-                _preload_content=ANY,
+                headers=ANY,
+                post_params=None,
+                body=None,
+                _preload_content=True,
                 _request_timeout=None,
             )
             api_client.close()
@@ -4444,11 +4456,11 @@ class TestSyncClientConfigurationHeaders:
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/custom/value%20with%20spaces%20%26%20special%20chars",
+                query_params=None,
                 headers=ANY,
+                post_params=None,
                 body=None,
-                query_params=[],
-                post_params=[],
-                _preload_content=ANY,
+                _preload_content=True,
                 _request_timeout=None,
             )
             api_client.close()

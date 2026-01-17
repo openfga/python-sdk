@@ -1,9 +1,9 @@
-import uuid
 import json
 import urllib.parse
-from typing import Any
+import uuid
 
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
@@ -27,6 +27,7 @@ from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
+from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
 from openfga_sdk.client.models.write_request import ClientWriteRequest
@@ -35,7 +36,6 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
-from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.constants import (
     CLIENT_BULK_REQUEST_ID_HEADER,
     CLIENT_MAX_BATCH_SIZE,
@@ -43,7 +43,6 @@ from openfga_sdk.constants import (
     CLIENT_METHOD_HEADER,
 )
 from openfga_sdk.exceptions import (
-    ApiException,
     AuthenticationError,
     FgaValidationException,
     UnauthorizedException,
@@ -73,8 +72,11 @@ from openfga_sdk.models.write_authorization_model_request import (
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.sync.api_client import ApiClient
 from openfga_sdk.sync.open_fga_api import OpenFgaApi
-from openfga_sdk.validation import is_well_formed_ulid_string
 from openfga_sdk.sync.rest import RESTResponse
+from openfga_sdk.telemetry.attributes import (
+    TelemetryAttributes,
+)
+from openfga_sdk.validation import is_well_formed_ulid_string
 
 
 def _chuck_array(array, max_size):
@@ -1145,7 +1147,7 @@ class OpenFgaClient:
 
         resource_path = path
         path_params_dict = dict(path_params) if path_params else {}
-        
+
         if "{store_id}" in resource_path and "store_id" not in path_params_dict:
             store_id = self.get_store_id()
             if store_id is None or store_id == "":
@@ -1154,13 +1156,13 @@ class OpenFgaClient:
                     "Set store_id in ClientConfiguration, use set_store_id(), or provide it in path_params."
                 )
             path_params_dict["store_id"] = store_id
-        
+
         for param_name, param_value in path_params_dict.items():
             placeholder = f"{{{param_name}}}"
             if placeholder in resource_path:
                 encoded_value = urllib.parse.quote(str(param_value), safe="")
                 resource_path = resource_path.replace(placeholder, encoded_value)
-        
+
         if "{" in resource_path or "}" in resource_path:
             raise FgaValidationException(
                 f"Not all path parameters were provided for path: {path}"
@@ -1205,37 +1207,40 @@ class OpenFgaClient:
 
         telemetry_attributes = None
         if operation_name:
-            from openfga_sdk.telemetry.attributes import TelemetryAttribute, TelemetryAttributes
             telemetry_attributes = {
                 TelemetryAttributes.fga_client_request_method: operation_name.lower(),
             }
             if self.get_store_id():
-                telemetry_attributes[TelemetryAttributes.fga_client_request_store_id] = self.get_store_id()
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = self.get_store_id()
 
-        try:
-            _, http_status, http_headers = self._api_client.call_api(
-                resource_path=resource_path,
-                method=method.upper(),
-                query_params=query_params_list if query_params_list else None,
-                header_params=auth_headers if auth_headers else None,
-                body=body_params,
-                response_types_map={},
-                auth_settings=[],
-                _return_http_data_only=False,
-                _preload_content=True,
-                _retry_params=retry_params,
-                _oauth2_client=self._api._oauth2_client,
-                _telemetry_attributes=telemetry_attributes,
-            )
-        except ApiException as e:
-            raise
+        _, http_status, http_headers = self._api_client.call_api(
+            resource_path=resource_path,
+            method=method.upper(),
+            query_params=query_params_list if query_params_list else None,
+            header_params=auth_headers if auth_headers else None,
+            body=body_params,
+            response_types_map={},
+            auth_settings=[],
+            _return_http_data_only=False,
+            _preload_content=True,
+            _retry_params=retry_params,
+            _oauth2_client=self._api._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
+        )
 
         rest_response: RESTResponse | None = getattr(
             self._api_client, "last_response", None
         )
 
         if rest_response is None:
-            raise RuntimeError("Failed to get response from API client")
+            raise RuntimeError(
+                f"Failed to get response from API client for {method.upper()} "
+                f"request to '{resource_path}'"
+                f"{f' (operation: {operation_name})' if operation_name else ''}. "
+                "This may indicate an internal SDK error, network problem, or client configuration issue."
+            )
 
         response_body: bytes | str | dict[str, Any] | None = None
         if rest_response.data is not None:
