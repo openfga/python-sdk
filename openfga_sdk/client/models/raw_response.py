@@ -5,9 +5,10 @@ This module provides a simple response wrapper for raw HTTP requests
 made through the SDK's raw_request method.
 """
 
+import json
+
 from dataclasses import dataclass
 from typing import Any
-import json
 
 
 @dataclass
