@@ -1216,7 +1216,7 @@ class OpenFgaClient:
                     TelemetryAttributes.fga_client_request_store_id
                 ] = self.get_store_id()
 
-        _, http_status, http_headers = await self._api_client.call_api(
+        await self._api_client.call_api(
             resource_path=resource_path,
             method=method.upper(),
             query_params=query_params_list if query_params_list else None,
@@ -1224,7 +1224,7 @@ class OpenFgaClient:
             body=body_params,
             response_types_map={},
             auth_settings=[],
-            _return_http_data_only=False,
+            _return_http_data_only=True,
             _preload_content=True,
             _retry_params=retry_params,
             _oauth2_client=self._api._oauth2_client,
@@ -1262,7 +1262,7 @@ class OpenFgaClient:
                 response_body = rest_response.data
 
         return RawResponse(
-            status=http_status,
-            headers=http_headers if http_headers else {},
+            status=rest_response.status,
+            headers=dict(rest_response.getheaders()),
             body=response_body,
         )

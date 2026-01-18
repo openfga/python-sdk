@@ -7,6 +7,7 @@ made through the SDK's raw_request method.
 
 from dataclasses import dataclass
 from typing import Any
+import json
 
 
 @dataclass
@@ -34,34 +35,13 @@ class RawResponse:
         """
         Return the response body as a JSON dictionary.
 
-        If the body is already a dict (parsed JSON), returns it directly.
-        If the body is a string or bytes, attempts to parse it as JSON.
-        Returns None if body is None or cannot be parsed.
+        The body is already parsed during the request, so this typically
+        just returns the body if it's a dict, or None otherwise.
 
         :return: Parsed JSON dictionary or None
         """
-        if self.body is None:
-            return None
-
         if isinstance(self.body, dict):
             return self.body
-
-        if isinstance(self.body, str):
-            import json
-
-            try:
-                return json.loads(self.body)
-            except (json.JSONDecodeError, ValueError):
-                return None
-
-        if isinstance(self.body, bytes):
-            import json
-
-            try:
-                return json.loads(self.body.decode("utf-8"))
-            except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
-                return None
-
         return None
 
     def text(self) -> str | None:
@@ -83,8 +63,6 @@ class RawResponse:
                 return self.body.decode("utf-8", errors="replace")
 
         if isinstance(self.body, dict):
-            import json
-
             return json.dumps(self.body)
 
         return str(self.body)

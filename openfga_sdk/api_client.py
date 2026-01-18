@@ -420,7 +420,7 @@ class ApiClient:
             if _return_http_data_only:
                 return return_data
             else:
-                return (return_data, response_data.status, response_data.getheaders())
+                return (return_data, response_data.status, response_data.headers)
 
     def _parse_retry_after_header(self, headers) -> int:
         retry_after_header = headers.get("retry-after")
