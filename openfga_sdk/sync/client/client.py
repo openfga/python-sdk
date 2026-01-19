@@ -1140,7 +1140,8 @@ class OpenFgaClient:
 
         request_headers = dict(headers) if headers else {}
         if options and options.get("headers"):
-            request_headers.update(options["headers"])
+            if isinstance(options["headers"], dict):
+                request_headers.update(options["headers"])
 
         if not operation_name:
             raise FgaValidationException("operation_name is required for raw_request")
@@ -1235,10 +1236,12 @@ class OpenFgaClient:
         )
 
         if rest_response is None:
+            operation_suffix = (
+                f" (operation: {operation_name})" if operation_name else ""
+            )
             raise RuntimeError(
                 f"Failed to get response from API client for {method.upper()} "
-                f"request to '{resource_path}'"
-                f"{f' (operation: {operation_name})' if operation_name else ''}. "
+                f"request to '{resource_path}'{operation_suffix}. "
                 "This may indicate an internal SDK error, network problem, or client configuration issue."
             )
 
