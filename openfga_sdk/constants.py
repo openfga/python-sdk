@@ -14,10 +14,10 @@ from typing import Final
 
 
 # Version of the OpenFGA Python SDK.
-SDK_VERSION: Final[str] = "0.9.8"
+SDK_VERSION: Final[str] = "0.9.9"
 
 # User agent used in HTTP requests.
-USER_AGENT: Final[str] = "openfga-sdk python/0.9.8"
+USER_AGENT: Final[str] = "openfga-sdk python/0.9.9"
 
 # Example API domain for documentation/tests.
 SAMPLE_BASE_DOMAIN: Final[str] = "fga.example"

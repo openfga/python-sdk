@@ -10,7 +10,7 @@
 
 [project]
 name = "openfga-sdk"
-version = "0.9.8"
+version = "0.9.9"
 description="A high performance and flexible authorization/permission engine built for developers and inspired by Google Zanzibar."
 authors = [
     { name = "OpenFGA (https://openfga.dev)", email = "community@openfga.dev"}
@@ -131,10 +131,14 @@ testpaths = [
     "integration",
 ]
 
-addopts = "--cov=openfga_sdk --cov-report term-missing --cov-report xml --cov-report html"
+addopts = "--cov=openfga_sdk --cov-report term-missing --cov-report xml --cov-report html --strict-markers"
 
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+
+markers = [
+    "integration: marks tests as integration tests requiring a running OpenFGA server",
+]
 
 [tool.mypy]
 python_version = "3.10"

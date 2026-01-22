@@ -662,7 +662,7 @@ wheels = [
 
 [[package]]
 name = "openfga-sdk"
-version = "0.9.8"
+version = "0.9.9"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },

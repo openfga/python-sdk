@@ -4,11 +4,14 @@
 sync:
 	uv sync
 
-# Run tests with coverage
+# Run tests with coverage (excludes integration tests)
 # Usage: make test
 # To run a specific test: make test TEST=test_file.py::test_function
 test:
-	uv run pytest --cov-report term-missing --cov=openfga_sdk $(if $(TEST),$(TEST),test/)
+	uv run pytest -m "not integration" --cov-report term-missing --cov=openfga_sdk $(if $(TEST),$(TEST),test/)
+
+test-integration:
+	uv run pytest -m integration --cov-report term-missing --cov=openfga_sdk $(if $(TEST),$(TEST),test/)
 
 # Run linter
 lint:
@@ -30,7 +33,8 @@ check: lint fmt test
 doc:
 	@echo "Available targets:"
 	@echo "  sync    - Install/update dependencies"
-	@echo "  test    - Run tests with coverage (use TEST=path.to.test to run specific tests)"
+	@echo "  test    - Run tests with coverage (excludes integration tests, use TEST=path.to.test to run specific tests)"
+	@echo "  test-integration - Run integration tests with coverage"
 	@echo "  lint    - Run linter checks"
 	@echo "  fmt     - Format code"
 	@echo "  fix     - Fix fixable linting and formatting issues"
