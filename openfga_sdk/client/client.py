@@ -120,6 +120,8 @@ def options_to_kwargs(
             kwargs["_headers"] = options["headers"]
         if options.get("retry_params"):
             kwargs["_retry_params"] = options["retry_params"]
+        if options.get("async_req") is not None:
+            kwargs["async_req"] = options["async_req"]
     return kwargs
 
 
