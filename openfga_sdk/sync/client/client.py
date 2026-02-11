@@ -104,8 +104,8 @@ def set_heading_if_not_set(
 
 
 def options_to_kwargs(
-    options: dict[str, int | str | dict[str, int | str]] | None = None,
-) -> dict[str, int | str | dict[str, int | str]]:
+    options: dict[str, int | str | bool | dict[str, int | str]] | None = None,
+) -> dict[str, int | str | bool | dict[str, int | str]]:
     """
     Return kwargs with continuation_token and page_size
     """

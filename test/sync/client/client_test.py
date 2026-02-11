@@ -244,6 +244,33 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
+    def test_list_stores_with_async_req(self, mock_request):
+        """Test that async_req option is correctly propagated to the API call"""
+        response_body = json.dumps(
+            {
+                "stores": [],
+                "continuation_token": "",
+            }
+        )
+
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client._api, "list_stores", wraps=api_client._api.list_stores
+            ) as mock_api_list_stores:
+                api_client.list_stores(
+                    options={
+                        "async_req": True,
+                    }
+                )
+
+                mock_api_list_stores.assert_called_once_with(
+                    async_req=True,
+                )
+
+    @patch.object(rest.RESTClientObject, "request")
     def test_create_store(self, mock_request):
         """Test case for create_store
 
