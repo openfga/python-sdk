@@ -13,6 +13,7 @@ import asyncio
 import os
 import sys
 
+
 sdk_path = os.path.realpath(os.path.join(os.path.abspath(__file__), "..", "..", ".."))
 sys.path.insert(0, sdk_path)
 
@@ -46,7 +47,6 @@ async def main():
     )
 
     async with OpenFgaClient(configuration) as fga_client:
-
         # ─── Setup: create a store, model, and tuple ─────────────
         print("=== Setup ===")
 
@@ -151,7 +151,9 @@ async def main():
         print(f"   ✅ id={body['id']}, name={body['name']}")
 
         # ── 3. GET /stores/{store_id}/authorization-models ────────
-        print("3. ReadAuthorizationModels (GET /stores/{store_id}/authorization-models)")
+        print(
+            "3. ReadAuthorizationModels (GET /stores/{store_id}/authorization-models)"
+        )
         raw = await fga_client.execute_api_request(
             operation_name="ReadAuthorizationModels",
             method="GET",
@@ -267,5 +269,3 @@ async def main():
 
 
 asyncio.run(main())
-
-
