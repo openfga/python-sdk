@@ -1,11 +1,13 @@
-import json
-import urllib.parse
 import uuid
 
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from openfga_sdk.client.configuration import ClientConfiguration
+from openfga_sdk.client.execute_api_request_builder import (
+    ExecuteApiRequestBuilder,
+    ResponseParser,
+)
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
     ClientBatchCheckItem,
@@ -1109,127 +1111,121 @@ class OpenFgaClient:
     #######################
     def execute_api_request(
         self,
-        request: dict[str, Any],
+        *,
+        operation_name: str,
+        method: str,
+        path: str,
+        path_params: dict[str, str] | None = None,
+        body: dict[str, Any] | list[Any] | str | bytes | None = None,
+        query_params: dict[str, str | int | list[str | int]] | None = None,
+        headers: dict[str, str] | None = None,
         options: dict[str, int | str | dict[str, int | str]] | None = None,
     ) -> RawResponse:
         """
         Execute an arbitrary HTTP request to any OpenFGA API endpoint.
 
-        Useful when you need to call a new or experimental API that doesn't yet have a built-in method in the SDK.
-        You still get the benefits of the SDK, like authentication, configuration, and consistent error handling.
+        Useful when you need to call a new or experimental API that doesn't
+        yet have a built-in method in the SDK. You still get the benefits of
+        the SDK: authentication, configuration, retries, and error handling.
 
-        :param request: Request parameters dict with the following keys:
-            - operation_name (str): Required. Operation name for telemetry and logging (e.g., "CustomCheck", "CustomEndpoint")
-            - method (str): Required. HTTP method (GET, POST, PUT, DELETE, PATCH)
-            - path (str): Required. API path (e.g., "/stores/{store_id}/my-endpoint")
-            - path_params (dict[str, str], optional): Path parameters to replace template variables in the path
-            - body (dict/list/str/bytes, optional): Request body for POST/PUT/PATCH requests
-            - query_params (dict[str, ...], optional): Query parameters
-            - headers (dict[str, str], optional): Custom request headers
-        :param options: Optional request options:
-            - headers: Additional headers (merged with request['headers']; options['headers'] takes precedence)
+        :param operation_name: Required. Operation name for telemetry/logging
+            (e.g., "CustomCheck", "CustomEndpoint")
+        :param method: Required. HTTP method (GET, POST, PUT, DELETE, PATCH)
+        :param path: Required. API path with optional template parameters
+            (e.g., "/stores/{store_id}/my-endpoint")
+        :param path_params: Path parameters to replace template variables.
+            If {store_id} is in the path and not provided here, it will be
+            automatically substituted from the client configuration.
+        :param body: Request body for POST/PUT/PATCH requests
+        :param query_params: Query string parameters
+        :param headers: Custom request headers. SDK always enforces
+            Content-Type and Accept as application/json.
+        :param options: Additional request options:
+            - headers: Extra headers (merged; options headers take precedence)
             - retry_params: Override retry parameters for this request
-        :return: RawResponse object with status, headers, and body
-        :raises FgaValidationException: If required parameters are missing or invalid
-        :raises ApiException: For HTTP errors (with SDK error handling applied)
+        :return: RawResponse with status, headers, and body
+        :raises FgaValidationException: If required parameters are missing
+        :raises ApiException: For HTTP errors
         """
-        return self._execute_api_request_internal(request, options, streaming=False)
+        return self._execute_api_request_internal(
+            operation_name=operation_name,
+            method=method,
+            path=path,
+            path_params=path_params,
+            body=body,
+            query_params=query_params,
+            headers=headers,
+            options=options,
+            streaming=False,
+        )
 
     def execute_streamed_api_request(
         self,
-        request: dict[str, Any],
+        *,
+        operation_name: str,
+        method: str,
+        path: str,
+        path_params: dict[str, str] | None = None,
+        body: dict[str, Any] | list[Any] | str | bytes | None = None,
+        query_params: dict[str, str | int | list[str | int]] | None = None,
+        headers: dict[str, str] | None = None,
         options: dict[str, int | str | dict[str, int | str]] | None = None,
     ) -> RawResponse:
         """
         Execute an arbitrary HTTP request to a streaming OpenFGA API endpoint.
 
-        Similar to execute_api_request but for streaming endpoints.
-
-        :param request: Request parameters dict (see execute_api_request for details)
-        :param options: Optional request options (see execute_api_request for details)
-        :return: RawResponse object with status, headers, and body
-        :raises FgaValidationException: If required parameters are missing or invalid
-        :raises ApiException: For HTTP errors (with SDK error handling applied)
+        Same interface as execute_api_request but for streaming endpoints.
+        See execute_api_request for full parameter documentation.
         """
-        return self._execute_api_request_internal(request, options, streaming=True)
+        return self._execute_api_request_internal(
+            operation_name=operation_name,
+            method=method,
+            path=path,
+            path_params=path_params,
+            body=body,
+            query_params=query_params,
+            headers=headers,
+            options=options,
+            streaming=True,
+        )
 
     def _execute_api_request_internal(
         self,
-        request: dict[str, Any],
+        *,
+        operation_name: str,
+        method: str,
+        path: str,
+        path_params: dict[str, str] | None = None,
+        body: dict[str, Any] | list[Any] | str | bytes | None = None,
+        query_params: dict[str, str | int | list[str | int]] | None = None,
+        headers: dict[str, str] | None = None,
         options: dict[str, int | str | dict[str, int | str]] | None = None,
         streaming: bool = False,
     ) -> RawResponse:
         """Internal implementation for execute_api_request and execute_streamed_api_request."""
-        # Extract request parameters
-        operation_name = request.get("operation_name")
-        method = request.get("method")
-        path = request.get("path")
-        query_params = request.get("query_params")
-        path_params = request.get("path_params")
-        headers = request.get("headers")
-        body = request.get("body")
+        # 1. Validate and build request
+        builder = ExecuteApiRequestBuilder(
+            operation_name=operation_name,
+            method=method,
+            path=path,
+            path_params=path_params,
+            body=body,
+            query_params=query_params,
+            headers=headers,
+        )
+        builder.validate()
 
-        # Validate required parameters
-        if not operation_name:
-            raise FgaValidationException(
-                "operation_name is required for execute_api_request"
-            )
-        if not method:
-            raise FgaValidationException("method is required for execute_api_request")
-        if not path:
-            raise FgaValidationException("path is required for execute_api_request")
+        # 2. Build path, query params, and headers
+        resource_path = builder.build_path(self.get_store_id())
+        query_params_list = builder.build_query_params_list()
 
-        request_headers = dict(headers) if headers else {}
-        if options and options.get("headers"):
-            if isinstance(options["headers"], dict):
-                request_headers.update(options["headers"])
+        options_headers = None
+        if options and isinstance(options.get("headers"), dict):
+            options_headers = options["headers"]
+        final_headers = builder.build_headers(options_headers)
 
-        resource_path = path
-        path_params_dict = dict(path_params) if path_params else {}
-
-        if "{store_id}" in resource_path and "store_id" not in path_params_dict:
-            store_id = self.get_store_id()
-            if store_id is None or store_id == "":
-                raise FgaValidationException(
-                    "Path contains {store_id} but store_id is not configured. "
-                    "Set store_id in ClientConfiguration, use set_store_id(), or provide it in path_params."
-                )
-            path_params_dict["store_id"] = store_id
-
-        for param_name, param_value in path_params_dict.items():
-            placeholder = f"{{{param_name}}}"
-            if placeholder in resource_path:
-                encoded_value = urllib.parse.quote(str(param_value), safe="")
-                resource_path = resource_path.replace(placeholder, encoded_value)
-
-        if "{" in resource_path or "}" in resource_path:
-            raise FgaValidationException(
-                f"Not all path parameters were provided for path: {path}"
-            )
-
-        query_params_list = []
-        if query_params:
-            for key, value in query_params.items():
-                if value is None:
-                    continue
-                if isinstance(value, list):
-                    for item in value:
-                        if item is not None:
-                            query_params_list.append((key, str(item)))
-                    continue
-                query_params_list.append((key, str(value)))
-
-        body_params = body
-        if "Content-Type" not in request_headers:
-            request_headers["Content-Type"] = "application/json"
-
-        retry_params = None
-        if options and options.get("retry_params"):
-            retry_params = options["retry_params"]
-        if "Accept" not in request_headers:
-            request_headers["Accept"] = "application/json"
-
-        auth_headers = dict(request_headers) if request_headers else {}
+        # 3. Apply authentication
+        auth_headers = dict(final_headers)
         self._api_client.update_params_for_auth(
             auth_headers,
             query_params_list,
@@ -1237,22 +1233,27 @@ class OpenFgaClient:
             oauth2_client=self._api._oauth2_client,
         )
 
-        telemetry_attributes = None
-        if operation_name:
-            telemetry_attributes = {
-                TelemetryAttributes.fga_client_request_method: operation_name.lower(),
-            }
-            if self.get_store_id():
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = self.get_store_id()
+        # 4. Build telemetry attributes
+        telemetry_attributes = {
+            TelemetryAttributes.fga_client_request_method: operation_name.lower(),
+        }
+        if self.get_store_id():
+            telemetry_attributes[TelemetryAttributes.fga_client_request_store_id] = (
+                self.get_store_id()
+            )
 
+        # 5. Extract retry params
+        retry_params = None
+        if options and options.get("retry_params"):
+            retry_params = options["retry_params"]
+
+        # 6. Make API request
         self._api_client.call_api(
             resource_path=resource_path,
             method=method.upper(),
             query_params=query_params_list if query_params_list else None,
             header_params=auth_headers if auth_headers else None,
-            body=body_params,
+            body=body,
             response_types_map={},
             auth_settings=[],
             _return_http_data_only=True,
@@ -1262,41 +1263,21 @@ class OpenFgaClient:
             _telemetry_attributes=telemetry_attributes,
         )
 
+        # 7. Parse response
         rest_response: RESTResponse | None = getattr(
             self._api_client, "last_response", None
         )
 
         if rest_response is None:
-            operation_suffix = (
-                f" (operation: {operation_name})" if operation_name else ""
-            )
             raise RuntimeError(
                 f"Failed to get response from API client for {method.upper()} "
-                f"request to '{resource_path}'{operation_suffix}. "
-                "This may indicate an internal SDK error, network problem, or client configuration issue."
+                f"request to '{resource_path}' (operation: {operation_name}). "
+                "This may indicate an internal SDK error, network problem, "
+                "or client configuration issue."
             )
-
-        response_body: bytes | str | dict[str, Any] | None = None
-        if rest_response.data is not None:
-            if isinstance(rest_response.data, str):
-                try:
-                    response_body = json.loads(rest_response.data)
-                except (json.JSONDecodeError, ValueError):
-                    response_body = rest_response.data
-            elif isinstance(rest_response.data, bytes):
-                try:
-                    decoded = rest_response.data.decode("utf-8")
-                    try:
-                        response_body = json.loads(decoded)
-                    except (json.JSONDecodeError, ValueError):
-                        response_body = decoded
-                except UnicodeDecodeError:
-                    response_body = rest_response.data
-            else:
-                response_body = rest_response.data
 
         return RawResponse(
             status=rest_response.status,
             headers=dict(rest_response.getheaders()),
-            body=response_body,
+            body=ResponseParser.parse_body(rest_response.data),
         )

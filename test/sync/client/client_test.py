@@ -4157,9 +4157,9 @@ class TestSyncClientConfigurationHeaders(TestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_post_with_body(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
-        Make a raw POST request with JSON body
+        Make a POST request with JSON body
         """
         response_body = '{"result": "success", "data": {"id": "123"}}'
         mock_request.return_value = mock_response(response_body, 200)
@@ -4168,14 +4168,12 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "CustomEndpoint",
-                    "method": "POST",
-                    "path": "/stores/{store_id}/custom-endpoint",
-                    "body": {"user": "user:bob", "action": "custom_action"},
-                    "query_params": {"page_size": "20"},
-                    "headers": {"X-Experimental-Feature": "enabled"},
-                }
+                operation_name="CustomEndpoint",
+                method="POST",
+                path="/stores/{store_id}/custom-endpoint",
+                body={"user": "user:bob", "action": "custom_action"},
+                query_params={"page_size": "20"},
+                headers={"X-Experimental-Feature": "enabled"},
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4209,9 +4207,9 @@ class TestSyncClientConfigurationHeaders(TestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_get_with_query_params(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
-        Make a raw GET request with query parameters
+        Make a GET request with query parameters
         """
         response_body = (
             '{"stores": [{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}]}'
@@ -4221,15 +4219,13 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration = self.configuration
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "ListStores",
-                    "method": "GET",
-                    "path": "/stores",
-                    "query_params": {
-                        "page_size": 10,
-                        "continuation_token": "eyJwayI6...",
-                    },
-                }
+                operation_name="ListStores",
+                method="GET",
+                path="/stores",
+                query_params={
+                    "page_size": 10,
+                    "continuation_token": "eyJwayI6...",
+                },
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4256,9 +4252,9 @@ class TestSyncClientConfigurationHeaders(TestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_with_path_params(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
-        Make a raw request with path parameters
+        Make a request with path parameters
         """
         response_body = '{"authorization_model": {"id": "01G5JAVJ41T49E9TT3SKVS7X1J"}}'
         mock_request.return_value = mock_response(response_body, 200)
@@ -4267,12 +4263,10 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "ReadAuthorizationModel",
-                    "method": "GET",
-                    "path": "/stores/{store_id}/authorization-models/{model_id}",
-                    "path_params": {"model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
-                }
+                operation_name="ReadAuthorizationModel",
+                method="GET",
+                path="/stores/{store_id}/authorization-models/{model_id}",
+                path_params={"model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4294,7 +4288,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_auto_store_id_substitution(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test automatic store_id substitution when not provided in path_params
         """
@@ -4305,11 +4299,9 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "GetStore",
-                    "method": "GET",
-                    "path": "/stores/{store_id}",
-                }
+                operation_name="GetStore",
+                method="GET",
+                path="/stores/{store_id}",
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4329,7 +4321,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     def test_raw_request_missing_operation_name(self):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test that operation_name is required
         """
@@ -4338,16 +4330,15 @@ class TestSyncClientConfigurationHeaders(TestCase):
         with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
                 api_client.execute_api_request(
-                    {
-                        "method": "GET",
-                        "path": "/stores",
-                    }
+                    operation_name="",
+                    method="GET",
+                    path="/stores",
                 )
             self.assertIn("operation_name is required", str(error.exception))
             api_client.close()
 
     def test_raw_request_missing_store_id(self):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test that store_id is required when path contains {store_id}
         """
@@ -4356,17 +4347,15 @@ class TestSyncClientConfigurationHeaders(TestCase):
         with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
                 api_client.execute_api_request(
-                    {
-                        "operation_name": "GetStore",
-                        "method": "GET",
-                        "path": "/stores/{store_id}",
-                    }
+                    operation_name="GetStore",
+                    method="GET",
+                    path="/stores/{store_id}",
                 )
             self.assertIn("store_id is not configured", str(error.exception))
             api_client.close()
 
     def test_raw_request_missing_path_params(self):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test that all path parameters must be provided
         """
@@ -4375,19 +4364,17 @@ class TestSyncClientConfigurationHeaders(TestCase):
         with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
                 api_client.execute_api_request(
-                    {
-                        "operation_name": "ReadAuthorizationModel",
-                        "method": "GET",
-                        "path": "/stores/{store_id}/authorization-models/{model_id}",
-                        # Missing model_id in path_params
-                    }
+                    operation_name="ReadAuthorizationModel",
+                    method="GET",
+                    path="/stores/{store_id}/authorization-models/{model_id}",
+                    # Missing model_id in path_params
                 )
             self.assertIn("Not all path parameters were provided", str(error.exception))
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_with_list_query_params(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test query parameters with list values
         """
@@ -4397,12 +4384,10 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration = self.configuration
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "ListStores",
-                    "method": "GET",
-                    "path": "/stores",
-                    "query_params": {"ids": ["id1", "id2", "id3"]},
-                }
+                operation_name="ListStores",
+                method="GET",
+                path="/stores",
+                query_params={"ids": ["id1", "id2", "id3"]},
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4422,7 +4407,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_default_headers(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test that default headers (Content-Type, Accept) are set
         """
@@ -4433,12 +4418,10 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "CustomEndpoint",
-                    "method": "POST",
-                    "path": "/stores/{store_id}/custom-endpoint",
-                    "body": {"test": "data"},
-                }
+                operation_name="CustomEndpoint",
+                method="POST",
+                path="/stores/{store_id}/custom-endpoint",
+                body={"test": "data"},
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4452,7 +4435,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_raw_request_url_encoded_path_params(self, mock_request):
-        """Test case for raw_request
+        """Test case for execute_api_request
 
         Test that path parameters are URL encoded
         """
@@ -4463,12 +4446,10 @@ class TestSyncClientConfigurationHeaders(TestCase):
         configuration.store_id = store_id
         with OpenFgaClient(configuration) as api_client:
             response = api_client.execute_api_request(
-                {
-                    "operation_name": "CustomEndpoint",
-                    "method": "GET",
-                    "path": "/stores/{store_id}/custom/{param}",
-                    "path_params": {"param": "value with spaces & special chars"},
-                }
+                operation_name="CustomEndpoint",
+                method="GET",
+                path="/stores/{store_id}/custom/{param}",
+                path_params={"param": "value with spaces & special chars"},
             )
 
             self.assertIsInstance(response, RawResponse)

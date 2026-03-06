@@ -1289,35 +1289,35 @@ async with OpenFgaClient(configuration) as fga_client:
         "resource": "resource:123",
     }
     
-    response = await fga_client.execute_api_request({
-        "operation_name": "CustomEndpoint",
-        "method": "POST",
-        "path": "/stores/{store_id}/custom-endpoint",
-        "path_params": {"store_id": FGA_STORE_ID},
-        "query_params": {"page_size": "20"},
-        "body": request_body,
-        "headers": {"X-Experimental-Feature": "enabled"},
-    })
+    response = await fga_client.execute_api_request(
+        operation_name="CustomEndpoint",
+        method="POST",
+        path="/stores/{store_id}/custom-endpoint",
+        path_params={"store_id": FGA_STORE_ID},
+        query_params={"page_size": "20"},
+        body=request_body,
+        headers={"X-Experimental-Feature": "enabled"},
+    )
 ```
 
 #### Example: Calling a custom endpoint with POST
 
 ```python
 # Call a custom endpoint using path parameters
-response = await fga_client.execute_api_request({
-    "operation_name": "CustomEndpoint",        # For telemetry/logging
-    "method": "POST",
-    "path": "/stores/{store_id}/custom-endpoint",
-    "path_params": {"store_id": FGA_STORE_ID},
-    "body": {
+response = await fga_client.execute_api_request(
+    operation_name="CustomEndpoint",        # For telemetry/logging
+    method="POST",
+    path="/stores/{store_id}/custom-endpoint",
+    path_params={"store_id": FGA_STORE_ID},
+    body={
         "user": "user:bob",
         "action": "custom_action",
         "resource": "resource:123",
     },
-    "query_params": {
+    query_params={
         "page_size": 20,
     },
-})
+)
 
 # Access the response data
 if response.status == 200:
@@ -1329,15 +1329,15 @@ if response.status == 200:
 
 ```python
 # Get a list of stores with query parameters
-stores_response = await fga_client.execute_api_request({
-    "operation_name": "ListStores",
-    "method": "GET",
-    "path": "/stores",
-    "query_params": {
+stores_response = await fga_client.execute_api_request(
+    operation_name="ListStores",
+    method="GET",
+    path="/stores",
+    query_params={
         "page_size": 10,
         "continuation_token": "eyJwayI6...",
     },
-})
+)
 
 stores = stores_response.json()
 print("Stores:", stores)
@@ -1349,25 +1349,25 @@ Path parameters are specified in the path using `{param_name}` syntax and are re
 
 ```python
 # Using explicit path parameters
-response = await fga_client.execute_api_request({
-    "operation_name": "GetAuthorizationModel",
-    "method": "GET",
-    "path": "/stores/{store_id}/authorization-models/{model_id}",
-    "path_params": {
+response = await fga_client.execute_api_request(
+    operation_name="GetAuthorizationModel",
+    method="GET",
+    path="/stores/{store_id}/authorization-models/{model_id}",
+    path_params={
         "store_id": "your-store-id",
         "model_id": "your-model-id",
     },
-})
+)
 
 # Using automatic store_id substitution
-response = await fga_client.execute_api_request({
-    "operation_name": "GetAuthorizationModel",
-    "method": "GET",
-    "path": "/stores/{store_id}/authorization-models/{model_id}",
-    "path_params": {
+response = await fga_client.execute_api_request(
+    operation_name="GetAuthorizationModel",
+    method="GET",
+    path="/stores/{store_id}/authorization-models/{model_id}",
+    path_params={
         "model_id": "your-model-id",
     },
-})
+)
 ```
 
 ### Retries
