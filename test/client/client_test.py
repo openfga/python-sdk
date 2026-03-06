@@ -4185,13 +4185,15 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="CustomEndpoint",
-                method="POST",
-                path="/stores/{store_id}/custom-endpoint",
-                body={"user": "user:bob", "action": "custom_action"},
-                query_params={"page_size": "20"},
-                headers={"X-Experimental-Feature": "enabled"},
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "CustomEndpoint",
+                    "method": "POST",
+                    "path": "/stores/{store_id}/custom-endpoint",
+                    "body": {"user": "user:bob", "action": "custom_action"},
+                    "query_params": {"page_size": "20"},
+                    "headers": {"X-Experimental-Feature": "enabled"},
+                }
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4237,14 +4239,16 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
 
         configuration = self.configuration
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="ListStores",
-                method="GET",
-                path="/stores",
-                query_params={
-                    "page_size": 10,
-                    "continuation_token": "eyJwayI6...",
-                },
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "ListStores",
+                    "method": "GET",
+                    "path": "/stores",
+                    "query_params": {
+                        "page_size": 10,
+                        "continuation_token": "eyJwayI6...",
+                    },
+                }
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4282,11 +4286,13 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="ReadAuthorizationModel",
-                method="GET",
-                path="/stores/{store_id}/authorization-models/{model_id}",
-                path_params={"model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "ReadAuthorizationModel",
+                    "method": "GET",
+                    "path": "/stores/{store_id}/authorization-models/{model_id}",
+                    "path_params": {"model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+                }
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4319,10 +4325,12 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="GetStore",
-                method="GET",
-                path="/stores/{store_id}",
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "GetStore",
+                    "method": "GET",
+                    "path": "/stores/{store_id}",
+                }
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4351,9 +4359,11 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
-                await api_client.raw_request(
-                    method="GET",
-                    path="/stores",
+                await api_client.execute_api_request(
+                    {
+                        "method": "GET",
+                        "path": "/stores",
+                    }
                 )
             self.assertIn("operation_name is required", str(error.exception))
             await api_client.close()
@@ -4368,10 +4378,12 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         # Don't set store_id
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
-                await api_client.raw_request(
-                    operation_name="GetStore",
-                    method="GET",
-                    path="/stores/{store_id}",
+                await api_client.execute_api_request(
+                    {
+                        "operation_name": "GetStore",
+                        "method": "GET",
+                        "path": "/stores/{store_id}",
+                    }
                 )
             self.assertIn("store_id is not configured", str(error.exception))
             await api_client.close()
@@ -4386,11 +4398,13 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
-                await api_client.raw_request(
-                    operation_name="ReadAuthorizationModel",
-                    method="GET",
-                    path="/stores/{store_id}/authorization-models/{model_id}",
-                    # Missing model_id in path_params
+                await api_client.execute_api_request(
+                    {
+                        "operation_name": "ReadAuthorizationModel",
+                        "method": "GET",
+                        "path": "/stores/{store_id}/authorization-models/{model_id}",
+                        # Missing model_id in path_params
+                    }
                 )
             self.assertIn("Not all path parameters were provided", str(error.exception))
             await api_client.close()
@@ -4407,11 +4421,13 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
 
         configuration = self.configuration
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="ListStores",
-                method="GET",
-                path="/stores",
-                query_params={"ids": ["id1", "id2", "id3"]},
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "ListStores",
+                    "method": "GET",
+                    "path": "/stores",
+                    "query_params": {"ids": ["id1", "id2", "id3"]},
+                }
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4443,11 +4459,13 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="CustomEndpoint",
-                method="POST",
-                path="/stores/{store_id}/custom-endpoint",
-                body={"test": "data"},
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "CustomEndpoint",
+                    "method": "POST",
+                    "path": "/stores/{store_id}/custom-endpoint",
+                    "body": {"test": "data"},
+                }
             )
 
             self.assertIsInstance(response, RawResponse)
@@ -4473,11 +4491,13 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
         configuration = self.configuration
         configuration.store_id = store_id
         async with OpenFgaClient(configuration) as api_client:
-            response = await api_client.raw_request(
-                operation_name="CustomEndpoint",
-                method="GET",
-                path="/stores/{store_id}/custom/{param}",
-                path_params={"param": "value with spaces & special chars"},
+            response = await api_client.execute_api_request(
+                {
+                    "operation_name": "CustomEndpoint",
+                    "method": "GET",
+                    "path": "/stores/{store_id}/custom/{param}",
+                    "path_params": {"param": "value with spaces & special chars"},
+                }
             )
 
             self.assertIsInstance(response, RawResponse)

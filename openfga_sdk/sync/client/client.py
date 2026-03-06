@@ -1105,46 +1105,84 @@ class OpenFgaClient:
         return api_response
 
     #######################
-    # Raw Request
+    # Execute API Request
     #######################
-    def raw_request(
+    def execute_api_request(
         self,
-        method: str,
-        path: str,
-        query_params: dict[str, str | int | list[str | int]] | None = None,
-        path_params: dict[str, str] | None = None,
-        headers: dict[str, str] | None = None,
-        body: dict[str, Any] | list[Any] | str | bytes | None = None,
-        operation_name: str | None = None,
+        request: dict[str, Any],
         options: dict[str, int | str | dict[str, int | str]] | None = None,
     ) -> RawResponse:
         """
-        Make a raw HTTP request to any OpenFGA API endpoint.
+        Execute an arbitrary HTTP request to any OpenFGA API endpoint.
 
-        :param method: HTTP method (GET, POST, PUT, DELETE, PATCH, etc.)
-        :param path: API endpoint path (e.g., "/stores/{store_id}/check" or "/stores")
-        :param query_params: Optional query parameters as a dictionary
-        :param path_params: Optional path parameters to replace placeholders in path
-            (e.g., {"store_id": "abc", "model_id": "xyz"})
-        :param headers: Optional request headers (will be merged with default headers)
-        :param body: Optional request body (dict/list will be JSON serialized, str/bytes sent as-is)
-        :param operation_name: Required operation name for telemetry/logging (e.g., "Check", "Write", "CustomEndpoint")
+        Useful when you need to call a new or experimental API that doesn't yet have a built-in method in the SDK.
+        You still get the benefits of the SDK, like authentication, configuration, and consistent error handling.
+
+        :param request: Request parameters dict with the following keys:
+            - operation_name (str): Required. Operation name for telemetry and logging (e.g., "CustomCheck", "CustomEndpoint")
+            - method (str): Required. HTTP method (GET, POST, PUT, DELETE, PATCH)
+            - path (str): Required. API path (e.g., "/stores/{store_id}/my-endpoint")
+            - path_params (dict[str, str], optional): Path parameters to replace template variables in the path
+            - body (dict/list/str/bytes, optional): Request body for POST/PUT/PATCH requests
+            - query_params (dict[str, ...], optional): Query parameters
+            - headers (dict[str, str], optional): Custom request headers
         :param options: Optional request options:
-            - headers: Additional headers (merged with headers parameter)
+            - headers: Additional headers (merged with request['headers']; options['headers'] takes precedence)
             - retry_params: Override retry parameters for this request
-            - authorization_model_id: Not used in raw_request, but kept for consistency
         :return: RawResponse object with status, headers, and body
-        :raises FgaValidationException: If path contains {store_id} but store_id is not configured
+        :raises FgaValidationException: If required parameters are missing or invalid
         :raises ApiException: For HTTP errors (with SDK error handling applied)
         """
+        return self._execute_api_request_internal(request, options, streaming=False)
+
+    def execute_streamed_api_request(
+        self,
+        request: dict[str, Any],
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ) -> RawResponse:
+        """
+        Execute an arbitrary HTTP request to a streaming OpenFGA API endpoint.
+
+        Similar to execute_api_request but for streaming endpoints.
+
+        :param request: Request parameters dict (see execute_api_request for details)
+        :param options: Optional request options (see execute_api_request for details)
+        :return: RawResponse object with status, headers, and body
+        :raises FgaValidationException: If required parameters are missing or invalid
+        :raises ApiException: For HTTP errors (with SDK error handling applied)
+        """
+        return self._execute_api_request_internal(request, options, streaming=True)
+
+    def _execute_api_request_internal(
+        self,
+        request: dict[str, Any],
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+        streaming: bool = False,
+    ) -> RawResponse:
+        """Internal implementation for execute_api_request and execute_streamed_api_request."""
+        # Extract request parameters
+        operation_name = request.get("operation_name")
+        method = request.get("method")
+        path = request.get("path")
+        query_params = request.get("query_params")
+        path_params = request.get("path_params")
+        headers = request.get("headers")
+        body = request.get("body")
+
+        # Validate required parameters
+        if not operation_name:
+            raise FgaValidationException(
+                "operation_name is required for execute_api_request"
+            )
+        if not method:
+            raise FgaValidationException("method is required for execute_api_request")
+        if not path:
+            raise FgaValidationException("path is required for execute_api_request")
 
         request_headers = dict(headers) if headers else {}
         if options and options.get("headers"):
             if isinstance(options["headers"], dict):
                 request_headers.update(options["headers"])
-
-        if not operation_name:
-            raise FgaValidationException("operation_name is required for raw_request")
 
         resource_path = path
         path_params_dict = dict(path_params) if path_params else {}

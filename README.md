@@ -1263,14 +1263,16 @@ response = await fga_client.write_assertions(body, options)
 
 ### Calling Other Endpoints
 
-In certain cases you may want to call other APIs not yet wrapped by the SDK. You can do so by using the `raw_request` method available on the `OpenFgaClient`. The `raw_request` method allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the operation name, HTTP method, path, parameters, body, and headers, while still honoring the client configuration (authentication, telemetry, retries, and error handling).
+In certain cases you may want to call other APIs not yet wrapped by the SDK. You can do so by using the `execute_api_request` method available on the `OpenFgaClient`. The `execute_api_request` method allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the HTTP method, path, body, query parameters, and path parameters, while still honoring the client configuration (authentication, telemetry, retries, and error handling).
+
+For streaming endpoints, use `execute_streamed_api_request` instead.
 
 This is useful when:
 - You want to call a new endpoint that is not yet supported by the SDK
 - You are using an earlier version of the SDK that doesn't yet support a particular endpoint
 - You have a custom endpoint deployed that extends the OpenFGA API
 
-In all cases, you initialize the SDK the same way as usual, and then call `raw_request` on the `fga_client` instance.
+In all cases, you initialize the SDK the same way as usual, and then call `execute_api_request` on the `fga_client` instance.
 
 ```python
 from openfga_sdk import ClientConfiguration, OpenFgaClient
@@ -1287,82 +1289,57 @@ async with OpenFgaClient(configuration) as fga_client:
         "resource": "resource:123",
     }
     
-    response = await fga_client.raw_request(
-        operation_name="CustomEndpoint",
-        method="POST",
-        path="/stores/{store_id}/custom-endpoint",
-        path_params={"store_id": FGA_STORE_ID},
-        query_params={"page_size": "20"},
-        body=request_body,
-        headers={"X-Experimental-Feature": "enabled"},
-    )
+    response = await fga_client.execute_api_request({
+        "operation_name": "CustomEndpoint",
+        "method": "POST",
+        "path": "/stores/{store_id}/custom-endpoint",
+        "path_params": {"store_id": FGA_STORE_ID},
+        "query_params": {"page_size": "20"},
+        "body": request_body,
+        "headers": {"X-Experimental-Feature": "enabled"},
+    })
 ```
 
-#### Example: Calling a new "Custom Endpoint" endpoint and handling raw response
+#### Example: Calling a custom endpoint with POST
 
 ```python
-# Get raw response without automatic decoding
-raw_response = await fga_client.raw_request(
-    operation_name="CustomEndpoint",
-    method="POST",
-    path="/stores/{store_id}/custom-endpoint",
-    path_params={"store_id": FGA_STORE_ID},
-    body={"user": "user:bob", "action": "custom_action"},
-)
+# Call a custom endpoint using path parameters
+response = await fga_client.execute_api_request({
+    "operation_name": "CustomEndpoint",        # For telemetry/logging
+    "method": "POST",
+    "path": "/stores/{store_id}/custom-endpoint",
+    "path_params": {"store_id": FGA_STORE_ID},
+    "body": {
+        "user": "user:bob",
+        "action": "custom_action",
+        "resource": "resource:123",
+    },
+    "query_params": {
+        "page_size": 20,
+    },
+})
 
 # Access the response data
-if raw_response.status == 200:
-    # Manually decode the response
-    result = raw_response.json()
-    if result:
-        print(f"Response: {result}")
-    
-    # You can access fields like headers, status code, etc. from raw_response:
-    print(f"Status Code: {raw_response.status}")
-    print(f"Headers: {raw_response.headers}")
-    print(f"Body as text: {raw_response.text()}")
-```
-
-#### Example: Calling a new "Custom Endpoint" endpoint and decoding response into a dictionary
-
-```python
-# Get raw response decoded into a dictionary
-response = await fga_client.raw_request(
-    operation_name="CustomEndpoint",
-    method="POST",
-    path="/stores/{store_id}/custom-endpoint",
-    path_params={"store_id": FGA_STORE_ID},
-    body={"user": "user:bob", "action": "custom_action"},
-)
-
-# The response body is automatically parsed as JSON if possible
-result = response.json()  # Returns dict or None if not JSON
-
-if result:
+if response.status == 200:
+    result = response.json()
     print(f"Response: {result}")
-    # Access fields from the decoded response
-    if "allowed" in result:
-        print(f"Allowed: {result['allowed']}")
-
-print(f"Status Code: {response.status}")
-print(f"Headers: {response.headers}")
 ```
 
 #### Example: Calling an existing endpoint with GET
 
 ```python
 # Get a list of stores with query parameters
-response = await fga_client.raw_request(
-    operation_name="ListStores",  # Required: descriptive name for the operation
-    method="GET",
-    path="/stores",
-    query_params={
+stores_response = await fga_client.execute_api_request({
+    "operation_name": "ListStores",
+    "method": "GET",
+    "path": "/stores",
+    "query_params": {
         "page_size": 10,
         "continuation_token": "eyJwayI6...",
     },
-)
+})
 
-stores = response.json()
+stores = stores_response.json()
 print("Stores:", stores)
 ```
 
@@ -1372,25 +1349,25 @@ Path parameters are specified in the path using `{param_name}` syntax and are re
 
 ```python
 # Using explicit path parameters
-response = await fga_client.raw_request(
-    operation_name="ReadAuthorizationModel",  # Required: descriptive name for the operation
-    method="GET",
-    path="/stores/{store_id}/authorization-models/{model_id}",
-    path_params={
+response = await fga_client.execute_api_request({
+    "operation_name": "GetAuthorizationModel",
+    "method": "GET",
+    "path": "/stores/{store_id}/authorization-models/{model_id}",
+    "path_params": {
         "store_id": "your-store-id",
         "model_id": "your-model-id",
     },
-)
+})
 
 # Using automatic store_id substitution
-response = await fga_client.raw_request(
-    operation_name="ReadAuthorizationModel",  # Required: descriptive name for the operation
-    method="GET",
-    path="/stores/{store_id}/authorization-models/{model_id}",
-    path_params={
+response = await fga_client.execute_api_request({
+    "operation_name": "GetAuthorizationModel",
+    "method": "GET",
+    "path": "/stores/{store_id}/authorization-models/{model_id}",
+    "path_params": {
         "model_id": "your-model-id",
     },
-)
+})
 ```
 
 ### Retries
