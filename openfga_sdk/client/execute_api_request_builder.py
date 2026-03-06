@@ -1,9 +1,4 @@
-"""
-Builders and utilities for execute_api_request functionality.
-
-This module provides reusable utilities for request building, header management,
-and response parsing to reduce code duplication across sync and async clients.
-"""
+"""Utilities for execute_api_request: request building, header management, response parsing."""
 
 import json
 import re
@@ -15,12 +10,7 @@ from openfga_sdk.exceptions import FgaValidationException
 
 
 class ExecuteApiRequestBuilder:
-    """
-    Builder for API request execution.
-
-    Encapsulates request validation, parameter building, and path construction
-    to eliminate duplication and improve maintainability.
-    """
+    """Builds and validates parameters for execute_api_request calls."""
 
     def __init__(
         self,
@@ -43,11 +33,7 @@ class ExecuteApiRequestBuilder:
         self.headers = headers
 
     def validate(self) -> None:
-        """
-        Validate all required parameters are present.
-
-        :raises FgaValidationException: If any required parameter is missing
-        """
+        """Validate that all required parameters are present."""
         if not self.operation_name:
             raise FgaValidationException(
                 "operation_name is required for execute_api_request"
@@ -59,14 +45,9 @@ class ExecuteApiRequestBuilder:
 
     def build_path(self, configured_store_id: str | None = None) -> str:
         """
-        Build and validate final resource path with parameter substitution.
+        Build resource path with parameter substitution.
 
-        Automatically substitutes {store_id} with configured store_id if not
-        explicitly provided in path_params.
-
-        :param configured_store_id: Store ID from client configuration
-        :return: Final resource path with all parameters substituted
-        :raises FgaValidationException: If path construction fails
+        Auto-substitutes {store_id} from client config if not in path_params.
         """
         path = self.path
         params = dict(self.path_params) if self.path_params else {}
@@ -99,16 +80,7 @@ class ExecuteApiRequestBuilder:
         return result
 
     def build_query_params_list(self) -> list[tuple[str, str]]:
-        """
-        Convert query_params dict to list of tuples for the API client.
-
-        Handles:
-        - List values (expanded to multiple tuples with same key)
-        - None values (filtered out)
-        - Type conversion to string
-
-        :return: List of (key, value) tuples for query parameters
-        """
+        """Convert query_params dict to list of (key, value) tuples. Expands lists, filters None."""
         if not self.query_params:
             return []
 
@@ -127,15 +99,9 @@ class ExecuteApiRequestBuilder:
         options_headers: dict[str, str] | None = None,
     ) -> dict[str, str]:
         """
-        Build final headers with proper precedence and SDK enforcement.
+        Merge request headers, options headers, and SDK-enforced defaults.
 
-        Header precedence (highest to lowest):
-        1. SDK-enforced headers (Content-Type, Accept — always application/json)
-        2. Options headers (from method options parameter)
-        3. Request headers (from headers parameter)
-
-        :param options_headers: Headers from method options
-        :return: Final merged headers with SDK enforcement
+        SDK always enforces Content-Type and Accept as application/json.
         """
         result = dict(self.headers) if self.headers else {}
         if options_headers:
@@ -147,24 +113,13 @@ class ExecuteApiRequestBuilder:
 
 
 class ResponseParser:
-    """Parse raw REST responses to appropriate Python types."""
+    """Parse raw REST responses into Python types."""
 
     @staticmethod
     def parse_body(
         data: bytes | str | dict[str, Any] | None,
     ) -> bytes | str | dict[str, Any] | None:
-        """
-        Parse response body, attempting JSON deserialization.
-
-        Handles:
-        - None values (returned as-is)
-        - Dict objects (returned as-is)
-        - String values (attempts JSON parsing, falls back to string)
-        - Bytes values (attempts UTF-8 decode + JSON, falls back gracefully)
-
-        :param data: Raw response data from REST client
-        :return: Parsed response (dict if JSON, else original type)
-        """
+        """Parse response data, attempting JSON deserialization."""
         if data is None:
             return None
 

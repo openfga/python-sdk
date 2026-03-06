@@ -1,9 +1,4 @@
-"""
-Raw response wrapper for raw_request method.
-
-This module provides a simple response wrapper for raw HTTP requests
-made through the SDK's raw_request method.
-"""
+"""Response wrapper for execute_api_request."""
 
 import json
 
@@ -14,32 +9,26 @@ from typing import Any
 @dataclass
 class RawResponse:
     """
-    Response wrapper for raw HTTP requests.
+    Response from execute_api_request / execute_streamed_api_request.
 
-    This class provides a simple interface to access the response
-    from a raw_request call, including status code, headers, and body.
-
-    The body is automatically parsed as JSON if possible, otherwise
-    it's returned as a string or bytes.
+    The body is automatically parsed as JSON if possible,
+    otherwise returned as a string or bytes.
     """
 
     status: int
     """HTTP status code"""
 
     headers: dict[str, str]
-    """Response headers as a dictionary"""
+    """Response headers"""
 
     body: bytes | str | dict[str, Any] | None = None
-    """Response body (already parsed as dict if JSON, otherwise str or bytes)"""
+    """Response body (dict if JSON, otherwise str or bytes)"""
 
     def json(self) -> dict[str, Any] | None:
         """
-        Return the response body as a JSON dictionary.
+        Return the response body as a parsed JSON dictionary.
 
-        The body is already parsed during the request, so this typically
-        just returns the body if it's a dict, or None otherwise.
-
-        :return: Parsed JSON dictionary or None
+        :return: Parsed dict or None
         """
         if isinstance(self.body, dict):
             return self.body
@@ -49,7 +38,7 @@ class RawResponse:
         """
         Return the response body as a string.
 
-        :return: Response body as string or None
+        :return: Body as string, or None
         """
         if self.body is None:
             return None

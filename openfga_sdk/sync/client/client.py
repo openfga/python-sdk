@@ -1124,28 +1124,19 @@ class OpenFgaClient:
         """
         Execute an arbitrary HTTP request to any OpenFGA API endpoint.
 
-        Useful when you need to call a new or experimental API that doesn't
-        yet have a built-in method in the SDK. You still get the benefits of
-        the SDK: authentication, configuration, retries, and error handling.
+        Useful for calling endpoints not yet wrapped by the SDK while
+        still getting authentication, retries, and error handling.
 
-        :param operation_name: Required. Operation name for telemetry/logging
-            (e.g., "CustomCheck", "CustomEndpoint")
-        :param method: Required. HTTP method (GET, POST, PUT, DELETE, PATCH)
-        :param path: Required. API path with optional template parameters
-            (e.g., "/stores/{store_id}/my-endpoint")
-        :param path_params: Path parameters to replace template variables.
-            If {store_id} is in the path and not provided here, it will be
-            automatically substituted from the client configuration.
-        :param body: Request body for POST/PUT/PATCH requests
+        :param operation_name: Operation name for telemetry (e.g., "CustomCheck")
+        :param method: HTTP method (GET, POST, PUT, DELETE, PATCH)
+        :param path: API path, e.g. "/stores/{store_id}/my-endpoint".
+            {store_id} is auto-substituted from config if not in path_params.
+        :param path_params: Path parameter substitutions (URL-encoded automatically)
+        :param body: Request body for POST/PUT/PATCH
         :param query_params: Query string parameters
-        :param headers: Custom request headers. SDK always enforces
-            Content-Type and Accept as application/json.
-        :param options: Additional request options:
-            - headers: Extra headers (merged; options headers take precedence)
-            - retry_params: Override retry parameters for this request
+        :param headers: Custom headers (SDK enforces Content-Type and Accept)
+        :param options: Extra options (headers, retry_params)
         :return: RawResponse with status, headers, and body
-        :raises FgaValidationException: If required parameters are missing
-        :raises ApiException: For HTTP errors
         """
         return self._execute_api_request_internal(
             operation_name=operation_name,
@@ -1202,8 +1193,7 @@ class OpenFgaClient:
         options: dict[str, int | str | dict[str, int | str]] | None = None,
         streaming: bool = False,
     ) -> RawResponse:
-        """Internal implementation for execute_api_request and execute_streamed_api_request."""
-        # 1. Validate and build request
+        """Shared implementation for execute_api_request and execute_streamed_api_request."""
         builder = ExecuteApiRequestBuilder(
             operation_name=operation_name,
             method=method,
@@ -1215,7 +1205,6 @@ class OpenFgaClient:
         )
         builder.validate()
 
-        # 2. Build path, query params, and headers
         resource_path = builder.build_path(self.get_store_id())
         query_params_list = builder.build_query_params_list()
 
@@ -1224,7 +1213,6 @@ class OpenFgaClient:
             options_headers = options["headers"]
         final_headers = builder.build_headers(options_headers)
 
-        # 3. Apply authentication
         auth_headers = dict(final_headers)
         self._api_client.update_params_for_auth(
             auth_headers,
@@ -1233,7 +1221,6 @@ class OpenFgaClient:
             oauth2_client=self._api._oauth2_client,
         )
 
-        # 4. Build telemetry attributes
         telemetry_attributes = {
             TelemetryAttributes.fga_client_request_method: operation_name.lower(),
         }
@@ -1242,12 +1229,10 @@ class OpenFgaClient:
                 self.get_store_id()
             )
 
-        # 5. Extract retry params
         retry_params = None
         if options and options.get("retry_params"):
             retry_params = options["retry_params"]
 
-        # 6. Make API request
         self._api_client.call_api(
             resource_path=resource_path,
             method=method.upper(),
@@ -1263,17 +1248,13 @@ class OpenFgaClient:
             _telemetry_attributes=telemetry_attributes,
         )
 
-        # 7. Parse response
         rest_response: RESTResponse | None = getattr(
             self._api_client, "last_response", None
         )
-
         if rest_response is None:
             raise RuntimeError(
-                f"Failed to get response from API client for {method.upper()} "
-                f"request to '{resource_path}' (operation: {operation_name}). "
-                "This may indicate an internal SDK error, network problem, "
-                "or client configuration issue."
+                f"No response for {method.upper()} {resource_path} "
+                f"(operation: {operation_name})"
             )
 
         return RawResponse(

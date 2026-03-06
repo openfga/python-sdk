@@ -1263,7 +1263,7 @@ response = await fga_client.write_assertions(body, options)
 
 ### Calling Other Endpoints
 
-In certain cases you may want to call other APIs not yet wrapped by the SDK. You can do so by using the `execute_api_request` method available on the `OpenFgaClient`. The `execute_api_request` method allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the HTTP method, path, body, query parameters, and path parameters, while still honoring the client configuration (authentication, telemetry, retries, and error handling).
+In certain cases you may want to call other APIs not yet wrapped by the SDK. You can do so by using the `execute_api_request` method available on the `OpenFgaClient`. It allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the HTTP method, path, body, query parameters, and path parameters, while still honoring the client configuration (authentication, telemetry, retries, and error handling).
 
 For streaming endpoints, use `execute_streamed_api_request` instead.
 
@@ -1272,35 +1272,7 @@ This is useful when:
 - You are using an earlier version of the SDK that doesn't yet support a particular endpoint
 - You have a custom endpoint deployed that extends the OpenFGA API
 
-In all cases, you initialize the SDK the same way as usual, and then call `execute_api_request` on the `fga_client` instance.
-
-```python
-from openfga_sdk import ClientConfiguration, OpenFgaClient
-
-configuration = ClientConfiguration(
-    api_url=FGA_API_URL,
-    store_id=FGA_STORE_ID,
-)
-
-async with OpenFgaClient(configuration) as fga_client:
-    request_body = {
-        "user": "user:bob",
-        "action": "custom_action",
-        "resource": "resource:123",
-    }
-    
-    response = await fga_client.execute_api_request(
-        operation_name="CustomEndpoint",
-        method="POST",
-        path="/stores/{store_id}/custom-endpoint",
-        path_params={"store_id": FGA_STORE_ID},
-        query_params={"page_size": "20"},
-        body=request_body,
-        headers={"X-Experimental-Feature": "enabled"},
-    )
-```
-
-#### Example: Calling a custom endpoint with POST
+#### Example: Calling a Custom Endpoint with POST
 
 ```python
 # Call a custom endpoint using path parameters
