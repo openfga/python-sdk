@@ -4,10 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from openfga_sdk.client.configuration import ClientConfiguration
-from openfga_sdk.client.execute_api_request_builder import (
-    ExecuteApiRequestBuilder,
-    ResponseParser,
-)
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
     ClientBatchCheckItem,
@@ -74,10 +70,6 @@ from openfga_sdk.models.write_authorization_model_request import (
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.sync.api_client import ApiClient
 from openfga_sdk.sync.open_fga_api import OpenFgaApi
-from openfga_sdk.sync.rest import RESTResponse
-from openfga_sdk.telemetry.attributes import (
-    TelemetryAttributes,
-)
 from openfga_sdk.validation import is_well_formed_ulid_string
 
 
@@ -1138,7 +1130,7 @@ class OpenFgaClient:
         :param options: Extra options (headers, retry_params)
         :return: RawResponse with status, headers, and body
         """
-        return self._execute_api_request_internal(
+        return self._api.execute_api_request(
             operation_name=operation_name,
             method=method,
             path=path,
@@ -1147,7 +1139,6 @@ class OpenFgaClient:
             query_params=query_params,
             headers=headers,
             options=options,
-            streaming=False,
         )
 
     def execute_streamed_api_request(
@@ -1168,7 +1159,7 @@ class OpenFgaClient:
         Same interface as execute_api_request but for streaming endpoints.
         See execute_api_request for full parameter documentation.
         """
-        return self._execute_api_request_internal(
+        return self._api.execute_streamed_api_request(
             operation_name=operation_name,
             method=method,
             path=path,
@@ -1177,88 +1168,4 @@ class OpenFgaClient:
             query_params=query_params,
             headers=headers,
             options=options,
-            streaming=True,
-        )
-
-    def _execute_api_request_internal(
-        self,
-        *,
-        operation_name: str,
-        method: str,
-        path: str,
-        path_params: dict[str, str] | None = None,
-        body: dict[str, Any] | list[Any] | str | bytes | None = None,
-        query_params: dict[str, str | int | list[str | int]] | None = None,
-        headers: dict[str, str] | None = None,
-        options: dict[str, int | str | dict[str, int | str]] | None = None,
-        streaming: bool = False,
-    ) -> RawResponse:
-        """Shared implementation for execute_api_request and execute_streamed_api_request."""
-        builder = ExecuteApiRequestBuilder(
-            operation_name=operation_name,
-            method=method,
-            path=path,
-            path_params=path_params,
-            body=body,
-            query_params=query_params,
-            headers=headers,
-        )
-        builder.validate()
-
-        resource_path = builder.build_path(self.get_store_id())
-        query_params_list = builder.build_query_params_list()
-
-        options_headers = None
-        if options and isinstance(options.get("headers"), dict):
-            options_headers = options["headers"]
-        final_headers = builder.build_headers(options_headers)
-
-        auth_headers = dict(final_headers)
-        self._api_client.update_params_for_auth(
-            auth_headers,
-            query_params_list,
-            auth_settings=[],
-            oauth2_client=self._api._oauth2_client,
-        )
-
-        telemetry_attributes = {
-            TelemetryAttributes.fga_client_request_method: operation_name.lower(),
-        }
-        if self.get_store_id():
-            telemetry_attributes[TelemetryAttributes.fga_client_request_store_id] = (
-                self.get_store_id()
-            )
-
-        retry_params = None
-        if options and options.get("retry_params"):
-            retry_params = options["retry_params"]
-
-        self._api_client.call_api(
-            resource_path=resource_path,
-            method=method.upper(),
-            query_params=query_params_list if query_params_list else None,
-            header_params=auth_headers if auth_headers else None,
-            body=body,
-            response_types_map={},
-            auth_settings=[],
-            _return_http_data_only=True,
-            _preload_content=True,
-            _retry_params=retry_params,
-            _oauth2_client=self._api._oauth2_client,
-            _telemetry_attributes=telemetry_attributes,
-        )
-
-        rest_response: RESTResponse | None = getattr(
-            self._api_client, "last_response", None
-        )
-        if rest_response is None:
-            raise RuntimeError(
-                f"No response for {method.upper()} {resource_path} "
-                f"(operation: {operation_name})"
-            )
-
-        return RawResponse(
-            status=rest_response.status,
-            headers=dict(rest_response.getheaders()),
-            body=ResponseParser.parse_body(rest_response.data),
         )
