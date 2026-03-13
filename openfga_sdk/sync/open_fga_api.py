@@ -14,9 +14,13 @@ from __future__ import annotations
 
 import urllib.parse
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
+
+
+if TYPE_CHECKING:
+    from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.sync.api_client import ApiClient
 from openfga_sdk.sync.oauth2 import OAuth2Client
 from openfga_sdk.telemetry import Telemetry
