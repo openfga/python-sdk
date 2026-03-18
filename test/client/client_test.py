@@ -4503,3 +4503,103 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 _request_timeout=None,
             )
             await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_basic(self, mock_stream):
+        """Test execute_streamed_api_request yields all chunks from the stream."""
+
+        async def mock_gen():
+            yield {"result": {"object": "document:roadmap"}}
+            yield {"result": {"object": "document:budget"}}
+
+        mock_stream.return_value = mock_gen()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={
+                    "type": "document",
+                    "relation": "viewer",
+                    "user": "user:anne",
+                },
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 2)
+            self.assertEqual(chunks[0], {"result": {"object": "document:roadmap"}})
+            self.assertEqual(chunks[1], {"result": {"object": "document:budget"}})
+
+            mock_stream.assert_called_once_with(
+                "POST",
+                f"http://api.fga.example/stores/{store_id}/streamed-list-objects",
+                query_params=None,
+                headers=ANY,
+                post_params=None,
+                body={"type": "document", "relation": "viewer", "user": "user:anne"},
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_empty_stream(self, mock_stream):
+        """Test execute_streamed_api_request handles an empty stream gracefully."""
+
+        async def mock_gen():
+            return
+            yield  # make it an async generator
+
+        mock_stream.return_value = mock_gen()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={"type": "document", "relation": "viewer", "user": "user:nobody"},
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 0)
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_path_substitution(self, mock_stream):
+        """Test execute_streamed_api_request substitutes path params correctly."""
+
+        async def mock_gen():
+            yield {"result": {"object": "document:roadmap"}}
+
+        mock_stream.return_value = mock_gen()
+
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={"type": "document", "relation": "viewer", "user": "user:anne"},
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 1)
+
+            # Verify store_id was substituted in the URL
+            call_args = mock_stream.call_args
+            self.assertIn(store_id, call_args[0][1])
+            self.assertNotIn("{store_id}", call_args[0][1])
+            await api_client.close()

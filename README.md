@@ -1265,7 +1265,7 @@ response = await fga_client.write_assertions(body, options)
 
 In certain cases you may want to call other APIs not yet wrapped by the SDK. You can do so by using the `execute_api_request` method available on the `OpenFgaClient`. It allows you to make raw HTTP calls to any OpenFGA endpoint by specifying the HTTP method, path, body, query parameters, and path parameters, while still honoring the client configuration (authentication, telemetry, retries, and error handling).
 
-For streaming endpoints, use `execute_streamed_api_request` instead.
+For streaming endpoints (e.g. `streamed-list-objects`), use `execute_streamed_api_request` instead. It returns an `AsyncIterator` (or `Iterator` in the sync client) that yields one parsed JSON object per chunk.
 
 This is useful when:
 - You want to call a new endpoint that is not yet supported by the SDK
@@ -1313,6 +1313,27 @@ stores_response = await fga_client.execute_api_request(
 
 stores = stores_response.json()
 print("Stores:", stores)
+```
+
+#### Example: Calling a Streaming Endpoint
+
+```python
+# Stream objects visible to a user
+async for chunk in fga_client.execute_streamed_api_request(
+    operation_name="StreamedListObjects",
+    method="POST",
+    path="/stores/{store_id}/streamed-list-objects",
+    path_params={"store_id": FGA_STORE_ID},
+    body={
+        "type": "document",
+        "relation": "viewer",
+        "user": "user:anne",
+        "authorization_model_id": FGA_MODEL_ID,
+    },
+):
+    # Each chunk has the shape {"result": {"object": "..."}} or {"error": {...}}
+    if "result" in chunk:
+        print(chunk["result"]["object"])  # e.g. "document:roadmap"
 ```
 
 #### Example: Using Path Parameters

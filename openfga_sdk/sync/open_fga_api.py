@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import urllib.parse
 
+from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
@@ -148,7 +149,7 @@ class OpenFgaApi:
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
         query_params: dict[str, str | int | list[str | int]] | None = None,
         headers: dict[str, str] | None = None,
-        options: dict[str, int | str | dict[str, int | str]] | None = None,
+        options: dict[str, Any] | None = None,
     ) -> RawResponse:
         """
         Execute an arbitrary HTTP request to any OpenFGA API endpoint.
@@ -164,7 +165,7 @@ class OpenFgaApi:
         :param body: Request body for POST/PUT/PATCH
         :param query_params: Query string parameters
         :param headers: Custom headers (SDK enforces Content-Type and Accept)
-        :param options: Extra options (headers, retry_params)
+        :param options: Extra options e.g. {"retry_params": RetryParams(max_retry=3)}
         :return: RawResponse with status, headers, and body
         """
         return self._execute_api_request_internal(
@@ -176,7 +177,6 @@ class OpenFgaApi:
             query_params=query_params,
             headers=headers,
             options=options,
-            streaming=False,
         )
 
     def execute_streamed_api_request(
@@ -189,15 +189,31 @@ class OpenFgaApi:
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
         query_params: dict[str, str | int | list[str | int]] | None = None,
         headers: dict[str, str] | None = None,
-        options: dict[str, int | str | dict[str, int | str]] | None = None,
-    ) -> RawResponse:
+        options: dict[str, Any] | None = None,
+    ) -> Iterator[dict[str, Any]]:
         """
         Execute an arbitrary HTTP request to a streaming OpenFGA API endpoint.
 
-        Same interface as execute_api_request but for streaming endpoints.
-        See execute_api_request for full parameter documentation.
+        Yields parsed JSON objects as they arrive. Use with for:
+
+            for chunk in api.execute_streamed_api_request(...):
+                process(chunk)
+
+        :param operation_name: Operation name for telemetry (e.g., "StreamedListObjects")
+        :param method: HTTP method (GET, POST, PUT, DELETE, PATCH)
+        :param path: API path, e.g. "/stores/{store_id}/streamed-list-objects".
+        :param path_params: Path parameter substitutions (URL-encoded automatically).
+            All path parameters, including store_id, must be provided explicitly.
+        :param body: Request body for POST/PUT/PATCH
+        :param query_params: Query string parameters
+        :param headers: Custom headers (SDK enforces Content-Type and Accept)
+        :param options: Extra options e.g. {"retry_params": RetryParams(max_retry=3)}
         """
-        return self._execute_api_request_internal(
+        from openfga_sdk.client.execute_api_request_builder import (
+            ExecuteApiRequestBuilder,
+        )
+
+        builder = ExecuteApiRequestBuilder(
             operation_name=operation_name,
             method=method,
             path=path,
@@ -205,9 +221,40 @@ class OpenFgaApi:
             body=body,
             query_params=query_params,
             headers=headers,
-            options=options,
-            streaming=True,
         )
+        builder.validate()
+
+        resource_path = builder.build_path()
+        query_params_list = builder.build_query_params_list()
+        final_headers = builder.build_headers()
+
+        retry_params = options.get("retry_params") if options else None
+
+        telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
+            TelemetryAttributes.fga_client_request_method: operation_name.lower(),
+        }
+        if self.api_client.get_store_id():
+            telemetry_attributes[TelemetryAttributes.fga_client_request_store_id] = (
+                self.api_client.get_store_id()
+            )
+
+        stream = self.api_client.call_api(
+            resource_path=resource_path,
+            method=method.upper(),
+            query_params=query_params_list if query_params_list else None,
+            header_params=final_headers,
+            body=body,
+            response_types_map={},
+            auth_settings=[],
+            _return_http_data_only=True,
+            _preload_content=True,
+            _retry_params=retry_params,
+            _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
+            _streaming=True,
+        )
+
+        yield from stream
 
     def _execute_api_request_internal(
         self,
@@ -219,10 +266,9 @@ class OpenFgaApi:
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
         query_params: dict[str, str | int | list[str | int]] | None = None,
         headers: dict[str, str] | None = None,
-        options: dict[str, int | str | dict[str, int | str]] | None = None,
-        streaming: bool = False,
+        options: dict[str, Any] | None = None,
     ) -> RawResponse:
-        """Shared implementation for execute_api_request and execute_streamed_api_request."""
+        """Implementation for execute_api_request."""
         from openfga_sdk.client.execute_api_request_builder import (
             ExecuteApiRequestBuilder,
             ResponseParser,
@@ -242,15 +288,9 @@ class OpenFgaApi:
 
         resource_path = builder.build_path()
         query_params_list = builder.build_query_params_list()
+        final_headers = builder.build_headers()
 
-        options_headers = None
-        if options and isinstance(options.get("headers"), dict):
-            options_headers = options["headers"]
-        final_headers = builder.build_headers(options_headers)
-
-        retry_params = None
-        if options and options.get("retry_params"):
-            retry_params = options["retry_params"]
+        retry_params = options.get("retry_params") if options else None
 
         telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: operation_name.lower(),
@@ -273,7 +313,7 @@ class OpenFgaApi:
             _retry_params=retry_params,
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
-            _streaming=streaming,
+            _streaming=False,
         )
 
         rest_response = getattr(self.api_client, "last_response", None)

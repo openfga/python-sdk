@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 
+from collections.abc import AsyncIterator
 from typing import Any
 
 from openfga_sdk.api.open_fga_api import OpenFgaApi
@@ -1113,7 +1114,7 @@ class OpenFgaClient:
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
         query_params: dict[str, str | int | list[str | int]] | None = None,
         headers: dict[str, str] | None = None,
-        options: dict[str, int | str | dict[str, int | str]] | None = None,
+        options: dict[str, Any] | None = None,
     ) -> RawResponse:
         """
         Execute an arbitrary HTTP request to any OpenFGA API endpoint.
@@ -1129,7 +1130,7 @@ class OpenFgaClient:
         :param body: Request body for POST/PUT/PATCH
         :param query_params: Query string parameters
         :param headers: Custom headers (SDK enforces Content-Type and Accept)
-        :param options: Extra options (headers, retry_params)
+        :param options: Extra options e.g. {"retry_params": RetryParams(max_retry=3)}
         :return: RawResponse with status, headers, and body
         """
         return await self._api.execute_api_request(
@@ -1153,15 +1154,17 @@ class OpenFgaClient:
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
         query_params: dict[str, str | int | list[str | int]] | None = None,
         headers: dict[str, str] | None = None,
-        options: dict[str, int | str | dict[str, int | str]] | None = None,
-    ) -> RawResponse:
+        options: dict[str, Any] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
         """
         Execute an arbitrary HTTP request to a streaming OpenFGA API endpoint.
 
         Same interface as execute_api_request but for streaming endpoints.
         See execute_api_request for full parameter documentation.
+
+        :return: AsyncIterator yielding parsed JSON chunks from the streaming response.
         """
-        return await self._api.execute_streamed_api_request(
+        async for chunk in self._api.execute_streamed_api_request(
             operation_name=operation_name,
             method=method,
             path=path,
@@ -1170,4 +1173,5 @@ class OpenFgaClient:
             query_params=query_params,
             headers=headers,
             options=options,
-        )
+        ):
+            yield chunk

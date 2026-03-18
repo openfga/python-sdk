@@ -242,6 +242,27 @@ async def main():
         assert raw.status == 200
         print(f"   ✅ custom headers accepted (status {raw.status})")
 
+        print("9. StreamedListObjects (POST /stores/{store_id}/streamed-list-objects)")
+        chunks = []
+        async for chunk in fga_client.execute_streamed_api_request(
+            operation_name="StreamedListObjects",
+            method="POST",
+            path="/stores/{store_id}/streamed-list-objects",
+            path_params={"store_id": store.id},
+            body={
+                "type": "document",
+                "relation": "viewer",
+                "user": "user:anne",
+                "authorization_model_id": auth_model_id,
+            },
+        ):
+            chunks.append(chunk)
+        assert len(chunks) >= 1, f"Expected at least 1 chunk, got {len(chunks)}"
+        # Each chunk has the shape {"result": {"object": "..."}} or {"error": {...}}
+        objects = [c["result"]["object"] for c in chunks if "result" in c]
+        assert "document:roadmap" in objects, f"Expected document:roadmap in {objects}"
+        print(f"   ✅ {len(chunks)} chunks, objects={objects}")
+
         print("\n=== Cleanup ===")
         await fga_client.delete_store()
         print(f"Deleted test store: {store.id}")
