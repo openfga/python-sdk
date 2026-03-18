@@ -1122,8 +1122,8 @@ class OpenFgaClient:
         :param operation_name: Operation name for telemetry (e.g., "CustomCheck")
         :param method: HTTP method (GET, POST, PUT, DELETE, PATCH)
         :param path: API path, e.g. "/stores/{store_id}/my-endpoint".
-            {store_id} is auto-substituted from config if not in path_params.
-        :param path_params: Path parameter substitutions (URL-encoded automatically)
+        :param path_params: Path parameter substitutions (URL-encoded automatically).
+            All path parameters, including store_id, must be provided explicitly.
         :param body: Request body for POST/PUT/PATCH
         :param query_params: Query string parameters
         :param headers: Custom headers (SDK enforces Content-Type and Accept)

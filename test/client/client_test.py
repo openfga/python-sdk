@@ -4189,6 +4189,7 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 operation_name="CustomEndpoint",
                 method="POST",
                 path="/stores/{store_id}/custom-endpoint",
+                path_params={"store_id": store_id},
                 body={"user": "user:bob", "action": "custom_action"},
                 query_params={"page_size": "20"},
                 headers={"X-Experimental-Feature": "enabled"},
@@ -4286,14 +4287,17 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 operation_name="ReadAuthorizationModel",
                 method="GET",
                 path="/stores/{store_id}/authorization-models/{model_id}",
-                path_params={"model_id": "01G5JAVJ41T49E9TT3SKVS7X1J"},
+                path_params={
+                    "store_id": store_id,
+                    "model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                },
             )
 
             self.assertIsInstance(response, RawResponse)
             self.assertEqual(response.status, 200)
             self.assertIsNotNone(response.body)
 
-            # Verify the API was called with correct path (store_id auto-substituted)
+            # Verify the API was called with correct path
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
@@ -4308,10 +4312,10 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     @pytest.mark.asyncio
-    async def test_raw_request_auto_store_id_substitution(self, mock_request):
+    async def test_raw_request_explicit_store_id_in_path_params(self, mock_request):
         """Test case for execute_api_request
 
-        Test automatic store_id substitution when not provided in path_params
+        Test that store_id must be provided explicitly in path_params
         """
         response_body = '{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}'
         mock_request.return_value = mock_response(response_body, 200)
@@ -4323,12 +4327,13 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 operation_name="GetStore",
                 method="GET",
                 path="/stores/{store_id}",
+                path_params={"store_id": store_id},
             )
 
             self.assertIsInstance(response, RawResponse)
             self.assertEqual(response.status, 200)
 
-            # Verify store_id was automatically substituted
+            # Verify store_id was substituted from explicit path_params
             mock_request.assert_called_once_with(
                 "GET",
                 "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
@@ -4363,10 +4368,9 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
     async def test_raw_request_missing_store_id(self):
         """Test case for execute_api_request
 
-        Test that store_id is required when path contains {store_id}
+        Test that store_id must be provided in path_params when path contains {store_id}
         """
         configuration = self.configuration
-        # Don't set store_id
         async with OpenFgaClient(configuration) as api_client:
             with self.assertRaises(FgaValidationException) as error:
                 await api_client.execute_api_request(
@@ -4374,7 +4378,7 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                     method="GET",
                     path="/stores/{store_id}",
                 )
-            self.assertIn("store_id is not configured", str(error.exception))
+            self.assertIn("store_id", str(error.exception))
             await api_client.close()
 
     @pytest.mark.asyncio
@@ -4391,9 +4395,10 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                     operation_name="ReadAuthorizationModel",
                     method="GET",
                     path="/stores/{store_id}/authorization-models/{model_id}",
+                    path_params={"store_id": store_id},
                     # Missing model_id in path_params
                 )
-            self.assertIn("Not all path parameters were provided", str(error.exception))
+            self.assertIn("model_id", str(error.exception))
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
@@ -4448,6 +4453,7 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 operation_name="CustomEndpoint",
                 method="POST",
                 path="/stores/{store_id}/custom-endpoint",
+                path_params={"store_id": store_id},
                 body={"test": "data"},
             )
 
@@ -4478,7 +4484,10 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 operation_name="CustomEndpoint",
                 method="GET",
                 path="/stores/{store_id}/custom/{param}",
-                path_params={"param": "value with spaces & special chars"},
+                path_params={
+                    "store_id": store_id,
+                    "param": "value with spaces & special chars",
+                },
             )
 
             self.assertIsInstance(response, RawResponse)

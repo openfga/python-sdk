@@ -43,26 +43,11 @@ class ExecuteApiRequestBuilder:
         if not self.path:
             raise FgaValidationException("path is required for execute_api_request")
 
-    def build_path(self, configured_store_id: str | None = None) -> str:
-        """
-        Build resource path with parameter substitution.
-
-        Auto-substitutes {store_id} from client config if not in path_params.
-        """
+    def build_path(self) -> str:
+        """Build resource path with parameter substitution from path_params."""
         path = self.path
         params = dict(self.path_params) if self.path_params else {}
 
-        # Auto-substitute store_id if needed
-        if "{store_id}" in path and "store_id" not in params:
-            if not configured_store_id:
-                raise FgaValidationException(
-                    "Path contains {store_id} but store_id is not configured. "
-                    "Set store_id in ClientConfiguration, use set_store_id(), "
-                    "or provide it in path_params."
-                )
-            params["store_id"] = configured_store_id
-
-        # Replace all params
         result = path
         for key, value in params.items():
             placeholder = f"{{{key}}}"
@@ -75,7 +60,8 @@ class ExecuteApiRequestBuilder:
             match = re.search(r"\{([^}]+)\}", result)
             if match:
                 raise FgaValidationException(
-                    f"Not all path parameters were provided for path: {path}"
+                    f"Path parameter '{match.group(1)}' not provided for path: {path}. "
+                    "All path parameters must be supplied via path_params."
                 )
         return result
 

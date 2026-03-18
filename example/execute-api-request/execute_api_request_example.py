@@ -47,7 +47,6 @@ async def main():
     )
 
     async with OpenFgaClient(configuration) as fga_client:
-        # ─── Setup: create a store, model, and tuple ─────────────
         print("=== Setup ===")
 
         # Create a test store via the SDK
@@ -116,10 +115,8 @@ async def main():
         )
         print("Wrote tuple: user:anne → writer → document:roadmap")
 
-        # ─── Tests ────────────────────────────────────────────────
-        print("\n=== execute_api_request tests ===\n")
+        print("\n=== execute_api_request ===\n")
 
-        # ── 1. GET /stores ────────────────────────────────────────
         print("1. ListStores (GET /stores)")
         raw = await fga_client.execute_api_request(
             operation_name="ListStores",
@@ -136,12 +133,12 @@ async def main():
         )
         print(f"   ✅ {len(body['stores'])} stores (status {raw.status})")
 
-        # ── 2. GET /stores/{store_id} (auto-substitution) ────────
         print("2. GetStore (GET /stores/{store_id})")
         raw = await fga_client.execute_api_request(
             operation_name="GetStore",
             method="GET",
             path="/stores/{store_id}",
+            path_params={"store_id": store.id},
         )
         sdk = await fga_client.get_store()
         body = raw.json()
@@ -150,7 +147,6 @@ async def main():
         assert body["name"] == sdk.name
         print(f"   ✅ id={body['id']}, name={body['name']}")
 
-        # ── 3. GET /stores/{store_id}/authorization-models ────────
         print(
             "3. ReadAuthorizationModels (GET /stores/{store_id}/authorization-models)"
         )
@@ -158,6 +154,7 @@ async def main():
             operation_name="ReadAuthorizationModels",
             method="GET",
             path="/stores/{store_id}/authorization-models",
+            path_params={"store_id": store.id},
         )
         sdk = await fga_client.read_authorization_models()
         body = raw.json()
@@ -165,12 +162,12 @@ async def main():
         assert len(body["authorization_models"]) == len(sdk.authorization_models)
         print(f"   ✅ {len(body['authorization_models'])} models")
 
-        # ── 4. POST /stores/{store_id}/check ──────────────────────
         print("4. Check (POST /stores/{store_id}/check)")
         raw = await fga_client.execute_api_request(
             operation_name="Check",
             method="POST",
             path="/stores/{store_id}/check",
+            path_params={"store_id": store.id},
             body={
                 "tuple_key": {
                     "user": "user:anne",
@@ -192,12 +189,12 @@ async def main():
         assert body["allowed"] == sdk.allowed
         print(f"   ✅ allowed={body['allowed']}")
 
-        # ── 5. POST /stores/{store_id}/read ───────────────────────
         print("5. Read (POST /stores/{store_id}/read)")
         raw = await fga_client.execute_api_request(
             operation_name="Read",
             method="POST",
             path="/stores/{store_id}/read",
+            path_params={"store_id": store.id},
             body={
                 "tuple_key": {
                     "user": "user:anne",
@@ -211,7 +208,6 @@ async def main():
         assert len(body["tuples"]) >= 1
         print(f"   ✅ {len(body['tuples'])} tuples returned")
 
-        # ── 6. POST /stores — create store via raw request ────────
         print("6. CreateStore (POST /stores)")
         raw = await fga_client.execute_api_request(
             operation_name="CreateStore",
@@ -225,7 +221,6 @@ async def main():
         new_store_id = body["id"]
         print(f"   ✅ created store: {new_store_id}")
 
-        # ── 7. DELETE /stores/{store_id} — clean up ───────────────
         print("7. DeleteStore (DELETE /stores/{store_id})")
         raw = await fga_client.execute_api_request(
             operation_name="DeleteStore",
@@ -236,36 +231,22 @@ async def main():
         assert raw.status == 204, f"Expected 204, got {raw.status}"
         print(f"   ✅ deleted store: {new_store_id} (status 204 No Content)")
 
-        # ── 8. Custom headers ─────────────────────────────────────
         print("8. Custom headers (GET /stores/{store_id})")
         raw = await fga_client.execute_api_request(
             operation_name="GetStoreWithHeaders",
             method="GET",
             path="/stores/{store_id}",
+            path_params={"store_id": store.id},
             headers={"X-Custom-Header": "test-value"},
         )
         assert raw.status == 200
         print(f"   ✅ custom headers accepted (status {raw.status})")
 
-        # ── 9. Explicit path_params override for store_id ─────────
-        print("9. Explicit store_id in path_params")
-        raw = await fga_client.execute_api_request(
-            operation_name="GetStore",
-            method="GET",
-            path="/stores/{store_id}",
-            path_params={"store_id": store.id},
-        )
-        body = raw.json()
-        assert raw.status == 200
-        assert body["id"] == store.id
-        print(f"   ✅ explicit store_id matched: {body['id']}")
-
-        # ─── Cleanup ─────────────────────────────────────────────
         print("\n=== Cleanup ===")
         await fga_client.delete_store()
         print(f"Deleted test store: {store.id}")
 
-        print("\n All execute_api_request integration tests passed!\n")
+        print("\nAll execute_api_request examples completed successfully.\n")
 
 
 asyncio.run(main())

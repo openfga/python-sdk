@@ -32,6 +32,24 @@ class OpenFgaApi:
     Do not edit the class manually.
     """
 
+    _COMMON_PARAMS = [
+        "async_req",
+        "_request_timeout",
+        "_headers",
+        "_retry_params",
+        "_streaming",
+    ]
+
+    _COMMON_ERROR_RESPONSE_TYPES = {
+        400: "ValidationErrorMessageResponse",
+        401: "UnauthenticatedResponse",
+        403: "ForbiddenResponse",
+        404: "PathUnknownErrorMessageResponse",
+        409: "AbortedMessageResponse",
+        422: "UnprocessableContentMessageResponse",
+        500: "InternalErrorMessageResponse",
+    }
+
     def __init__(self, api_client=None):
         if api_client is None:
             api_client = ApiClient()
@@ -60,40 +78,43 @@ class OpenFgaApi:
         self,
         method: str,
         path: str,
-        method_name: str,
+        operation_name: str,
         response_types_map: dict,
         body=None,
         query_params=None,
-        local_var_params: dict | None = None,
+        headers: dict | None = None,
+        options: dict | None = None,
     ) -> Any:
         """Shared executor for all API endpoint methods."""
-        if local_var_params is None:
-            local_var_params = {}
+        if options is None:
+            options = {}
 
-        header_params = dict(local_var_params.get("_headers") or {})
+        header_params = dict(headers or {})
         header_params["Accept"] = self.api_client.select_header_accept(
             ["application/json"]
         )
         if body is not None:
-            content_type = local_var_params.get(
-                "_content_type",
-                self.api_client.select_header_content_type(
-                    ["application/json"], method, body
-                ),
+            content_type = self.api_client.select_header_content_type(
+                ["application/json"], method, body
             )
             if content_type:
                 header_params["Content-Type"] = content_type
 
         telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
-            TelemetryAttributes.fga_client_request_method: method_name,
+            TelemetryAttributes.fga_client_request_method: operation_name,
             TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
-            TelemetryAttributes.fga_client_request_model_id: local_var_params.get(
+            TelemetryAttributes.fga_client_request_model_id: options.get(
                 "authorization_model_id", ""
             ),
         }
         telemetry_attributes = TelemetryAttributes.fromBody(
             body=body, attributes=telemetry_attributes
         )
+
+        merged_response_types_map = {
+            **self._COMMON_ERROR_RESPONSE_TYPES,
+            **response_types_map,
+        }
 
         return await self.api_client.call_api(
             path,
@@ -104,18 +125,17 @@ class OpenFgaApi:
             body=body,
             post_params=[],
             files={},
-            response_types_map=response_types_map,
+            response_types_map=merged_response_types_map,
             auth_settings=[],
-            async_req=local_var_params.get("async_req"),
-            _return_http_data_only=local_var_params.get("_return_http_data_only"),
-            _preload_content=local_var_params.get("_preload_content", True),
-            _request_timeout=local_var_params.get("_request_timeout"),
-            _retry_params=local_var_params.get("_retry_params"),
+            async_req=options.get("async_req"),
+            _return_http_data_only=True,
+            _preload_content=True,
+            _request_timeout=options.get("_request_timeout"),
+            _retry_params=options.get("_retry_params"),
             collection_formats={},
-            _request_auth=local_var_params.get("_request_auth"),
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
-            _streaming=local_var_params.get("_streaming", False),
+            _streaming=options.get("_streaming", False),
         )
 
     async def execute_api_request(
@@ -139,8 +159,8 @@ class OpenFgaApi:
         :param operation_name: Operation name for telemetry (e.g., "CustomCheck")
         :param method: HTTP method (GET, POST, PUT, DELETE, PATCH)
         :param path: API path, e.g. "/stores/{store_id}/my-endpoint".
-            {store_id} is auto-substituted from config if not in path_params.
-        :param path_params: Path parameter substitutions (URL-encoded automatically)
+        :param path_params: Path parameter substitutions (URL-encoded automatically).
+            All path parameters, including store_id, must be provided explicitly.
         :param body: Request body for POST/PUT/PATCH
         :param query_params: Query string parameters
         :param headers: Custom headers (SDK enforces Content-Type and Accept)
@@ -220,7 +240,7 @@ class OpenFgaApi:
         )
         builder.validate()
 
-        resource_path = builder.build_path(self.api_client.get_store_id())
+        resource_path = builder.build_path()
         query_params_list = builder.build_query_params_list()
 
         options_headers = None
@@ -293,7 +313,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: BatchCheckResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.batch_check_with_http_info(body, **kwargs)
 
     async def batch_check_with_http_info(self, body, **kwargs):
@@ -333,19 +352,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -369,19 +376,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/batch-check",
-            method_name="batch_check",
-            response_types_map={
-                200: "BatchCheckResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="batch_check",
+            response_types_map={200: "BatchCheckResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def check(self, body, **kwargs):
@@ -408,7 +407,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: CheckResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.check_with_http_info(body, **kwargs)
 
     async def check_with_http_info(self, body, **kwargs):
@@ -448,19 +446,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -484,19 +470,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/check",
-            method_name="check",
-            response_types_map={
-                200: "CheckResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="check",
+            response_types_map={200: "CheckResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def create_store(self, body, **kwargs):
@@ -523,7 +501,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: CreateStoreResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.create_store_with_http_info(body, **kwargs)
 
     async def create_store_with_http_info(self, body, **kwargs):
@@ -563,19 +540,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -587,19 +552,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path="/stores",
-            method_name="create_store",
-            response_types_map={
-                201: "CreateStoreResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="create_store",
+            response_types_map={201: "CreateStoreResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def delete_store(self, **kwargs):
@@ -624,7 +581,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: None
         """
-        kwargs["_return_http_data_only"] = True
         return await self.delete_store_with_http_info(**kwargs)
 
     async def delete_store_with_http_info(self, **kwargs):
@@ -662,19 +618,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = []
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -691,9 +635,10 @@ class OpenFgaApi:
         return await self._execute(
             method="DELETE",
             path=f"/stores/{store_id}",
-            method_name="delete_store",
+            operation_name="delete_store",
             response_types_map={},
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def expand(self, body, **kwargs):
@@ -720,7 +665,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ExpandResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.expand_with_http_info(body, **kwargs)
 
     async def expand_with_http_info(self, body, **kwargs):
@@ -760,19 +704,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -796,19 +728,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/expand",
-            method_name="expand",
-            response_types_map={
-                200: "ExpandResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="expand",
+            response_types_map={200: "ExpandResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def get_store(self, **kwargs):
@@ -833,7 +757,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: GetStoreResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.get_store_with_http_info(**kwargs)
 
     async def get_store_with_http_info(self, **kwargs):
@@ -871,19 +794,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = []
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -900,18 +811,10 @@ class OpenFgaApi:
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}",
-            method_name="get_store",
-            response_types_map={
-                200: "GetStoreResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
-            local_var_params=local_var_params,
+            operation_name="get_store",
+            response_types_map={200: "GetStoreResponse"},
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def list_objects(self, body, **kwargs):
@@ -938,7 +841,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ListObjectsResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.list_objects_with_http_info(body, **kwargs)
 
     async def list_objects_with_http_info(self, body, **kwargs):
@@ -978,19 +880,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1014,19 +904,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/list-objects",
-            method_name="list_objects",
-            response_types_map={
-                200: "ListObjectsResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="list_objects",
+            response_types_map={200: "ListObjectsResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def list_stores(self, **kwargs):
@@ -1057,7 +939,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ListStoresResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.list_stores_with_http_info(**kwargs)
 
     async def list_stores_with_http_info(self, **kwargs):
@@ -1101,19 +982,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["page_size", "continuation_token", "name"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1134,19 +1003,11 @@ class OpenFgaApi:
         return await self._execute(
             method="GET",
             path="/stores",
-            method_name="list_stores",
-            response_types_map={
-                200: "ListStoresResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="list_stores",
+            response_types_map={200: "ListStoresResponse"},
             query_params=query_params,
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def list_users(self, body, **kwargs):
@@ -1173,7 +1034,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ListUsersResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.list_users_with_http_info(body, **kwargs)
 
     async def list_users_with_http_info(self, body, **kwargs):
@@ -1213,19 +1073,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1249,19 +1097,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/list-users",
-            method_name="list_users",
-            response_types_map={
-                200: "ListUsersResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="list_users",
+            response_types_map={200: "ListUsersResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def read(self, body, **kwargs):
@@ -1288,7 +1128,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ReadResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.read_with_http_info(body, **kwargs)
 
     async def read_with_http_info(self, body, **kwargs):
@@ -1328,19 +1167,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1364,19 +1191,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/read",
-            method_name="read",
-            response_types_map={
-                200: "ReadResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="read",
+            response_types_map={200: "ReadResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def read_assertions(self, authorization_model_id, **kwargs):
@@ -1403,7 +1222,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ReadAssertionsResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.read_assertions_with_http_info(
             authorization_model_id, **kwargs
         )
@@ -1445,19 +1263,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["authorization_model_id"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1481,18 +1287,10 @@ class OpenFgaApi:
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}/assertions/{authorization_model_id}",
-            method_name="read_assertions",
-            response_types_map={
-                200: "ReadAssertionsResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
-            local_var_params=local_var_params,
+            operation_name="read_assertions",
+            response_types_map={200: "ReadAssertionsResponse"},
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def read_authorization_model(self, id, **kwargs):
@@ -1519,7 +1317,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ReadAuthorizationModelResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.read_authorization_model_with_http_info(id, **kwargs)
 
     async def read_authorization_model_with_http_info(self, id, **kwargs):
@@ -1559,19 +1356,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["id"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1595,18 +1380,10 @@ class OpenFgaApi:
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}/authorization-models/{id}",
-            method_name="read_authorization_model",
-            response_types_map={
-                200: "ReadAuthorizationModelResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
-            local_var_params=local_var_params,
+            operation_name="read_authorization_model",
+            response_types_map={200: "ReadAuthorizationModelResponse"},
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def read_authorization_models(self, **kwargs):
@@ -1635,7 +1412,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ReadAuthorizationModelsResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.read_authorization_models_with_http_info(**kwargs)
 
     async def read_authorization_models_with_http_info(self, **kwargs):
@@ -1677,19 +1453,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["page_size", "continuation_token"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1713,19 +1477,11 @@ class OpenFgaApi:
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}/authorization-models",
-            method_name="read_authorization_models",
-            response_types_map={
-                200: "ReadAuthorizationModelsResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="read_authorization_models",
+            response_types_map={200: "ReadAuthorizationModelsResponse"},
             query_params=query_params,
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def read_changes(self, **kwargs):
@@ -1758,7 +1514,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: ReadChangesResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.read_changes_with_http_info(**kwargs)
 
     async def read_changes_with_http_info(self, **kwargs):
@@ -1804,19 +1559,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["type", "page_size", "continuation_token", "start_time"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1844,19 +1587,11 @@ class OpenFgaApi:
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}/changes",
-            method_name="read_changes",
-            response_types_map={
-                200: "ReadChangesResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="read_changes",
+            response_types_map={200: "ReadChangesResponse"},
             query_params=query_params,
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def streamed_list_objects(self, body, **kwargs):
@@ -1883,7 +1618,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: StreamResultOfStreamedListObjectsResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.streamed_list_objects_with_http_info(body, **kwargs)
 
     async def streamed_list_objects_with_http_info(self, body, **kwargs):
@@ -1923,19 +1657,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -1959,19 +1681,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/streamed-list-objects",
-            method_name="streamed_list_objects",
-            response_types_map={
-                200: "StreamResultOfStreamedListObjectsResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="streamed_list_objects",
+            response_types_map={200: "StreamResultOfStreamedListObjectsResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def write(self, body, **kwargs):
@@ -1998,7 +1712,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: object
         """
-        kwargs["_return_http_data_only"] = True
         return await self.write_with_http_info(body, **kwargs)
 
     async def write_with_http_info(self, body, **kwargs):
@@ -2038,19 +1751,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -2074,19 +1775,11 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/write",
-            method_name="write",
-            response_types_map={
-                200: "object",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="write",
+            response_types_map={200: "object"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def write_assertions(self, authorization_model_id, body, **kwargs):
@@ -2115,7 +1808,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: None
         """
-        kwargs["_return_http_data_only"] = True
         return await self.write_assertions_with_http_info(
             authorization_model_id, body, **kwargs
         )
@@ -2161,19 +1853,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["authorization_model_id", "body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -2204,10 +1884,11 @@ class OpenFgaApi:
         return await self._execute(
             method="PUT",
             path=f"/stores/{store_id}/assertions/{authorization_model_id}",
-            method_name="write_assertions",
+            operation_name="write_assertions",
             response_types_map={},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )
 
     async def write_authorization_model(self, body, **kwargs):
@@ -2234,7 +1915,6 @@ class OpenFgaApi:
                  returns the request thread.
         :rtype: WriteAuthorizationModelResponse
         """
-        kwargs["_return_http_data_only"] = True
         return await self.write_authorization_model_with_http_info(body, **kwargs)
 
     async def write_authorization_model_with_http_info(self, body, **kwargs):
@@ -2274,19 +1954,7 @@ class OpenFgaApi:
         local_var_params = locals()
 
         all_params = ["body"]
-        all_params.extend(
-            [
-                "async_req",
-                "_return_http_data_only",
-                "_preload_content",
-                "_request_timeout",
-                "_request_auth",
-                "_content_type",
-                "_headers",
-                "_retry_params",
-                "_streaming",
-            ]
-        )
+        all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
             if key not in all_params:
@@ -2310,17 +1978,9 @@ class OpenFgaApi:
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/authorization-models",
-            method_name="write_authorization_model",
-            response_types_map={
-                201: "WriteAuthorizationModelResponse",
-                400: "ValidationErrorMessageResponse",
-                401: "UnauthenticatedResponse",
-                403: "ForbiddenResponse",
-                404: "PathUnknownErrorMessageResponse",
-                409: "AbortedMessageResponse",
-                422: "UnprocessableContentMessageResponse",
-                500: "InternalErrorMessageResponse",
-            },
+            operation_name="write_authorization_model",
+            response_types_map={201: "WriteAuthorizationModelResponse"},
             body=local_var_params.get("body"),
-            local_var_params=local_var_params,
+            headers=local_var_params.get("_headers"),
+            options=local_var_params,
         )

@@ -1317,26 +1317,15 @@ print("Stores:", stores)
 
 #### Example: Using Path Parameters
 
-Path parameters are specified in the path using `{param_name}` syntax and are replaced with URL-encoded values from the `path_params` dictionary. If `{store_id}` is present in the path and not provided in `path_params`, it will be automatically replaced with the configured store_id:
+Path parameters are specified in the path using `{param_name}` syntax and must all be provided explicitly via `path_params` (URL-encoded automatically):
 
 ```python
-# Using explicit path parameters
 response = await fga_client.execute_api_request(
     operation_name="GetAuthorizationModel",
     method="GET",
     path="/stores/{store_id}/authorization-models/{model_id}",
     path_params={
         "store_id": "your-store-id",
-        "model_id": "your-model-id",
-    },
-)
-
-# Using automatic store_id substitution
-response = await fga_client.execute_api_request(
-    operation_name="GetAuthorizationModel",
-    method="GET",
-    path="/stores/{store_id}/authorization-models/{model_id}",
-    path_params={
         "model_id": "your-model-id",
     },
 )
