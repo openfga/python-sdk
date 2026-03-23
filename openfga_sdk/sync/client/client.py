@@ -1,6 +1,8 @@
 import uuid
 
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
@@ -24,6 +26,7 @@ from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
+from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple, convert_tuple_keys
 from openfga_sdk.client.models.write_request import ClientWriteRequest
@@ -1097,3 +1100,77 @@ class OpenFgaClient:
             authorization_model_id, api_request_body, **kwargs
         )
         return api_response
+
+    #######################
+    # Execute API Request
+    #######################
+    def execute_api_request(
+        self,
+        *,
+        operation_name: str,
+        method: str,
+        path: str,
+        path_params: dict[str, str] | None = None,
+        body: dict[str, Any] | list[Any] | str | bytes | None = None,
+        query_params: dict[str, str | int | list[str | int]] | None = None,
+        headers: dict[str, str] | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> RawResponse:
+        """
+        Execute an arbitrary HTTP request to any OpenFGA API endpoint.
+
+        Useful for calling endpoints not yet wrapped by the SDK while
+        still getting authentication, retries, and error handling.
+
+        :param operation_name: Operation name for telemetry (e.g., "CustomCheck")
+        :param method: HTTP method (GET, POST, PUT, DELETE, PATCH)
+        :param path: API path, e.g. "/stores/{store_id}/my-endpoint".
+        :param path_params: Path parameter substitutions (URL-encoded automatically).
+            All path parameters, including store_id, must be provided explicitly.
+        :param body: Request body for POST/PUT/PATCH
+        :param query_params: Query string parameters
+        :param headers: Custom headers (SDK enforces Content-Type and Accept)
+        :param options: Extra options e.g. {"retry_params": RetryParams(max_retry=3)}
+        :return: RawResponse with status, headers, and body
+        """
+        return self._api.execute_api_request(
+            operation_name=operation_name,
+            method=method,
+            path=path,
+            path_params=path_params,
+            body=body,
+            query_params=query_params,
+            headers=headers,
+            options=options,
+        )
+
+    def execute_streamed_api_request(
+        self,
+        *,
+        operation_name: str,
+        method: str,
+        path: str,
+        path_params: dict[str, str] | None = None,
+        body: dict[str, Any] | list[Any] | str | bytes | None = None,
+        query_params: dict[str, str | int | list[str | int]] | None = None,
+        headers: dict[str, str] | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        """
+        Execute an arbitrary HTTP request to a streaming OpenFGA API endpoint.
+
+        Same interface as execute_api_request but for streaming endpoints.
+        See execute_api_request for full parameter documentation.
+
+        :return: Iterator yielding parsed JSON chunks from the streaming response.
+        """
+        yield from self._api.execute_streamed_api_request(
+            operation_name=operation_name,
+            method=method,
+            path=path,
+            path_params=path_params,
+            body=body,
+            query_params=query_params,
+            headers=headers,
+            options=options,
+        )
