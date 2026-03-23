@@ -20,6 +20,7 @@ from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
 from openfga_sdk.client.models.list_users_request import ClientListUsersRequest
+from openfga_sdk.client.models.raw_response import RawResponse
 from openfga_sdk.client.models.read_changes_request import ClientReadChangesRequest
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
@@ -28,6 +29,7 @@ from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpt
 from openfga_sdk.configuration import RetryParams
 from openfga_sdk.exceptions import (
     FgaValidationException,
+    RateLimitExceededError,
     UnauthorizedException,
     ValidationException,
 )
@@ -3906,12 +3908,17 @@ def client_configuration():
     )
 
 
-class TestClientConfigurationHeaders:
+class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
     """Tests for ClientConfiguration headers parameter"""
 
-    def test_client_configuration_headers_default_none(self, client_configuration):
+    def setUp(self):
+        self.configuration = ClientConfiguration(
+            api_url="http://api.fga.example",
+        )
+
+    def test_client_configuration_headers_default_none(self):
         """Test that headers default to an empty dict in ClientConfiguration"""
-        assert client_configuration.headers == {}
+        assert self.configuration.headers == {}
 
     def test_client_configuration_headers_initialization_with_dict(self):
         """Test initializing ClientConfiguration with headers"""
@@ -3936,11 +3943,11 @@ class TestClientConfigurationHeaders:
         )
         assert config.headers == {}
 
-    def test_client_configuration_headers_setter(self, client_configuration):
+    def test_client_configuration_headers_setter(self):
         """Test setting headers via property setter"""
         headers = {"X-Test": "test-value"}
-        client_configuration.headers = headers
-        assert client_configuration.headers == headers
+        self.configuration.headers = headers
+        assert self.configuration.headers == headers
 
     def test_client_configuration_headers_with_authorization_model_id(self):
         """Test ClientConfiguration with headers and authorization_model_id"""
@@ -4165,3 +4172,519 @@ class TestClientConfigurationHeaders:
                 _preload_content=ANY,
                 _request_timeout=None,
             )
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_post_with_body(self, mock_request):
+        """Test case for execute_api_request
+
+        Make a POST request with JSON body
+        """
+        response_body = '{"result": "success", "data": {"id": "123"}}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="CustomEndpoint",
+                method="POST",
+                path="/stores/{store_id}/custom-endpoint",
+                path_params={"store_id": store_id},
+                body={"user": "user:bob", "action": "custom_action"},
+                query_params={"page_size": "20"},
+                headers={"X-Experimental-Feature": "enabled"},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+            self.assertIsNotNone(response.headers)
+            self.assertIsNotNone(response.body)
+            self.assertIsInstance(response.body, dict)
+            self.assertEqual(response.body["result"], "success")
+
+            # Verify response helper methods
+            json_data = response.json()
+            self.assertIsNotNone(json_data)
+            self.assertEqual(json_data["result"], "success")
+
+            text_data = response.text()
+            self.assertIsNotNone(text_data)
+            self.assertIn("success", text_data)
+
+            # Verify the API was called with correct parameters
+            mock_request.assert_called_once_with(
+                "POST",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/custom-endpoint",
+                query_params=[("page_size", "20")],
+                headers=ANY,
+                post_params=None,
+                body={"user": "user:bob", "action": "custom_action"},
+                _preload_content=True,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_get_with_query_params(self, mock_request):
+        """Test case for execute_api_request
+
+        Make a GET request with query parameters
+        """
+        response_body = (
+            '{"stores": [{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}]}'
+        )
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="ListStores",
+                method="GET",
+                path="/stores",
+                query_params={
+                    "page_size": 10,
+                    "continuation_token": "eyJwayI6...",
+                },
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+            self.assertIsNotNone(response.body)
+            self.assertIsInstance(response.body, dict)
+            self.assertIn("stores", response.body)
+
+            # Verify the API was called with correct parameters
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores",
+                query_params=[
+                    ("page_size", "10"),
+                    ("continuation_token", "eyJwayI6..."),
+                ],
+                headers=ANY,
+                post_params=None,
+                body=None,
+                _preload_content=True,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_with_path_params(self, mock_request):
+        """Test case for execute_api_request
+
+        Make a request with path parameters
+        """
+        response_body = '{"authorization_model": {"id": "01G5JAVJ41T49E9TT3SKVS7X1J"}}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="ReadAuthorizationModel",
+                method="GET",
+                path="/stores/{store_id}/authorization-models/{model_id}",
+                path_params={
+                    "store_id": store_id,
+                    "model_id": "01G5JAVJ41T49E9TT3SKVS7X1J",
+                },
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+            self.assertIsNotNone(response.body)
+
+            # Verify the API was called with correct path
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/authorization-models/01G5JAVJ41T49E9TT3SKVS7X1J",
+                query_params=None,
+                headers=ANY,
+                post_params=None,
+                body=None,
+                _preload_content=True,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_explicit_store_id_in_path_params(self, mock_request):
+        """Test case for execute_api_request
+
+        Test that store_id must be provided explicitly in path_params
+        """
+        response_body = '{"id": "01YCP46JKYM8FJCQ37NMBYHE5X", "name": "store1"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="GetStore",
+                method="GET",
+                path="/stores/{store_id}",
+                path_params={"store_id": store_id},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+
+            # Verify store_id was substituted from explicit path_params
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X",
+                query_params=None,
+                headers=ANY,
+                post_params=None,
+                body=None,
+                _preload_content=True,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @pytest.mark.asyncio
+    async def test_api_executor_missing_operation_name(self):
+        """Test case for execute_api_request
+
+        Test that operation_name is required
+        """
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(FgaValidationException) as error:
+                await api_client.execute_api_request(
+                    operation_name="",
+                    method="GET",
+                    path="/stores",
+                )
+            self.assertIn("operation_name is required", str(error.exception))
+            await api_client.close()
+
+    @pytest.mark.asyncio
+    async def test_api_executor_missing_store_id(self):
+        """Test case for execute_api_request
+
+        Test that store_id must be provided in path_params when path contains {store_id}
+        """
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(FgaValidationException) as error:
+                await api_client.execute_api_request(
+                    operation_name="GetStore",
+                    method="GET",
+                    path="/stores/{store_id}",
+                )
+            self.assertIn("store_id", str(error.exception))
+            await api_client.close()
+
+    @pytest.mark.asyncio
+    async def test_api_executor_missing_path_params(self):
+        """Test case for execute_api_request
+
+        Test that all path parameters must be provided
+        """
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(FgaValidationException) as error:
+                await api_client.execute_api_request(
+                    operation_name="ReadAuthorizationModel",
+                    method="GET",
+                    path="/stores/{store_id}/authorization-models/{model_id}",
+                    path_params={"store_id": store_id},
+                    # Missing model_id in path_params
+                )
+            self.assertIn("model_id", str(error.exception))
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_with_list_query_params(self, mock_request):
+        """Test case for execute_api_request
+
+        Test query parameters with list values
+        """
+        response_body = '{"results": []}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="ListStores",
+                method="GET",
+                path="/stores",
+                query_params={"ids": ["id1", "id2", "id3"]},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+
+            # Verify list query params are expanded
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores",
+                query_params=[("ids", "id1"), ("ids", "id2"), ("ids", "id3")],
+                headers=ANY,
+                post_params=None,
+                body=None,
+                _preload_content=True,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_default_headers(self, mock_request):
+        """Test case for execute_api_request
+
+        Test that default headers (Content-Type, Accept) are set
+        """
+        response_body = '{"result": "success"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="CustomEndpoint",
+                method="POST",
+                path="/stores/{store_id}/custom-endpoint",
+                path_params={"store_id": store_id},
+                body={"test": "data"},
+            )
+
+            self.assertIsInstance(response, RawResponse)
+            self.assertEqual(response.status, 200)
+
+            # Verify default headers are set
+            call_args = mock_request.call_args
+            headers = call_args[1]["headers"]
+            self.assertEqual(headers.get("Content-Type"), "application/json")
+            self.assertEqual(headers.get("Accept"), "application/json")
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @pytest.mark.asyncio
+    async def test_api_executor_url_encoded_path_params(self, mock_request):
+        """Test case for execute_api_request
+
+        Test that path parameters are URL encoded
+        """
+        response_body = '{"result": "success"}'
+        mock_request.return_value = mock_response(response_body, 200)
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            response = await api_client.execute_api_request(
+                operation_name="CustomEndpoint",
+                method="GET",
+                path="/stores/{store_id}/custom/{param}",
+                path_params={
+                    "store_id": store_id,
+                    "param": "value with spaces & special chars",
+                },
+            )
+
+            self.assertIsInstance(response, RawResponse)
+
+            mock_request.assert_called_once_with(
+                "GET",
+                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/custom/value%20with%20spaces%20%26%20special%20chars",
+                query_params=None,
+                headers=ANY,
+                post_params=None,
+                body=None,
+                _preload_content=True,
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_basic(self, mock_stream):
+        """Test execute_streamed_api_request yields all chunks from the stream."""
+
+        async def mock_gen():
+            yield {"result": {"object": "document:roadmap"}}
+            yield {"result": {"object": "document:budget"}}
+
+        mock_stream.return_value = mock_gen()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={
+                    "type": "document",
+                    "relation": "viewer",
+                    "user": "user:anne",
+                },
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 2)
+            self.assertEqual(chunks[0], {"result": {"object": "document:roadmap"}})
+            self.assertEqual(chunks[1], {"result": {"object": "document:budget"}})
+
+            mock_stream.assert_called_once_with(
+                "POST",
+                f"http://api.fga.example/stores/{store_id}/streamed-list-objects",
+                query_params=None,
+                headers=ANY,
+                post_params=None,
+                body={"type": "document", "relation": "viewer", "user": "user:anne"},
+                _request_timeout=None,
+            )
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_empty_stream(self, mock_stream):
+        """Test execute_streamed_api_request handles an empty stream gracefully."""
+
+        async def mock_gen():
+            return
+            yield  # make it an async generator
+
+        mock_stream.return_value = mock_gen()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={"type": "document", "relation": "viewer", "user": "user:nobody"},
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 0)
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_path_substitution(self, mock_stream):
+        """Test execute_streamed_api_request substitutes path params correctly."""
+
+        async def mock_gen():
+            yield {"result": {"object": "document:roadmap"}}
+
+        mock_stream.return_value = mock_gen()
+
+        configuration = self.configuration
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={"type": "document", "relation": "viewer", "user": "user:anne"},
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 1)
+
+            # Verify store_id was substituted in the URL
+            call_args = mock_stream.call_args
+            self.assertIn(store_id, call_args[0][1])
+            self.assertNotIn("{store_id}", call_args[0][1])
+            await api_client.close()
+
+    @patch("asyncio.sleep")
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_retry_on_connection(
+        self, mock_stream, mock_sleep
+    ):
+        """Test that the streaming executor retries on connection-phase errors (e.g. 429)
+        but does NOT retry once streaming has begun."""
+
+        async def mock_gen():
+            yield {"result": {"object": "document:roadmap"}}
+            yield {"result": {"object": "document:budget"}}
+
+        mock_stream.side_effect = [
+            RateLimitExceededError(
+                http_resp=http_mock_response(
+                    '{"code": "rate_limit_exceeded", "message": "Rate Limit exceeded"}',
+                    429,
+                )
+            ),
+            mock_gen(),
+        ]
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.retry_params = RetryParams(max_retry=3, min_wait_in_ms=10)
+        async with OpenFgaClient(configuration) as api_client:
+            chunks = []
+            async for chunk in api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={
+                    "type": "document",
+                    "relation": "viewer",
+                    "user": "user:anne",
+                },
+            ):
+                chunks.append(chunk)
+
+            self.assertEqual(len(chunks), 2)
+            self.assertEqual(chunks[0], {"result": {"object": "document:roadmap"}})
+            self.assertEqual(chunks[1], {"result": {"object": "document:budget"}})
+
+            # stream() was called twice: first raised 429, second succeeded
+            self.assertEqual(mock_stream.call_count, 2)
+            await api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_no_retry_without_config(
+        self, mock_stream
+    ):
+        """Test that without retry config, a 429 on connection is raised immediately."""
+
+        mock_stream.side_effect = RateLimitExceededError(
+            http_resp=http_mock_response(
+                '{"code": "rate_limit_exceeded", "message": "Rate Limit exceeded"}',
+                429,
+            )
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.retry_params = RetryParams(max_retry=0)
+        async with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(RateLimitExceededError):
+                async for _chunk in api_client.execute_streamed_api_request(
+                    operation_name="StreamedListObjects",
+                    method="POST",
+                    path="/stores/{store_id}/streamed-list-objects",
+                    path_params={"store_id": store_id},
+                    body={
+                        "type": "document",
+                        "relation": "viewer",
+                        "user": "user:anne",
+                    },
+                ):
+                    pass  # should not reach here
+
+            self.assertEqual(mock_stream.call_count, 1)
+            await api_client.close()
