@@ -24,8 +24,10 @@ from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.configuration import RetryParams
 from openfga_sdk.exceptions import (
     FgaValidationException,
+    RateLimitExceededError,
     UnauthorizedException,
     ValidationException,
 )
@@ -4156,7 +4158,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             )
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_post_with_body(self, mock_request):
+    def test_api_executor_post_with_body(self, mock_request):
         """Test case for execute_api_request
 
         Make a POST request with JSON body
@@ -4207,7 +4209,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_get_with_query_params(self, mock_request):
+    def test_api_executor_get_with_query_params(self, mock_request):
         """Test case for execute_api_request
 
         Make a GET request with query parameters
@@ -4252,7 +4254,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_with_path_params(self, mock_request):
+    def test_api_executor_with_path_params(self, mock_request):
         """Test case for execute_api_request
 
         Make a request with path parameters
@@ -4291,7 +4293,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_explicit_store_id_in_path_params(self, mock_request):
+    def test_api_executor_explicit_store_id_in_path_params(self, mock_request):
         """Test case for execute_api_request
 
         Test that store_id must be provided explicitly in path_params
@@ -4325,7 +4327,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             )
             api_client.close()
 
-    def test_raw_request_missing_operation_name(self):
+    def test_api_executor_missing_operation_name(self):
         """Test case for execute_api_request
 
         Test that operation_name is required
@@ -4342,7 +4344,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             self.assertIn("operation_name is required", str(error.exception))
             api_client.close()
 
-    def test_raw_request_missing_store_id(self):
+    def test_api_executor_missing_store_id(self):
         """Test case for execute_api_request
 
         Test that store_id must be provided in path_params when path contains {store_id}
@@ -4358,7 +4360,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             self.assertIn("store_id", str(error.exception))
             api_client.close()
 
-    def test_raw_request_missing_path_params(self):
+    def test_api_executor_missing_path_params(self):
         """Test case for execute_api_request
 
         Test that all path parameters must be provided
@@ -4378,7 +4380,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_with_list_query_params(self, mock_request):
+    def test_api_executor_with_list_query_params(self, mock_request):
         """Test case for execute_api_request
 
         Test query parameters with list values
@@ -4411,7 +4413,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_default_headers(self, mock_request):
+    def test_api_executor_default_headers(self, mock_request):
         """Test case for execute_api_request
 
         Test that default headers (Content-Type, Accept) are set
@@ -4440,7 +4442,7 @@ class TestSyncClientConfigurationHeaders(TestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_raw_request_url_encoded_path_params(self, mock_request):
+    def test_api_executor_url_encoded_path_params(self, mock_request):
         """Test case for execute_api_request
 
         Test that path parameters are URL encoded
@@ -4578,4 +4580,85 @@ class TestSyncClientConfigurationHeaders(TestCase):
             call_args = mock_stream.call_args
             self.assertIn(store_id, call_args[0][1])
             self.assertNotIn("{store_id}", call_args[0][1])
+            api_client.close()
+
+    @patch("time.sleep")
+    @patch.object(rest.RESTClientObject, "stream")
+    def test_execute_streamed_api_request_retry_on_connection(
+        self, mock_stream, mock_sleep
+    ):
+        """Test that the streaming executor retries on connection-phase errors (e.g. 429)
+        but does NOT retry once streaming has begun."""
+
+        def mock_gen():
+            yield {"result": {"object": "document:roadmap"}}
+            yield {"result": {"object": "document:budget"}}
+
+        mock_stream.side_effect = [
+            RateLimitExceededError(
+                http_resp=http_mock_response(
+                    '{"code": "rate_limit_exceeded", "message": "Rate Limit exceeded"}',
+                    429,
+                )
+            ),
+            mock_gen(),
+        ]
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.retry_params = RetryParams(max_retry=3, min_wait_in_ms=10)
+        with OpenFgaClient(configuration) as api_client:
+            chunks = list(
+                api_client.execute_streamed_api_request(
+                    operation_name="StreamedListObjects",
+                    method="POST",
+                    path="/stores/{store_id}/streamed-list-objects",
+                    path_params={"store_id": store_id},
+                    body={
+                        "type": "document",
+                        "relation": "viewer",
+                        "user": "user:anne",
+                    },
+                )
+            )
+
+            self.assertEqual(len(chunks), 2)
+            self.assertEqual(chunks[0], {"result": {"object": "document:roadmap"}})
+            self.assertEqual(chunks[1], {"result": {"object": "document:budget"}})
+
+            # stream() was called twice: first raised 429, second succeeded
+            self.assertEqual(mock_stream.call_count, 2)
+            api_client.close()
+
+    @patch.object(rest.RESTClientObject, "stream")
+    def test_execute_streamed_api_request_no_retry_without_config(self, mock_stream):
+        """Test that without retry config, a 429 on connection is raised immediately."""
+
+        mock_stream.side_effect = RateLimitExceededError(
+            http_resp=http_mock_response(
+                '{"code": "rate_limit_exceeded", "message": "Rate Limit exceeded"}',
+                429,
+            )
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.retry_params = RetryParams(max_retry=0)
+        with OpenFgaClient(configuration) as api_client:
+            with self.assertRaises(RateLimitExceededError):
+                list(
+                    api_client.execute_streamed_api_request(
+                        operation_name="StreamedListObjects",
+                        method="POST",
+                        path="/stores/{store_id}/streamed-list-objects",
+                        path_params={"store_id": store_id},
+                        body={
+                            "type": "document",
+                            "relation": "viewer",
+                            "user": "user:anne",
+                        },
+                    )
+                )
+
+            self.assertEqual(mock_stream.call_count, 1)
             api_client.close()

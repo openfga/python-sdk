@@ -1,8 +1,7 @@
 # ruff: noqa: E402
 
 """
-execute_api_request example — calls real OpenFGA endpoints and compares
-the results with the regular SDK methods to verify correctness.
+execute_api_request example
 
 Requires a running OpenFGA server (default: http://localhost:8080).
     export FGA_API_URL=http://localhost:8080   # optional, this is the default
@@ -49,14 +48,12 @@ async def main():
     async with OpenFgaClient(configuration) as fga_client:
         print("=== Setup ===")
 
-        # Create a test store via the SDK
         store = await fga_client.create_store(
             CreateStoreRequest(name="execute_api_request_test")
         )
         fga_client.set_store_id(store.id)
         print(f"Created store: {store.id}")
 
-        # Write an authorization model
         model_resp = await fga_client.write_authorization_model(
             WriteAuthorizationModelRequest(
                 schema_version="1.1",
@@ -101,7 +98,6 @@ async def main():
         fga_client.set_authorization_model_id(auth_model_id)
         print(f"Created model: {auth_model_id}")
 
-        # Write a tuple
         await fga_client.write(
             ClientWriteRequest(
                 writes=[
@@ -113,10 +109,11 @@ async def main():
                 ]
             )
         )
-        print("Wrote tuple: user:anne → writer → document:roadmap")
+        print("Wrote tuple: user:anne writer document:roadmap")
 
         print("\n=== execute_api_request ===\n")
 
+        # 1. ListStores
         print("1. ListStores (GET /stores)")
         raw = await fga_client.execute_api_request(
             operation_name="ListStores",
@@ -128,12 +125,11 @@ async def main():
         body = raw.json()
         assert raw.status == 200, f"Expected 200, got {raw.status}"
         assert "stores" in body
-        assert len(body["stores"]) == len(sdk.stores), (
-            f"Count mismatch: {len(body['stores'])} vs {len(sdk.stores)}"
-        )
-        print(f"   ✅ {len(body['stores'])} stores (status {raw.status})")
+        assert len(body["stores"]) == len(sdk.stores)
+        print(f"   {len(body['stores'])} stores (status {raw.status})")
 
-        print("2. GetStore (GET /stores/{store_id})")
+        # 2. GetStore
+        print("2. GetStore (GET /stores/{{store_id}})")
         raw = await fga_client.execute_api_request(
             operation_name="GetStore",
             method="GET",
@@ -145,10 +141,11 @@ async def main():
         assert raw.status == 200
         assert body["id"] == sdk.id
         assert body["name"] == sdk.name
-        print(f"   ✅ id={body['id']}, name={body['name']}")
+        print(f"   id={body['id']}, name={body['name']}")
 
+        # 3. ReadAuthorizationModels
         print(
-            "3. ReadAuthorizationModels (GET /stores/{store_id}/authorization-models)"
+            "3. ReadAuthorizationModels (GET /stores/{{store_id}}/authorization-models)"
         )
         raw = await fga_client.execute_api_request(
             operation_name="ReadAuthorizationModels",
@@ -160,9 +157,10 @@ async def main():
         body = raw.json()
         assert raw.status == 200
         assert len(body["authorization_models"]) == len(sdk.authorization_models)
-        print(f"   ✅ {len(body['authorization_models'])} models")
+        print(f"   {len(body['authorization_models'])} models")
 
-        print("4. Check (POST /stores/{store_id}/check)")
+        # 4. Check
+        print("4. Check (POST /stores/{{store_id}}/check)")
         raw = await fga_client.execute_api_request(
             operation_name="Check",
             method="POST",
@@ -187,9 +185,10 @@ async def main():
         body = raw.json()
         assert raw.status == 200
         assert body["allowed"] == sdk.allowed
-        print(f"   ✅ allowed={body['allowed']}")
+        print(f"   allowed={body['allowed']}")
 
-        print("5. Read (POST /stores/{store_id}/read)")
+        # 5. Read
+        print("5. Read (POST /stores/{{store_id}}/read)")
         raw = await fga_client.execute_api_request(
             operation_name="Read",
             method="POST",
@@ -206,22 +205,24 @@ async def main():
         assert raw.status == 200
         assert "tuples" in body
         assert len(body["tuples"]) >= 1
-        print(f"   ✅ {len(body['tuples'])} tuples returned")
+        print(f"   {len(body['tuples'])} tuples returned")
 
+        # 6. CreateStore
         print("6. CreateStore (POST /stores)")
         raw = await fga_client.execute_api_request(
             operation_name="CreateStore",
             method="POST",
             path="/stores",
-            body={"name": "raw_request_test_store"},
+            body={"name": "executor_test_store"},
         )
         body = raw.json()
         assert raw.status == 201, f"Expected 201, got {raw.status}"
         assert "id" in body
         new_store_id = body["id"]
-        print(f"   ✅ created store: {new_store_id}")
+        print(f"   created store: {new_store_id}")
 
-        print("7. DeleteStore (DELETE /stores/{store_id})")
+        # 7. DeleteStore
+        print("7. DeleteStore (DELETE /stores/{{store_id}})")
         raw = await fga_client.execute_api_request(
             operation_name="DeleteStore",
             method="DELETE",
@@ -229,9 +230,10 @@ async def main():
             path_params={"store_id": new_store_id},
         )
         assert raw.status == 204, f"Expected 204, got {raw.status}"
-        print(f"   ✅ deleted store: {new_store_id} (status 204 No Content)")
+        print(f"   deleted store: {new_store_id} (status 204)")
 
-        print("8. Custom headers (GET /stores/{store_id})")
+        # 8. Custom headers
+        print("8. Custom headers (GET /stores/{{store_id}})")
         raw = await fga_client.execute_api_request(
             operation_name="GetStoreWithHeaders",
             method="GET",
@@ -240,9 +242,12 @@ async def main():
             headers={"X-Custom-Header": "test-value"},
         )
         assert raw.status == 200
-        print(f"   ✅ custom headers accepted (status {raw.status})")
+        print(f"   custom headers accepted (status {raw.status})")
 
-        print("9. StreamedListObjects (POST /stores/{store_id}/streamed-list-objects)")
+        # 9. StreamedListObjects
+        print(
+            "9. StreamedListObjects (POST /stores/{{store_id}}/streamed-list-objects)"
+        )
         chunks = []
         async for chunk in fga_client.execute_streamed_api_request(
             operation_name="StreamedListObjects",
@@ -258,16 +263,16 @@ async def main():
         ):
             chunks.append(chunk)
         assert len(chunks) >= 1, f"Expected at least 1 chunk, got {len(chunks)}"
-        # Each chunk has the shape {"result": {"object": "..."}} or {"error": {...}}
         objects = [c["result"]["object"] for c in chunks if "result" in c]
         assert "document:roadmap" in objects, f"Expected document:roadmap in {objects}"
-        print(f"   ✅ {len(chunks)} chunks, objects={objects}")
+        print(f"   {len(chunks)} chunks, objects={objects}")
 
+        # Cleanup
         print("\n=== Cleanup ===")
         await fga_client.delete_store()
         print(f"Deleted test store: {store.id}")
 
-        print("\nAll execute_api_request examples completed successfully.\n")
+        print("\nAll examples completed successfully.\n")
 
 
 asyncio.run(main())
