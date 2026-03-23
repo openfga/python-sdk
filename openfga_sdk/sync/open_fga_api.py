@@ -88,9 +88,8 @@ class OpenFgaApi:
     ) -> Any:
         """Shared executor for all API endpoint methods.
 
-        Delegates to _execute_api_request_internal (or
-        _execute_streamed_api_request_internal when _streaming=True) so all
-        API calls share one unified code path.
+        Delegates to the public execute_api_request / execute_streamed_api_request
+        so all API calls share one unified code path.
         """
         if options is None:
             options = {}
@@ -118,7 +117,7 @@ class OpenFgaApi:
         )
 
         if options.get("_streaming", False):
-            return self._execute_streamed_api_request_internal(
+            return self.execute_streamed_api_request(
                 operation_name=operation_name,
                 method=method,
                 path=path,
@@ -128,9 +127,10 @@ class OpenFgaApi:
                 options=options,
                 response_types_map=response_types_map,
                 telemetry_attributes=telemetry_attributes,
+                _skip_builder=True,
             )
 
-        return self._execute_api_request_internal(
+        return self.execute_api_request(
             operation_name=operation_name,
             method=method,
             path=path,
@@ -151,15 +151,21 @@ class OpenFgaApi:
         path: str,
         path_params: dict[str, str] | None = None,
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
-        query_params: dict[str, str | int | list[str | int]] | None = None,
+        query_params: dict[str, str | int | list[str | int]] | list | None = None,
         headers: dict[str, str] | None = None,
         options: dict[str, Any] | None = None,
-    ) -> RawResponse:
+        response_types_map: dict | None = None,
+        telemetry_attributes: dict | None = None,
+        _skip_builder: bool = False,
+    ) -> Any:
         """
         Execute an arbitrary HTTP request to any OpenFGA API endpoint.
 
         Useful for calling endpoints not yet wrapped by the SDK while
         still getting authentication, retries, and error handling.
+
+        When called directly by users, returns a RawResponse.
+        When called internally with response_types_map, returns a deserialized typed model.
 
         :param operation_name: Operation name for telemetry (e.g., "CustomCheck")
         :param method: HTTP method (GET, POST, PUT, DELETE, PATCH)
@@ -170,17 +176,109 @@ class OpenFgaApi:
         :param query_params: Query string parameters
         :param headers: Custom headers (SDK enforces Content-Type and Accept)
         :param options: Extra options e.g. {"retry_params": RetryParams(max_retry=3)}
-        :return: RawResponse with status, headers, and body
+        :param response_types_map: When provided, merge with common error types and
+            return a deserialized typed model. When None, return RawResponse.
+        :param telemetry_attributes: When provided, use as-is for telemetry.
+            When None, build minimal defaults.
+        :param _skip_builder: When True, path/headers/query_params are used as-is
+            (already resolved by _execute). When False (default), run through
+            ExecuteApiRequestBuilder.
+        :return: RawResponse (public callers) or deserialized model (internal callers)
         """
-        return self._execute_api_request_internal(
-            operation_name=operation_name,
-            method=method,
-            path=path,
-            path_params=path_params,
+        from openfga_sdk.client.execute_api_request_builder import (
+            ExecuteApiRequestBuilder,
+            ResponseParser,
+        )
+        from openfga_sdk.client.models.raw_response import RawResponse
+
+        if _skip_builder:
+            resource_path = path
+            query_params_list = query_params if query_params is not None else []
+            final_headers = headers or {}
+        else:
+            builder = ExecuteApiRequestBuilder(
+                operation_name=operation_name,
+                method=method,
+                path=path,
+                path_params=path_params,
+                body=body,
+                query_params=query_params,
+                headers=headers,
+            )
+            builder.validate()
+
+            resource_path = builder.build_path()
+            query_params_list = builder.build_query_params_list()
+            final_headers = builder.build_headers()
+
+        retry_params = options.get("retry_params") if options else None
+        request_timeout = options.get("_request_timeout") if options else None
+        async_req = options.get("async_req") if options else None
+
+        if telemetry_attributes is None:
+            telemetry_attributes = {
+                TelemetryAttributes.fga_client_request_method: operation_name.lower(),
+            }
+            if self.api_client.get_store_id():
+                telemetry_attributes[
+                    TelemetryAttributes.fga_client_request_store_id
+                ] = self.api_client.get_store_id()
+
+        if response_types_map is not None:
+            merged_response_types_map = {
+                **self._COMMON_ERROR_RESPONSE_TYPES,
+                **response_types_map,
+            }
+            return self.api_client.call_api(
+                resource_path=resource_path,
+                method=method.upper(),
+                path_params={},
+                query_params=query_params_list if query_params_list else [],
+                header_params=final_headers,
+                body=body,
+                post_params=[],
+                files={},
+                response_types_map=merged_response_types_map,
+                auth_settings=[],
+                async_req=async_req,
+                _return_http_data_only=True,
+                _preload_content=True,
+                _request_timeout=request_timeout,
+                _retry_params=retry_params,
+                collection_formats={},
+                _oauth2_client=self._oauth2_client,
+                _telemetry_attributes=telemetry_attributes,
+                _streaming=False,
+            )
+
+        # No response_types_map: public caller path → return RawResponse
+        self.api_client.call_api(
+            resource_path=resource_path,
+            method=method.upper(),
+            query_params=query_params_list if query_params_list else None,
+            header_params=final_headers,
             body=body,
-            query_params=query_params,
-            headers=headers,
-            options=options,
+            response_types_map={},
+            auth_settings=[],
+            _return_http_data_only=True,
+            _preload_content=True,
+            _retry_params=retry_params,
+            _oauth2_client=self._oauth2_client,
+            _telemetry_attributes=telemetry_attributes,
+            _streaming=False,
+        )
+
+        rest_response = getattr(self.api_client, "last_response", None)
+        if rest_response is None:
+            raise RuntimeError(
+                f"No response for {method.upper()} {resource_path} "
+                f"(operation: {operation_name})"
+            )
+
+        return RawResponse(
+            status=rest_response.status,
+            headers=dict(rest_response.getheaders()),
+            body=ResponseParser.parse_body(rest_response.data),
         )
 
     def execute_streamed_api_request(
@@ -191,9 +289,12 @@ class OpenFgaApi:
         path: str,
         path_params: dict[str, str] | None = None,
         body: dict[str, Any] | list[Any] | str | bytes | None = None,
-        query_params: dict[str, str | int | list[str | int]] | None = None,
+        query_params: dict[str, str | int | list[str | int]] | list | None = None,
         headers: dict[str, str] | None = None,
         options: dict[str, Any] | None = None,
+        response_types_map: dict | None = None,
+        telemetry_attributes: dict | None = None,
+        _skip_builder: bool = False,
     ) -> Iterator[dict[str, Any]]:
         """
         Execute an arbitrary HTTP request to a streaming OpenFGA API endpoint.
@@ -212,39 +313,9 @@ class OpenFgaApi:
         :param query_params: Query string parameters
         :param headers: Custom headers (SDK enforces Content-Type and Accept)
         :param options: Extra options e.g. {"retry_params": RetryParams(max_retry=3)}
-        """
-        yield from self._execute_streamed_api_request_internal(
-            operation_name=operation_name,
-            method=method,
-            path=path,
-            path_params=path_params,
-            body=body,
-            query_params=query_params,
-            headers=headers,
-            options=options,
-        )
-
-    def _execute_streamed_api_request_internal(
-        self,
-        *,
-        operation_name: str,
-        method: str,
-        path: str,
-        path_params: dict[str, str] | None = None,
-        body: dict[str, Any] | list[Any] | str | bytes | None = None,
-        query_params=None,
-        headers=None,
-        options: dict[str, Any] | None = None,
-        response_types_map: dict | None = None,
-        telemetry_attributes: dict | None = None,
-        _skip_builder: bool = False,
-    ) -> Iterator[dict[str, Any]]:
-        """Implementation for streaming API requests.
-
-        When _skip_builder=True, query_params must already be a list of tuples
-        and headers must already be a fully-built dict (used when called from _execute).
-        When response_types_map is provided, it is merged with _COMMON_ERROR_RESPONSE_TYPES.
-        When telemetry_attributes is provided, it is used as-is instead of building minimal defaults.
+        :param response_types_map: When provided, merge with common error types.
+        :param telemetry_attributes: When provided, use as-is for telemetry.
+        :param _skip_builder: When True, path/headers/query_params are used as-is.
         """
         if _skip_builder:
             resource_path = path
@@ -306,126 +377,6 @@ class OpenFgaApi:
         )
 
         yield from stream
-
-    def _execute_api_request_internal(
-        self,
-        *,
-        operation_name: str,
-        method: str,
-        path: str,
-        path_params: dict[str, str] | None = None,
-        body: dict[str, Any] | list[Any] | str | bytes | None = None,
-        query_params=None,
-        headers=None,
-        options: dict[str, Any] | None = None,
-        response_types_map: dict | None = None,
-        telemetry_attributes: dict | None = None,
-        _skip_builder: bool = False,
-    ) -> Any:
-        """Implementation for execute_api_request (and _execute delegation).
-
-        When _skip_builder=True, query_params must already be a list of tuples
-        and headers must already be a fully-built dict (used when called from _execute).
-        When response_types_map is provided, it is merged with _COMMON_ERROR_RESPONSE_TYPES
-        and the deserialized typed result from call_api is returned directly.
-        When telemetry_attributes is provided, it is used as-is instead of building minimal defaults.
-        """
-        from openfga_sdk.client.execute_api_request_builder import (
-            ExecuteApiRequestBuilder,
-            ResponseParser,
-        )
-        from openfga_sdk.client.models.raw_response import RawResponse
-
-        if _skip_builder:
-            resource_path = path
-            query_params_list = query_params if query_params is not None else []
-            final_headers = headers or {}
-        else:
-            builder = ExecuteApiRequestBuilder(
-                operation_name=operation_name,
-                method=method,
-                path=path,
-                path_params=path_params,
-                body=body,
-                query_params=query_params,
-                headers=headers,
-            )
-            builder.validate()
-
-            resource_path = builder.build_path()
-            query_params_list = builder.build_query_params_list()
-            final_headers = builder.build_headers()
-
-        retry_params = options.get("retry_params") if options else None
-        request_timeout = options.get("_request_timeout") if options else None
-        async_req = options.get("async_req") if options else None
-
-        if telemetry_attributes is None:
-            telemetry_attributes = {
-                TelemetryAttributes.fga_client_request_method: operation_name.lower(),
-            }
-            if self.api_client.get_store_id():
-                telemetry_attributes[
-                    TelemetryAttributes.fga_client_request_store_id
-                ] = self.api_client.get_store_id()
-
-        if response_types_map is not None:
-            merged_response_types_map = {
-                **self._COMMON_ERROR_RESPONSE_TYPES,
-                **response_types_map,
-            }
-            # call_api returns a deserialized typed model when response_types_map is non-empty
-            return self.api_client.call_api(
-                resource_path=resource_path,
-                method=method.upper(),
-                path_params={},
-                query_params=query_params_list if query_params_list else [],
-                header_params=final_headers,
-                body=body,
-                post_params=[],
-                files={},
-                response_types_map=merged_response_types_map,
-                auth_settings=[],
-                async_req=async_req,
-                _return_http_data_only=True,
-                _preload_content=True,
-                _request_timeout=request_timeout,
-                _retry_params=retry_params,
-                collection_formats={},
-                _oauth2_client=self._oauth2_client,
-                _telemetry_attributes=telemetry_attributes,
-                _streaming=False,
-            )
-
-        # No response_types_map: public execute_api_request path → return RawResponse
-        self.api_client.call_api(
-            resource_path=resource_path,
-            method=method.upper(),
-            query_params=query_params_list if query_params_list else None,
-            header_params=final_headers,
-            body=body,
-            response_types_map={},
-            auth_settings=[],
-            _return_http_data_only=True,
-            _preload_content=True,
-            _retry_params=retry_params,
-            _oauth2_client=self._oauth2_client,
-            _telemetry_attributes=telemetry_attributes,
-            _streaming=False,
-        )
-
-        rest_response = getattr(self.api_client, "last_response", None)
-        if rest_response is None:
-            raise RuntimeError(
-                f"No response for {method.upper()} {resource_path} "
-                f"(operation: {operation_name})"
-            )
-
-        return RawResponse(
-            status=rest_response.status,
-            headers=dict(rest_response.getheaders()),
-            body=ResponseParser.parse_body(rest_response.data),
-        )
 
     def batch_check(self, body, **kwargs):
         """Send a list of `check` operations in a single request
