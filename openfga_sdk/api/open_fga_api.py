@@ -211,7 +211,11 @@ class OpenFgaApi:
             query_params_list = builder.build_query_params_list()
             final_headers = builder.build_headers()
 
-        retry_params = options.get("retry_params") if options else None
+        retry_params = (
+            options.get("retry_params") or options.get("_retry_params")
+            if options
+            else None
+        )
         request_timeout = options.get("_request_timeout") if options else None
         async_req = options.get("async_req") if options else None
 
@@ -341,7 +345,12 @@ class OpenFgaApi:
             query_params_list = builder.build_query_params_list()
             final_headers = builder.build_headers()
 
-        retry_params = options.get("retry_params") if options else None
+        retry_params = (
+            options.get("retry_params") or options.get("_retry_params")
+            if options
+            else None
+        )
+        request_timeout = options.get("_request_timeout") if options else None
 
         if telemetry_attributes is None:
             telemetry_attributes = {
@@ -370,6 +379,7 @@ class OpenFgaApi:
             auth_settings=[],
             _return_http_data_only=True,
             _preload_content=True,
+            _request_timeout=request_timeout,
             _retry_params=retry_params,
             _oauth2_client=self._oauth2_client,
             _telemetry_attributes=telemetry_attributes,
