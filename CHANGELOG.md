@@ -1,10 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.9.9...HEAD)
+## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.10.0...HEAD)
+
+### [0.10.0](https://github.com/openfga/python-sdk/compare/v0.9.9...v0.10.0) (2026-03-24)
 
 - feat: add `execute_api_request` and `execute_streamed_api_request` methods to `OpenFgaClient` and `OpenFgaApi` for making arbitrary HTTP requests to any OpenFGA API endpoint with full auth, retry, and telemetry support (#252) - thanks @kcbiradar
 
-### Breaking Changes
+#### Breaking Changes
 
 - The `_return_http_data_only`, `_preload_content`, `_request_auth`, `async_req`, and `_request_timeout` kwargs have been removed from all `OpenFgaApi` and `SyncOpenFgaApi` endpoint methods. These were internal implementation details not intended for external use. `_return_http_data_only` is now hardcoded to `True`; all endpoint methods return the deserialized response object directly. Users relying on `_with_http_info` methods returning a `(data, status, headers)` tuple should use `execute_api_request` instead.
 
