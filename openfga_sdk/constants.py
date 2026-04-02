@@ -14,7 +14,7 @@ from typing import Final
 
 
 # Version of the OpenFGA Python SDK.
-SDK_VERSION: Final[str] = "0.10.0"
+SDK_VERSION: Final[str] = "0.10.0"  # x-release-please-version
 
 # User agent used in HTTP requests.
 USER_AGENT: Final[str] = "openfga-sdk python/0.10.0"
