@@ -20,8 +20,11 @@
         { "type": "chore",    "section": "Miscellaneous", "hidden": true  }
       ],
       "extra-files": [
-        { "type": "toml",    "path": "pyproject.toml",          "jsonpath": "$.project.version" },
-        { "type": "generic", "path": "openfga_sdk/constants.py" }
+        { "type": "toml",    "path": "pyproject.toml",                    "jsonpath": "$.project.version" },
+        { "type": "generic", "path": "openfga_sdk/constants.py"           },
+        { "type": "generic", "path": "README.md"                          },
+        { "type": "generic", "path": "example/example1/setup.py"          },
+        { "type": "generic", "path": "example/example1/requirements.txt"  }
       ]
     }
   }

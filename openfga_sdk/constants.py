@@ -17,7 +17,8 @@ from typing import Final
 SDK_VERSION: Final[str] = "0.10.0"  # x-release-please-version
 
 # User agent used in HTTP requests.
-USER_AGENT: Final[str] = "openfga-sdk python/0.10.0"
+
+USER_AGENT: Final[str] = "openfga-sdk python/0.10.0"  # x-release-please-version
 
 # Example API domain for documentation/tests.
 SAMPLE_BASE_DOMAIN: Final[str] = "fga.example"
