@@ -1,7 +1,5 @@
 # Changelog
 
-## [Unreleased](https://github.com/openfga/python-sdk/compare/v0.10.0...HEAD)
-
 ### [0.10.0](https://github.com/openfga/python-sdk/compare/v0.9.9...v0.10.0) (2026-03-24)
 
 - feat: add `execute_api_request` and `execute_streamed_api_request` methods to `OpenFgaClient` and `OpenFgaApi` for making arbitrary HTTP requests to any OpenFGA API endpoint with full auth, retry, and telemetry support (#252) - thanks @kcbiradar
