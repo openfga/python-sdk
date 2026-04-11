@@ -3,6 +3,7 @@
   "release-type": "python",
   "packages": {
     ".": {
+      "package-name": "",
       "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md",
       "changelog-type": "default",
@@ -17,7 +18,8 @@
         { "type": "docs",     "section": "Documentation", "hidden": false },
         { "type": "test",     "section": "Tests",         "hidden": true  },
         { "type": "ci",       "section": "CI",            "hidden": true  },
-        { "type": "chore",    "section": "Miscellaneous", "hidden": true  }
+        { "type": "chore",    "section": "Miscellaneous", "hidden": true  },
+        { "type": "release",  "section": "Miscellaneous", "hidden": true  }
       ],
       "extra-files": [
         { "type": "toml",    "path": "pyproject.toml",                    "jsonpath": "$.project.version" },
