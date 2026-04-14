@@ -436,11 +436,15 @@ class RESTClientObject:
                 except json.JSONDecodeError:
                     logger.debug("Incomplete leftover data at end of stream.")
 
-            # Handle any HTTP errors that may have occurred
-            self.handle_response_exception(response)
-
-            # Release the response object (required!)
-            response.release_conn()
+            try:
+                # Handle any HTTP errors that may have occurred
+                self.handle_response_exception(response)
+            finally:
+                # Release the response object back to the connection pool.
+                # This must always run, even if handle_response_exception raises,
+                # to avoid leaking the connection (preload_content=False means
+                # urllib3 does not auto-release).
+                response.release_conn()
 
     def request(
         self,

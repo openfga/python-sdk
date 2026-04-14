@@ -428,3 +428,98 @@ async def test_stream_partial_chunks():
 
     client.handle_response_exception.assert_awaited_once()
     mock_response.release.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_releases_conn_on_error_status():
+    """Ensure release() is called even when handle_response_exception raises,
+    so the connection is returned to the pool and not leaked."""
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_session = MagicMock()
+    client.pool_manager = mock_session
+
+    class FakeContent:
+        async def iter_chunks(self):
+            yield (b'{"ok":true}\n', None)
+
+    mock_response = MagicMock()
+    mock_response.status = 500
+    mock_response.reason = "Internal Server Error"
+    mock_response.data = None
+    mock_response.content = FakeContent()
+
+    mock_context_manager = AsyncMock()
+    mock_context_manager.__aenter__.return_value = mock_response
+    mock_context_manager.__aexit__.return_value = None
+
+    mock_session.request.return_value = mock_context_manager
+
+    # Make handle_response_exception raise an exception
+    client.handle_response_exception = AsyncMock(
+        side_effect=ServiceException(status=500, reason="Internal Server Error")
+    )
+    client.close = AsyncMock()
+
+    results = []
+    with pytest.raises(ServiceException):
+        async for item in client.stream("GET", "http://example.com"):
+            results.append(item)
+
+    # The critical assertion: release() must be called even though
+    # handle_response_exception raised ServiceException
+    mock_response.release.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_releases_conn_on_success():
+    """Ensure release() is called on successful stream completion."""
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_session = MagicMock()
+    client.pool_manager = mock_session
+
+    class FakeContent:
+        async def iter_chunks(self):
+            yield (b'{"ok":true}\n', None)
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.reason = "OK"
+    mock_response.data = None
+    mock_response.content = FakeContent()
+
+    mock_context_manager = AsyncMock()
+    mock_context_manager.__aenter__.return_value = mock_response
+    mock_context_manager.__aexit__.return_value = None
+
+    mock_session.request.return_value = mock_context_manager
+
+    client.handle_response_exception = AsyncMock()
+    client.close = AsyncMock()
+
+    results = []
+    async for item in client.stream("GET", "http://example.com"):
+        results.append(item)
+
+    assert results == [{"ok": True}]
+    client.handle_response_exception.assert_awaited_once()
+    mock_response.release.assert_called_once()

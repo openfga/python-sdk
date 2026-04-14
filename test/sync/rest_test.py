@@ -522,6 +522,96 @@ def test_stream_exception_in_chunks():
     mock_pool_manager.request.assert_called_once()
 
 
+def test_stream_releases_conn_on_error_status():
+    """Ensure release_conn() is called even when handle_response_exception raises,
+    so the connection is returned to the pool and not leaked."""
+    mock_config = MagicMock(
+        spec=[
+            "verify_ssl",
+            "ssl_ca_cert",
+            "cert_file",
+            "key_file",
+            "assert_hostname",
+            "retries",
+            "socket_options",
+            "connection_pool_maxsize",
+            "timeout_millisec",
+            "proxy",
+            "proxy_headers",
+        ]
+    )
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.timeout_millisec = 5000
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_pool_manager = MagicMock()
+    client.pool_manager = mock_pool_manager
+
+    mock_response = MagicMock()
+    mock_response.status = 500
+    mock_response.reason = "Internal Server Error"
+    mock_response.stream.return_value = iter([])  # empty stream, no chunks
+
+    mock_pool_manager.request.return_value = mock_response
+
+    with pytest.raises(ServiceException):
+        # Must consume the generator to trigger the finally block
+        list(client.stream("GET", "http://example.com"))
+
+    # The critical assertion: release_conn() must be called even though
+    # handle_response_exception raised ServiceException
+    mock_response.release_conn.assert_called_once()
+
+
+def test_stream_releases_conn_on_success():
+    """Ensure release_conn() is called on successful stream completion."""
+    mock_config = MagicMock(
+        spec=[
+            "verify_ssl",
+            "ssl_ca_cert",
+            "cert_file",
+            "key_file",
+            "assert_hostname",
+            "retries",
+            "socket_options",
+            "connection_pool_maxsize",
+            "timeout_millisec",
+            "proxy",
+            "proxy_headers",
+        ]
+    )
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.timeout_millisec = 5000
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_pool_manager = MagicMock()
+    client.pool_manager = mock_pool_manager
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.reason = "OK"
+    mock_response.stream.return_value = iter([b'{"ok":true}\n'])
+
+    mock_pool_manager.request.return_value = mock_response
+
+    results = list(client.stream("GET", "http://example.com"))
+
+    assert results == [{"ok": True}]
+    mock_response.release_conn.assert_called_once()
+
+
 # Tests for SSL Context Reuse (fix for OpenSSL 3.0+ performance issues)
 @patch("ssl.create_default_context")
 @patch("urllib3.PoolManager")
