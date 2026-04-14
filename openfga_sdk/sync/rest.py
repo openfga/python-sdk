@@ -496,5 +496,4 @@ class RESTClientObject:
         # Handle any errors that may have occurred
         self.handle_response_exception(raw_response)
 
-
         return wrapped_response or raw_response
