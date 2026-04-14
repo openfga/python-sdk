@@ -493,7 +493,13 @@ class RESTClientObject:
             # Log the response body
             logger.debug("response body: %s", wrapped_response.data.decode("utf-8"))
 
-        # Handle any errors that may have occurred
-        self.handle_response_exception(raw_response)
+        # Handle any errors that may have occurred. If an exception is raised,
+        # ensure the underlying response is closed so the connection is not
+        # leaked from the pool.
+        try:
+            self.handle_response_exception(raw_response)
+        except Exception:
+            raw_response.close()
+            raise
 
         return wrapped_response or raw_response
