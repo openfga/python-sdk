@@ -1,7 +1,6 @@
 import io
 import json
 import logging
-import re
 import ssl
 import urllib
 
@@ -221,7 +220,7 @@ class RESTClientObject:
             args["url"] = f"{url}?{encoded_qs}"
 
         if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
-            if re.search("json", headers["Content-Type"], re.IGNORECASE):
+            if "json" in headers["Content-Type"].lower():
                 if body is not None:
                     body = json.dumps(body)
                 args["data"] = body

@@ -1,7 +1,6 @@
 import io
 import json
 import logging
-import re
 import ssl
 import urllib
 
@@ -279,7 +278,7 @@ class RESTClientObject:
 
         # Handle body/post_params for methods that send payloads
         if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
-            if re.search("json", headers["Content-Type"], re.IGNORECASE):
+            if "json" in headers["Content-Type"].lower():
                 if body is not None:
                     body = json.dumps(body)
                 args["body"] = body
@@ -497,7 +496,5 @@ class RESTClientObject:
         # Handle any errors that may have occurred
         self.handle_response_exception(raw_response)
 
-        # Release the connection back to the pool
-        self.close()
 
         return wrapped_response or raw_response

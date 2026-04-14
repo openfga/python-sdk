@@ -241,8 +241,9 @@ class TelemetryAttributes:
             _attributes[TelemetryAttributes.http_request_method] = http_method
 
         if url is not None:
-            _hostname = urllib.parse.urlparse(url).hostname
-            _scheme = urllib.parse.urlparse(url).scheme
+            _parsed_url = urllib.parse.urlparse(url)
+            _hostname = _parsed_url.hostname
+            _scheme = _parsed_url.scheme
 
             if type(_hostname) is str:
                 _attributes[TelemetryAttributes.http_host] = _hostname
