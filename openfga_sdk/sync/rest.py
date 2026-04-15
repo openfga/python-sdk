@@ -1,7 +1,6 @@
 import io
 import json
 import logging
-import re
 import ssl
 import urllib
 
@@ -279,7 +278,7 @@ class RESTClientObject:
 
         # Handle body/post_params for methods that send payloads
         if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
-            if re.search("json", headers["Content-Type"], re.IGNORECASE):
+            if "json" in headers["Content-Type"].lower():
                 if body is not None:
                     body = json.dumps(body)
                 args["body"] = body
@@ -437,11 +436,15 @@ class RESTClientObject:
                 except json.JSONDecodeError:
                     logger.debug("Incomplete leftover data at end of stream.")
 
-            # Handle any HTTP errors that may have occurred
-            self.handle_response_exception(response)
-
-            # Release the response object (required!)
-            response.release_conn()
+            try:
+                # Handle any HTTP errors that may have occurred
+                self.handle_response_exception(response)
+            finally:
+                # Release the response object back to the connection pool.
+                # This must always run, even if handle_response_exception raises,
+                # to avoid leaking the connection (preload_content=False means
+                # urllib3 does not auto-release).
+                response.release_conn()
 
     def request(
         self,
@@ -494,10 +497,13 @@ class RESTClientObject:
             # Log the response body
             logger.debug("response body: %s", wrapped_response.data.decode("utf-8"))
 
-        # Handle any errors that may have occurred
-        self.handle_response_exception(raw_response)
-
-        # Release the connection back to the pool
-        self.close()
+        # Handle any errors that may have occurred. If an exception is raised,
+        # ensure the underlying response is closed so the connection is not
+        # leaked from the pool.
+        try:
+            self.handle_response_exception(raw_response)
+        except Exception:
+            raw_response.close()
+            raise
 
         return wrapped_response or raw_response

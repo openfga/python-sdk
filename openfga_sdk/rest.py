@@ -1,7 +1,6 @@
 import io
 import json
 import logging
-import re
 import ssl
 import urllib
 
@@ -221,7 +220,7 @@ class RESTClientObject:
             args["url"] = f"{url}?{encoded_qs}"
 
         if method in ["POST", "PUT", "PATCH", "OPTIONS", "DELETE"]:
-            if re.search("json", headers["Content-Type"], re.IGNORECASE):
+            if "json" in headers["Content-Type"].lower():
                 if body is not None:
                     body = json.dumps(body)
                 args["data"] = body
@@ -397,11 +396,15 @@ class RESTClientObject:
             if isinstance(response, aiohttp.ClientResponse):
                 logger.debug("response body: %s", buffer.decode("utf-8"))
 
-            # Handle any HTTP errors that may have occurred
-            await self.handle_response_exception(response)
-
-            # Release the response object (required!)
-            response.release()
+            try:
+                # Handle any HTTP errors that may have occurred
+                await self.handle_response_exception(response)
+            finally:
+                # Release the response object back to the connection pool.
+                # This must always run, even if handle_response_exception raises,
+                # to avoid leaking the connection (preload_content=False means
+                # the connection is not auto-released).
+                response.release()
 
     async def request(
         self,
