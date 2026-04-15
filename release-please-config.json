@@ -27,7 +27,9 @@
         { "type": "generic", "path": "openfga_sdk/constants.py"           },
         { "type": "generic", "path": "README.md"                          },
         { "type": "generic", "path": "example/example1/setup.py"          },
-        { "type": "generic", "path": "example/example1/requirements.txt"  }
+        { "type": "generic", "path": "example/example1/requirements.txt"  },
+        { "type": "generic", "path": "VERSION.txt"                        },
+        { "type": "toml",    "path": "uv.lock",                            "jsonpath": "$.package[?(@.name.value=='openfga-sdk')].version" }
       ]
     }
   }
