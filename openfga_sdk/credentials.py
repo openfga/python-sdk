@@ -215,11 +215,10 @@ class Credentials:
                 self.configuration is None
                 or none_or_empty(self.configuration.client_id)
                 or none_or_empty(self.configuration.client_secret)
-                or none_or_empty(self.configuration.api_audience)
                 or none_or_empty(self.configuration.api_issuer)
             ):
                 raise ApiValueError(
-                    "configuration `{}` requires client_id, client_secret, api_audience and api_issuer defined for client_credentials method."
+                    "configuration `{}` requires client_id, client_secret and api_issuer defined for client_credentials method."
                 )
 
             # validate token issuer

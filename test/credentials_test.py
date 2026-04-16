@@ -184,9 +184,10 @@ class TestCredentials(IsolatedAsyncioTestCase):
         with self.assertRaises(openfga_sdk.ApiValueError):
             credential.validate_credentials_config()
 
-    def test_configuration_client_credentials_missing_api_audience(self):
+    def test_configuration_client_credentials_without_api_audience(self):
         """
-        Test credential with method client_credentials and configuration is missing api audience
+        Test credential with method client_credentials and no api_audience is valid
+        (audience is optional for standard OAuth2 servers)
         """
         credential = Credentials(
             method="client_credentials",
@@ -196,8 +197,9 @@ class TestCredentials(IsolatedAsyncioTestCase):
                 api_issuer="issuer.fga.example",
             ),
         )
-        with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+        credential.validate_credentials_config()
+        self.assertEqual(credential.method, "client_credentials")
+        self.assertIsNone(credential.configuration.api_audience)
 
 
 class TestCredentialsIssuer(IsolatedAsyncioTestCase):

@@ -189,9 +189,10 @@ async def main():
             method='client_credentials',
             configuration=CredentialConfiguration(
                 api_issuer=FGA_API_TOKEN_ISSUER,
-                api_audience=FGA_API_AUDIENCE,
+                api_audience=FGA_API_AUDIENCE,  # optional, required for Auth0; omit for standard OAuth2
                 client_id=FGA_CLIENT_ID,
                 client_secret=FGA_CLIENT_SECRET,
+                # scopes="read write",  # optional, space-separated OAuth2 scopes
             )
         )
     )

@@ -64,9 +64,11 @@ class OAuth2Client:
         post_params = {
             "client_id": configuration.client_id,
             "client_secret": configuration.client_secret,
-            "audience": configuration.api_audience,
             "grant_type": "client_credentials",
         }
+
+        if configuration.api_audience is not None:
+            post_params["audience"] = configuration.api_audience
 
         # Add scope parameter if scopes are configured
         if configuration.scopes is not None:

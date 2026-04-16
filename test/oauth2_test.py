@@ -601,3 +601,103 @@ This is not a JSON response
             },
         )
         await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_without_audience(self, mock_request):
+        """
+        Test that audience is omitted from the token request when not provided
+        (standard OAuth2 flow without Auth0 audience extension)
+        """
+        response_body = """
+{
+  "expires_in": 120,
+  "access_token": "AABBCCDD"
+}
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+        auth_header = await client.get_authentication_header(rest_client)
+        self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+        expected_header = urllib3.response.HTTPHeaderDict(
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": USER_AGENT,
+            }
+        )
+        mock_request.assert_called_once_with(
+            method="POST",
+            url="https://issuer.fga.example/oauth/token",
+            headers=expected_header,
+            query_params=None,
+            body=None,
+            _preload_content=True,
+            _request_timeout=None,
+            post_params={
+                "client_id": "myclientid",
+                "client_secret": "mysecret",
+                "grant_type": "client_credentials",
+            },
+        )
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_with_scopes_no_audience(self, mock_request):
+        """
+        Test that scope is sent and audience is omitted when only scopes are provided
+        (standard OAuth2 flow)
+        """
+        response_body = """
+{
+  "expires_in": 120,
+  "access_token": "AABBCCDD"
+}
+        """
+        mock_request.return_value = mock_response(response_body, 200)
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                scopes="read write",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+        auth_header = await client.get_authentication_header(rest_client)
+        self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+        expected_header = urllib3.response.HTTPHeaderDict(
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": USER_AGENT,
+            }
+        )
+        mock_request.assert_called_once_with(
+            method="POST",
+            url="https://issuer.fga.example/oauth/token",
+            headers=expected_header,
+            query_params=None,
+            body=None,
+            _preload_content=True,
+            _request_timeout=None,
+            post_params={
+                "client_id": "myclientid",
+                "client_secret": "mysecret",
+                "grant_type": "client_credentials",
+                "scope": "read write",
+            },
+        )
+        await rest_client.close()
