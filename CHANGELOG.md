@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.10.1](https://github.com/openfga/python-sdk/compare/v0.10.0...v0.10.1) (2026-04-16)
+
+
+### Added
+
+* release automation configs ([#262](https://github.com/openfga/python-sdk/issues/262)) ([fdee3c6](https://github.com/openfga/python-sdk/commit/fdee3c69a58160c26a517ec5bbbb855e70ae109d))
+
+
+### Fixed
+
+* stop destroying connection pool after every sync request ([#270](https://github.com/openfga/python-sdk/issues/270)) ([9d39016](https://github.com/openfga/python-sdk/commit/9d3901636908bb3e1d47032764fb96aabdeb5e85))
+
+
+### Documentation
+
+* remove fga_client.close() from README ([#191](https://github.com/openfga/python-sdk/issues/191)) ([#239](https://github.com/openfga/python-sdk/issues/239)) ([070ec15](https://github.com/openfga/python-sdk/commit/070ec157077483e32c8b0b32e357126b7bf4d734))
+
+
+### Miscellaneous
+
+* release 0.10.1 ([446d512](https://github.com/openfga/python-sdk/commit/446d5121f5a2f534deebcef436b58b0c63796ae2))
+
 ### [0.10.0](https://github.com/openfga/python-sdk/compare/v0.9.9...v0.10.0) (2026-03-24)
 
 - feat: add `execute_api_request` and `execute_streamed_api_request` methods to `OpenFgaClient` and `OpenFgaApi` for making arbitrary HTTP requests to any OpenFGA API endpoint with full auth, retry, and telemetry support (#252) - thanks @kcbiradar
