@@ -67,15 +67,24 @@ class OAuth2Client:
             "grant_type": "client_credentials",
         }
 
-        if configuration.api_audience is not None:
+        if (
+            configuration.api_audience is not None
+            and configuration.api_audience.strip()
+        ):
             post_params["audience"] = configuration.api_audience
 
         # Add scope parameter if scopes are configured
         if configuration.scopes is not None:
             if isinstance(configuration.scopes, list):
-                post_params["scope"] = " ".join(configuration.scopes)
+                scope_str = " ".join(s for s in configuration.scopes if s and s.strip())
             else:
-                post_params["scope"] = configuration.scopes
+                scope_str = (
+                    configuration.scopes.strip()
+                    if isinstance(configuration.scopes, str)
+                    else ""
+                )
+            if scope_str:
+                post_params["scope"] = scope_str
 
         headers = urllib3.response.HTTPHeaderDict(
             {

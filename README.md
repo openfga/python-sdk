@@ -202,6 +202,37 @@ async def main():
         return api_response
 ```
 
+> **Note:** `api_issuer` accepts either a hostname (e.g., `issuer.fga.example`, which defaults to `https://<hostname>/oauth/token`) or a full token endpoint URL (e.g., `https://oauth.fga.example/token`). Use the full URL when your OAuth2 provider uses a non-standard token endpoint path.
+
+#### OAuth2 Client Credentials (Standard OAuth2)
+
+For OAuth2 providers that use `scope` instead of `audience`:
+
+```python
+from openfga_sdk import ClientConfiguration, OpenFgaClient
+from openfga_sdk.credentials import Credentials, CredentialConfiguration
+
+
+async def main():
+    configuration = ClientConfiguration(
+        api_url=FGA_API_URL,  # required
+        store_id=FGA_STORE_ID,  # optional
+        authorization_model_id=FGA_MODEL_ID,  # optional
+        credentials=Credentials(
+            method='client_credentials',
+            configuration=CredentialConfiguration(
+                api_issuer="https://oauth.fga.example/token",  # full token endpoint URL
+                client_id=FGA_CLIENT_ID,
+                client_secret=FGA_CLIENT_SECRET,
+                scopes="email profile",  # space-separated OAuth2 scopes
+            )
+        )
+    )
+    async with OpenFgaClient(configuration) as fga_client:
+        api_response = await fga_client.read_authorization_models()
+        return api_response
+```
+
 ### Custom Headers
 
 #### Default Headers
