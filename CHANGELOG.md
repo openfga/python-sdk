@@ -17,11 +17,6 @@
 
 * remove fga_client.close() from README ([#191](https://github.com/openfga/python-sdk/issues/191)) ([#239](https://github.com/openfga/python-sdk/issues/239)) ([070ec15](https://github.com/openfga/python-sdk/commit/070ec157077483e32c8b0b32e357126b7bf4d734))
 
-
-### Miscellaneous
-
-* release 0.10.1 ([446d512](https://github.com/openfga/python-sdk/commit/446d5121f5a2f534deebcef436b58b0c63796ae2))
-
 ### [0.10.0](https://github.com/openfga/python-sdk/compare/v0.9.9...v0.10.0) (2026-03-24)
 
 - feat: add `execute_api_request` and `execute_streamed_api_request` methods to `OpenFgaClient` and `OpenFgaApi` for making arbitrary HTTP requests to any OpenFGA API endpoint with full auth, retry, and telemetry support (#252) - thanks @kcbiradar
