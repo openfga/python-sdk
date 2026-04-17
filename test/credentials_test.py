@@ -184,9 +184,10 @@ class TestCredentials(IsolatedAsyncioTestCase):
         with self.assertRaises(openfga_sdk.ApiValueError):
             credential.validate_credentials_config()
 
-    def test_configuration_client_credentials_missing_api_audience(self):
+    def test_configuration_client_credentials_without_api_audience(self):
         """
-        Test credential with method client_credentials and configuration is missing api audience
+        Test credential with method client_credentials and no api_audience is valid
+        (audience is optional for standard OAuth2 servers)
         """
         credential = Credentials(
             method="client_credentials",
@@ -196,14 +197,114 @@ class TestCredentials(IsolatedAsyncioTestCase):
                 api_issuer="issuer.fga.example",
             ),
         )
-        with self.assertRaises(openfga_sdk.ApiValueError):
-            credential.validate_credentials_config()
+        credential.validate_credentials_config()
+        self.assertEqual(credential.method, "client_credentials")
+        self.assertIsNone(credential.configuration.api_audience)
+
+    def test_configuration_client_credentials_blank_api_audience_normalized(self):
+        """
+        Test that blank/whitespace api_audience is normalized to None
+        (common misconfiguration from env vars like FGA_API_AUDIENCE="")
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="",
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertIsNone(credential.configuration.api_audience)
+
+    def test_configuration_client_credentials_whitespace_api_audience_normalized(self):
+        """
+        Test that whitespace-only api_audience is normalized to None
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="   ",
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertIsNone(credential.configuration.api_audience)
+
+    def test_configuration_client_credentials_blank_scopes_normalized(self):
+        """
+        Test that blank scopes string is normalized to None
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                scopes="",
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertIsNone(credential.configuration.scopes)
+
+    def test_configuration_client_credentials_whitespace_scopes_normalized(self):
+        """
+        Test that whitespace-only scopes string is normalized to None
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                scopes="   ",
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertIsNone(credential.configuration.scopes)
+
+    def test_configuration_client_credentials_empty_scopes_list_normalized(self):
+        """
+        Test that empty scopes list is normalized to None
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                scopes=[],
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertIsNone(credential.configuration.scopes)
+
+    def test_configuration_client_credentials_blank_scopes_list_normalized(self):
+        """
+        Test that scopes list with only blank strings is normalized to None
+        """
+        credential = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                scopes=["", "  "],
+            ),
+        )
+        credential.validate_credentials_config()
+        self.assertIsNone(credential.configuration.scopes)
 
 
 class TestCredentialsIssuer(IsolatedAsyncioTestCase):
     def setUp(self):
         # Setup a basic configuration that can be modified per test case
-        self.configuration = CredentialConfiguration(api_issuer="https://example.com")
+        self.configuration = CredentialConfiguration(
+            api_issuer="https://abc.fga.example"
+        )
         self.credentials = Credentials(
             method="client_credentials", configuration=self.configuration
         )
@@ -216,15 +317,15 @@ class TestCredentialsIssuer(IsolatedAsyncioTestCase):
 
     def test_valid_issuer_with_oauth_endpoint_https(self):
         # Test a valid HTTPS URL
-        self.configuration.api_issuer = "https://example.com/oauth/token"
+        self.configuration.api_issuer = "https://abc.fga.example/oauth/token"
         result = self.credentials._parse_issuer(self.configuration.api_issuer)
-        self.assertEqual(result, "https://example.com/oauth/token")
+        self.assertEqual(result, "https://abc.fga.example/oauth/token")
 
     def test_valid_issuer_with_some_endpoint_https(self):
         # Test a valid HTTPS URL
-        self.configuration.api_issuer = "https://example.com/oauth/some/endpoint"
+        self.configuration.api_issuer = "https://abc.fga.example/oauth/some/endpoint"
         result = self.credentials._parse_issuer(self.configuration.api_issuer)
-        self.assertEqual(result, "https://example.com/oauth/some/endpoint")
+        self.assertEqual(result, "https://abc.fga.example/oauth/some/endpoint")
 
     def test_valid_issuer_http(self):
         # Test a valid HTTP URL
@@ -242,7 +343,7 @@ class TestCredentialsIssuer(IsolatedAsyncioTestCase):
 
     def test_invalid_issuer_bad_scheme(self):
         # Test an issuer with an unsupported scheme
-        self.configuration.api_issuer = "ftp://example.com"
+        self.configuration.api_issuer = "ftp://abc.fga.example"
         with self.assertRaises(ApiValueError):
             self.credentials._parse_issuer(self.configuration.api_issuer)
 

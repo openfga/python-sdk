@@ -215,12 +215,32 @@ class Credentials:
                 self.configuration is None
                 or none_or_empty(self.configuration.client_id)
                 or none_or_empty(self.configuration.client_secret)
-                or none_or_empty(self.configuration.api_audience)
                 or none_or_empty(self.configuration.api_issuer)
             ):
                 raise ApiValueError(
-                    "configuration `{}` requires client_id, client_secret, api_audience and api_issuer defined for client_credentials method."
+                    f"configuration `{self.configuration}` requires client_id, client_secret and api_issuer defined for client_credentials method."
                 )
+
+            # Normalize blank/whitespace values to None
+            # (common misconfiguration from env vars like FGA_API_AUDIENCE="")
+            if (
+                isinstance(self.configuration.api_audience, str)
+                and self.configuration.api_audience.strip() == ""
+            ):
+                self.configuration.api_audience = None
+            if (
+                isinstance(self.configuration.scopes, str)
+                and self.configuration.scopes.strip() == ""
+            ):
+                self.configuration.scopes = None
+            if isinstance(self.configuration.scopes, list):
+                self.configuration.scopes = [
+                    s.strip()
+                    for s in self.configuration.scopes
+                    if isinstance(s, str) and s.strip()
+                ]
+                if not self.configuration.scopes:
+                    self.configuration.scopes = None
 
             # validate token issuer
             self._parse_issuer(self.configuration.api_issuer)
