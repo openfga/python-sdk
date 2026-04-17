@@ -478,4 +478,3 @@ This is not a JSON response
         )
         rest_client.close()
 
-        rest_client.close()

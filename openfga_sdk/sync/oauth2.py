@@ -76,7 +76,7 @@ class OAuth2Client:
         # Add scope parameter if scopes are configured
         if configuration.scopes is not None:
             if isinstance(configuration.scopes, list):
-                scope_str = " ".join(s for s in configuration.scopes if s and s.strip())
+                scope_str = " ".join(s.strip() for s in configuration.scopes if s and s.strip())
             else:
                 scope_str = (
                     configuration.scopes.strip()

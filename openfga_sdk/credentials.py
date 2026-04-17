@@ -218,7 +218,7 @@ class Credentials:
                 or none_or_empty(self.configuration.api_issuer)
             ):
                 raise ApiValueError(
-                    "configuration `{}` requires client_id, client_secret and api_issuer defined for client_credentials method."
+                    f"configuration `{self.configuration}` requires client_id, client_secret and api_issuer defined for client_credentials method."
                 )
 
             # Normalize blank/whitespace values to None
@@ -235,7 +235,7 @@ class Credentials:
                 self.configuration.scopes = None
             if isinstance(self.configuration.scopes, list):
                 self.configuration.scopes = [
-                    s
+                    s.strip()
                     for s in self.configuration.scopes
                     if isinstance(s, str) and s.strip()
                 ]
