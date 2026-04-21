@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.2](https://github.com/openfga/python-sdk/compare/v0.10.1...v0.10.2) (2026-04-21)
+
+
+### Added
+
+* oauth2 scopes for authentication ([#276](https://github.com/openfga/python-sdk/issues/276)) ([64f9b9f](https://github.com/openfga/python-sdk/commit/64f9b9fea9026bbe2c1375c342afb90d101579a4))
+
+
 ## [0.10.1](https://github.com/openfga/python-sdk/compare/v0.10.0...v0.10.1) (2026-04-16)
 
 
