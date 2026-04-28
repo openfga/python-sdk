@@ -511,6 +511,7 @@ This is not a JSON response
             for t in threads:
                 t.join()
 
+        self.assertEqual(len(results), 5)
         self.assertEqual(len(obtain_calls), 1)
         self.assertTrue(
             all(r == {"Authorization": "Bearer concurrent-token"} for r in results)
