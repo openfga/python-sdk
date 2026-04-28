@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
@@ -693,6 +694,42 @@ This is not a JSON response
         self.assertEqual(mock_request.call_count, 2)
 
         await rest_client.close()
+
+    async def test_concurrent_requests_only_fetch_token_once(self):
+        """
+        Multiple concurrent requests while the token is invalid should result in
+        only one token fetch — subsequent coroutines wait on the lock and reuse
+        the token obtained by the first.
+        """
+        obtain_calls = []
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        oauth_client = OAuth2Client(credentials)
+
+        async def mock_obtain_token(client):
+            obtain_calls.append(1)
+            await asyncio.sleep(0)  # yield so other coroutines reach the lock
+            oauth_client._access_token = "concurrent-token"
+            oauth_client._access_expiry_time = datetime.now() + timedelta(seconds=3600)
+            oauth_client._access_token_expiry_buffer = 300
+
+        with patch.object(oauth_client, "_obtain_token", side_effect=mock_obtain_token):
+            results = await asyncio.gather(
+                *[oauth_client.get_authentication_header(None) for _ in range(5)]
+            )
+
+        self.assertEqual(len(obtain_calls), 1)
+        self.assertTrue(
+            all(r == {"Authorization": "Bearer concurrent-token"} for r in results)
+        )
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_get_authentication_with_scopes_no_audience(self, mock_request):

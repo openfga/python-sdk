@@ -1,3 +1,5 @@
+import threading
+import time
 from datetime import datetime, timedelta
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
@@ -470,6 +472,49 @@ This is not a JSON response
 
         rest_client.close()
 
+    def test_concurrent_requests_only_fetch_token_once(self):
+        """
+        Multiple concurrent threads while the token is invalid should result in
+        only one token fetch — subsequent threads wait on the lock and reuse
+        the token obtained by the first.
+        """
+        obtain_calls = []
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        oauth_client = OAuth2Client(credentials)
+
+        def mock_obtain_token(client):
+            obtain_calls.append(1)
+            time.sleep(0.05)  # hold the lock briefly so other threads queue up
+            oauth_client._access_token = "concurrent-token"
+            oauth_client._access_expiry_time = datetime.now() + timedelta(seconds=3600)
+            oauth_client._access_token_expiry_buffer = 300
+
+        results = []
+
+        def call():
+            results.append(oauth_client.get_authentication_header(None))
+
+        with patch.object(oauth_client, "_obtain_token", side_effect=mock_obtain_token):
+            threads = [threading.Thread(target=call) for _ in range(5)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+        self.assertEqual(len(obtain_calls), 1)
+        self.assertTrue(
+            all(r == {"Authorization": "Bearer concurrent-token"} for r in results)
+        )
+
     @patch.object(rest.RESTClientObject, "request")
     def test_get_authentication_with_scopes_no_audience(self, mock_request):
         """
@@ -520,4 +565,3 @@ This is not a JSON response
             },
         )
         rest_client.close()
-

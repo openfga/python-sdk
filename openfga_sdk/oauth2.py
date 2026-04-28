@@ -41,6 +41,7 @@ class OAuth2Client:
         self._access_token = None
         self._access_expiry_time = None
         self._access_token_expiry_buffer = 0
+        self._lock = asyncio.Lock()
         self._telemetry = Telemetry()
 
         if configuration is None:
@@ -80,7 +81,9 @@ class OAuth2Client:
         # Add scope parameter if scopes are configured
         if configuration.scopes is not None:
             if isinstance(configuration.scopes, list):
-                scope_str = " ".join(s.strip() for s in configuration.scopes if s and s.strip())
+                scope_str = " ".join(
+                    s.strip() for s in configuration.scopes if s and s.strip()
+                )
             else:
                 scope_str = (
                     configuration.scopes.strip()
@@ -162,8 +165,8 @@ class OAuth2Client:
         """
         If configured, return the header for authentication
         """
-        # check to see token is valid
         if not self._token_valid():
-            # In this case, the token is not valid, we need to get the refresh the token
-            await self._obtain_token(client)
+            async with self._lock:
+                if not self._token_valid():
+                    await self._obtain_token(client)
         return {"Authorization": f"Bearer {self._access_token}"}
