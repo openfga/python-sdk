@@ -153,9 +153,8 @@ class OAuth2Client:
                 if api_response.get("expires_in") and api_response.get("access_token"):
                     self._token_state = _TokenState(
                         access_token=api_response.get("access_token"),
-                        expiry_time=datetime.now() + timedelta(
-                            seconds=int(api_response.get("expires_in"))
-                        ),
+                        expiry_time=datetime.now()
+                        + timedelta(seconds=int(api_response.get("expires_in"))),
                         expiry_buffer=(
                             TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC
                             + random.random() * TOKEN_EXPIRY_JITTER_IN_SEC
