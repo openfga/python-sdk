@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import urllib3
@@ -19,6 +20,13 @@ from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
+
+
+@dataclass(frozen=True)
+class _TokenState:
+    access_token: str
+    expiry_time: datetime
+    expiry_buffer: float
 
 
 def jitter(loop_count, min_wait_in_ms):
@@ -39,9 +47,7 @@ def jitter(loop_count, min_wait_in_ms):
 class OAuth2Client:
     def __init__(self, credentials: Credentials, configuration=None):
         self._credentials = credentials
-        self._access_token = None
-        self._access_expiry_time = None
-        self._access_token_expiry_buffer = 0
+        self._token_state: _TokenState | None = None
         self._lock = threading.Lock()
         self._telemetry = Telemetry()
 
@@ -54,10 +60,11 @@ class OAuth2Client:
         """
         Return whether token is valid (with proactive expiry buffer to avoid using near-expired tokens)
         """
-        if self._access_token is None or self._access_expiry_time is None:
+        state = self._token_state  # atomic snapshot — either old or new, never torn
+        if state is None:
             return False
-        remaining = (self._access_expiry_time - datetime.now()).total_seconds()
-        return remaining > self._access_token_expiry_buffer
+        remaining = (state.expiry_time - datetime.now()).total_seconds()
+        return remaining > state.expiry_buffer
 
     def _obtain_token(self, client):
         """
@@ -144,13 +151,15 @@ class OAuth2Client:
                     raise AuthenticationError(http_resp=raw_response)
 
                 if api_response.get("expires_in") and api_response.get("access_token"):
-                    self._access_expiry_time = datetime.now() + timedelta(
-                        seconds=int(api_response.get("expires_in"))
-                    )
-                    self._access_token = api_response.get("access_token")
-                    self._access_token_expiry_buffer = (
-                        TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC
-                        + random.random() * TOKEN_EXPIRY_JITTER_IN_SEC
+                    self._token_state = _TokenState(
+                        access_token=api_response.get("access_token"),
+                        expiry_time=datetime.now() + timedelta(
+                            seconds=int(api_response.get("expires_in"))
+                        ),
+                        expiry_buffer=(
+                            TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC
+                            + random.random() * TOKEN_EXPIRY_JITTER_IN_SEC
+                        ),
                     )
                     self._telemetry.metrics.credentialsRequest(
                         attributes={
@@ -170,4 +179,4 @@ class OAuth2Client:
             with self._lock:
                 if not self._token_valid():
                     self._obtain_token(client)
-        return {"Authorization": f"Bearer {self._access_token}"}
+        return {"Authorization": f"Bearer {self._token_state.access_token}"}

@@ -11,7 +11,7 @@ from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC, USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import AuthenticationError
-from openfga_sdk.oauth2 import OAuth2Client
+from openfga_sdk.oauth2 import OAuth2Client, _TokenState
 
 
 # Helper function to construct mock response
@@ -35,8 +35,11 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         Test getting authentication header when method is client credentials
         """
         client = OAuth2Client(None)
-        client._access_token = "XYZ123"
-        client._access_expiry_time = datetime.now() + timedelta(seconds=3600)
+        client._token_state = _TokenState(
+            access_token="XYZ123",
+            expiry_time=datetime.now() + timedelta(seconds=3600),
+            expiry_buffer=0,
+        )
         auth_header = await client.get_authentication_header(None)
         self.assertEqual(auth_header, {"Authorization": "Bearer XYZ123"})
 
@@ -67,9 +70,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -151,8 +154,11 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         rest_client = rest.RESTClientObject(Configuration())
         client = OAuth2Client(credentials)
 
-        client._access_token = "XYZ123"
-        client._access_expiry_time = datetime.now() - timedelta(seconds=240)
+        client._token_state = _TokenState(
+            access_token="XYZ123",
+            expiry_time=datetime.now() - timedelta(seconds=240),
+            expiry_buffer=0,
+        )
 
         with self.assertRaises(AuthenticationError):
             await client.get_authentication_header(rest_client)
@@ -293,9 +299,9 @@ This is not a JSON response
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -348,9 +354,9 @@ This is not a JSON response
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -403,9 +409,9 @@ This is not a JSON response
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -458,9 +464,9 @@ This is not a JSON response
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -516,9 +522,9 @@ This is not a JSON response
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -575,9 +581,9 @@ This is not a JSON response
         client = OAuth2Client(credentials)
         auth_header = await client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -718,9 +724,11 @@ This is not a JSON response
         async def mock_obtain_token(client):
             obtain_calls.append(1)
             await asyncio.sleep(0)  # yield so other coroutines reach the lock
-            oauth_client._access_token = "concurrent-token"
-            oauth_client._access_expiry_time = datetime.now() + timedelta(seconds=3600)
-            oauth_client._access_token_expiry_buffer = 300
+            oauth_client._token_state = _TokenState(
+                access_token="concurrent-token",
+                expiry_time=datetime.now() + timedelta(seconds=3600),
+                expiry_buffer=300,
+            )
 
         with patch.object(oauth_client, "_obtain_token", side_effect=mock_obtain_token):
             results = await asyncio.gather(
