@@ -5,7 +5,7 @@ from unittest.mock import patch
 import urllib3
 
 from openfga_sdk.configuration import Configuration
-from openfga_sdk.constants import USER_AGENT
+from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC, USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import AuthenticationError
 from openfga_sdk.sync import rest
@@ -34,7 +34,7 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         """
         client = OAuth2Client(None)
         client._access_token = "XYZ123"
-        client._access_expiry_time = datetime.now() + timedelta(seconds=60)
+        client._access_expiry_time = datetime.now() + timedelta(seconds=3600)
         auth_header = client.get_authentication_header(None)
         self.assertEqual(auth_header, {"Authorization": "Bearer XYZ123"})
 
@@ -425,6 +425,49 @@ This is not a JSON response
                 "grant_type": "client_credentials",
             },
         )
+        rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @patch("openfga_sdk.sync.oauth2.random")
+    def test_get_authentication_refreshes_near_expiry_token(
+        self, mock_random, mock_request
+    ):
+        """
+        Token close to expiry (within buffer window) should trigger a proactive refresh
+        """
+        mock_random.random.return_value = 0
+        short_lived_secs = max(1, TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC - 1)
+
+        mock_request.side_effect = [
+            mock_response(
+                f'{{"expires_in": {short_lived_secs}, "access_token": "short-lived-token"}}',
+                200,
+            ),
+            mock_response(
+                '{"expires_in": 3600, "access_token": "refreshed-token"}',
+                200,
+            ),
+        ]
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+
+        header1 = client.get_authentication_header(rest_client)
+        header2 = client.get_authentication_header(rest_client)
+
+        self.assertEqual(header1, {"Authorization": "Bearer short-lived-token"})
+        self.assertEqual(header2, {"Authorization": "Bearer refreshed-token"})
+        self.assertEqual(mock_request.call_count, 2)
+
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
