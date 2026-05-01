@@ -11,7 +11,8 @@ from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC, USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import AuthenticationError
-from openfga_sdk.oauth2 import OAuth2Client, _TokenState
+from openfga_sdk.oauth2 import OAuth2Client
+from openfga_sdk.oauth2_common import _TokenState
 
 
 # Helper function to construct mock response
