@@ -1,3 +1,6 @@
+import threading
+import time
+
 from datetime import datetime, timedelta
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
@@ -5,9 +8,10 @@ from unittest.mock import patch
 import urllib3
 
 from openfga_sdk.configuration import Configuration
-from openfga_sdk.constants import USER_AGENT
+from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC, USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import AuthenticationError
+from openfga_sdk.oauth2_common import _TokenState
 from openfga_sdk.sync import rest
 from openfga_sdk.sync.oauth2 import OAuth2Client
 
@@ -33,8 +37,11 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         Test getting authentication header when method is client credentials
         """
         client = OAuth2Client(None)
-        client._access_token = "XYZ123"
-        client._access_expiry_time = datetime.now() + timedelta(seconds=60)
+        client._token_state = _TokenState(
+            access_token="XYZ123",
+            expiry_time=datetime.now() + timedelta(seconds=3600),
+            expiry_buffer=0,
+        )
         auth_header = client.get_authentication_header(None)
         self.assertEqual(auth_header, {"Authorization": "Bearer XYZ123"})
 
@@ -65,9 +72,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         client = OAuth2Client(credentials)
         auth_header = client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -123,9 +130,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         client = OAuth2Client(credentials)
         auth_header = client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -182,9 +189,9 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         client = OAuth2Client(credentials)
         auth_header = client.get_authentication_header(rest_client)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
-        self.assertEqual(client._access_token, "AABBCCDD")
+        self.assertEqual(client._token_state.access_token, "AABBCCDD")
         self.assertGreaterEqual(
-            client._access_expiry_time, current_time + timedelta(seconds=120)
+            client._token_state.expiry_time, current_time + timedelta(seconds=120)
         )
         expected_header = urllib3.response.HTTPHeaderDict(
             {
@@ -265,8 +272,11 @@ class TestOAuth2Client(IsolatedAsyncioTestCase):
         rest_client = rest.RESTClientObject(Configuration())
         client = OAuth2Client(credentials)
 
-        client._access_token = "XYZ123"
-        client._access_expiry_time = datetime.now() - timedelta(seconds=240)
+        client._token_state = _TokenState(
+            access_token="XYZ123",
+            expiry_time=datetime.now() - timedelta(seconds=240),
+            expiry_buffer=0,
+        )
 
         with self.assertRaises(AuthenticationError):
             client.get_authentication_header(rest_client)
@@ -428,6 +438,95 @@ This is not a JSON response
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
+    @patch("openfga_sdk.sync.oauth2.random")
+    def test_get_authentication_refreshes_near_expiry_token(
+        self, mock_random, mock_request
+    ):
+        """
+        Token close to expiry (within buffer window) should trigger a proactive refresh
+        """
+        mock_random.random.return_value = 0
+        short_lived_secs = max(1, TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC - 1)
+
+        mock_request.side_effect = [
+            mock_response(
+                f'{{"expires_in": {short_lived_secs}, "access_token": "short-lived-token"}}',
+                200,
+            ),
+            mock_response(
+                '{"expires_in": 3600, "access_token": "refreshed-token"}',
+                200,
+            ),
+        ]
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        rest_client = rest.RESTClientObject(Configuration())
+        client = OAuth2Client(credentials)
+
+        header1 = client.get_authentication_header(rest_client)
+        header2 = client.get_authentication_header(rest_client)
+
+        self.assertEqual(header1, {"Authorization": "Bearer short-lived-token"})
+        self.assertEqual(header2, {"Authorization": "Bearer refreshed-token"})
+        self.assertEqual(mock_request.call_count, 2)
+
+        rest_client.close()
+
+    def test_concurrent_requests_only_fetch_token_once(self):
+        """
+        Multiple concurrent threads while the token is invalid should result in
+        only one token fetch — subsequent threads wait on the lock and reuse
+        the token obtained by the first.
+        """
+        obtain_calls = []
+
+        credentials = Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+        oauth_client = OAuth2Client(credentials)
+
+        def mock_obtain_token(client):
+            obtain_calls.append(1)
+            time.sleep(0.05)  # hold the lock briefly so other threads queue up
+            oauth_client._token_state = _TokenState(
+                access_token="concurrent-token",
+                expiry_time=datetime.now() + timedelta(seconds=3600),
+                expiry_buffer=300,
+            )
+
+        results = []
+
+        def call():
+            results.append(oauth_client.get_authentication_header(None))
+
+        with patch.object(oauth_client, "_obtain_token", side_effect=mock_obtain_token):
+            threads = [threading.Thread(target=call) for _ in range(5)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+        self.assertEqual(len(results), 5)
+        self.assertEqual(len(obtain_calls), 1)
+        self.assertTrue(
+            all(r == {"Authorization": "Bearer concurrent-token"} for r in results)
+        )
+
+    @patch.object(rest.RESTClientObject, "request")
     def test_get_authentication_with_scopes_no_audience(self, mock_request):
         """
         Test that scope is sent and audience is omitted when only scopes are provided
@@ -477,4 +576,3 @@ This is not a JSON response
             },
         )
         rest_client.close()
-
