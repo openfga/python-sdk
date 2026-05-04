@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.3](https://github.com/openfga/python-sdk/compare/v0.10.2...v0.10.3) (2026-05-04)
+
+
+### Fixed
+
+* add token expiry buffer to prevent expired token usage and lock concurrent refreshes ([#283](https://github.com/openfga/python-sdk/issues/283)) ([3b31489](https://github.com/openfga/python-sdk/commit/3b31489b946358ed07c05757edc001c023d94748))
+
+
 ## [0.10.2](https://github.com/openfga/python-sdk/compare/v0.10.1...v0.10.2) (2026-04-21)
 
 
