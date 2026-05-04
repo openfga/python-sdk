@@ -4,7 +4,7 @@ attrs >= 26.1.0
 frozenlist >= 1.8.0
 idna >= 3.13
 multidict >= 6.7.1
-openfga-sdk >= 0.10.2  # x-release-please-version
+openfga-sdk >= 0.10.3  # x-release-please-version
 python-dateutil >= 2.9.0.post0
 urllib3 != 2.0.0.dev, != 2.1.0.dev, != 2.2.0, != 2.2.1, >= 2.6.3, < 3
 yarl >= 1.23.0
