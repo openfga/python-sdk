@@ -72,7 +72,7 @@ jobs:
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
           MANIFEST_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
-          PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          PYPROJECT_VERSION=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
 
           echo "Tag: $TAG_VERSION | Manifest: $MANIFEST_VERSION | pyproject.toml: $PYPROJECT_VERSION"
 
