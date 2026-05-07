@@ -60,10 +60,36 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: openfga/python-sdk
 
-  publish:
+  verify-version:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [test]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify versions match
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          MANIFEST_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
+          PYPROJECT_VERSION=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+
+          echo "Tag: $TAG_VERSION | Manifest: $MANIFEST_VERSION | pyproject.toml: $PYPROJECT_VERSION"
+
+          if [[ "$TAG_VERSION" != "$MANIFEST_VERSION" ]]; then
+            echo "ERROR: Tag version does not match manifest version"
+            exit 1
+          fi
+          if [[ "$PYPROJECT_VERSION" != "$MANIFEST_VERSION" ]]; then
+            echo "ERROR: pyproject.toml version does not match manifest version"
+            exit 1
+          fi
+          echo "All versions verified: $TAG_VERSION"
+
+  publish:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [verify-version]
 
     permissions:
       id-token: write # Required for PyPI trusted publishing
@@ -91,20 +117,9 @@ jobs:
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
 
-  create-release:
-    runs-on: ubuntu-latest
+  undraft-release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [publish]
     permissions:
       contents: write
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-
-      - uses: Roang-zero1/github-create-release-action@57eb9bdce7a964e48788b9e78b5ac766cb684803 # v3.0.1
-        with:
-          version_regex: ^v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: openfga/sdk-generator/.github/workflows/undraft-release.yml@main
