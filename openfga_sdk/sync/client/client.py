@@ -107,8 +107,8 @@ def set_heading_if_not_set(
 
 
 def options_to_kwargs(
-    options: dict[str, int | str | dict[str, int | str]] | None = None,
-) -> dict[str, int | str | dict[str, int | str]]:
+    options: dict[str, int | str | bool | dict[str, int | str]] | None = None,
+) -> dict[str, int | str | bool | dict[str, int | str]]:
     """
     Return kwargs with continuation_token and page_size
     """
@@ -124,6 +124,8 @@ def options_to_kwargs(
             kwargs["_headers"] = options["headers"]
         if options.get("retry_params"):
             kwargs["_retry_params"] = options["retry_params"]
+        if options.get("async_req") is not None:
+            kwargs["async_req"] = options["async_req"]
     return kwargs
 
 
