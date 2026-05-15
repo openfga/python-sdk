@@ -15,4 +15,4 @@ from typing import Final
 SDK_VERSION: Final[str] = "0.10.3"  # x-release-please-version
 
 # User agent used in HTTP requests.
-USER_AGENT: Final[str] = "openfga-sdk python/0.10.3"  # x-release-please-version
+USER_AGENT: Final[str] = f"openfga-sdk python/{SDK_VERSION}"
