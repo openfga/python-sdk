@@ -15,12 +15,12 @@ from dateutil.parser import parse  # type: ignore[import-untyped]
 import openfga_sdk.models
 
 from openfga_sdk import oauth2, rest
+from openfga_sdk._version import USER_AGENT as DEFAULT_USER_AGENT
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import (
     MAX_BACKOFF_TIME_IN_SEC,
     RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC,
 )
-from openfga_sdk.constants import USER_AGENT as DEFAULT_USER_AGENT
 from openfga_sdk.exceptions import (
     ApiException,
     ApiValueError,
