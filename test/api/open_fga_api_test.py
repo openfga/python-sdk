@@ -9,8 +9,8 @@ import urllib3
 import openfga_sdk
 
 from openfga_sdk import rest
+from openfga_sdk._version import USER_AGENT
 from openfga_sdk.api import open_fga_api
-from openfga_sdk.constants import USER_AGENT
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import (
     FGA_REQUEST_ID,

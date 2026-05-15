@@ -9,6 +9,7 @@ Covers:
 
 from openfga_sdk import Configuration
 from openfga_sdk import __version__ as package_version
+from openfga_sdk._version import SDK_VERSION, USER_AGENT
 from openfga_sdk.api_client import (
     DEFAULT_USER_AGENT as ASYNC_DEFAULT_USER_AGENT,
 )
@@ -17,8 +18,6 @@ from openfga_sdk.constants import (
     DEFAULT_MIN_WAIT_IN_MS,
     MAX_BACKOFF_TIME_IN_SEC,
     SAMPLE_BASE_DOMAIN,
-    SDK_VERSION,
-    USER_AGENT,
 )
 from openfga_sdk.sync.api_client import DEFAULT_USER_AGENT as SYNC_DEFAULT_USER_AGENT
 
