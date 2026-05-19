@@ -14,5 +14,7 @@ openfga_sdk/api/open_fga_api
 openfga_sdk/sync/open_fga_api.py
 openfga_sdk/api_client.py
 openfga_sdk/configuration.py
+openfga_sdk/_version.py
 openfga_sdk/exceptions.py
 openfga_sdk/rest.py
+VERSION.txt

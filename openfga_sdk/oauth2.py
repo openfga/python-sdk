@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 
 import urllib3
 
+from openfga_sdk._version import USER_AGENT
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import (
     TOKEN_EXPIRY_JITTER_IN_SEC,
     TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC,
-    USER_AGENT,
 )
 from openfga_sdk.credentials import Credentials
 from openfga_sdk.exceptions import AuthenticationError
