@@ -7,8 +7,9 @@ from unittest.mock import patch
 
 import urllib3
 
+from openfga_sdk._version import USER_AGENT
 from openfga_sdk.configuration import Configuration
-from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC, USER_AGENT
+from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import AuthenticationError
 from openfga_sdk.oauth2_common import _TokenState

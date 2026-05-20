@@ -6,12 +6,12 @@ import urllib
 
 import urllib3
 
+from openfga_sdk._version import SDK_VERSION
 from openfga_sdk.constants import (
     DEFAULT_MAX_RETRY,
     DEFAULT_MIN_WAIT_IN_MS,
     MAX_BACKOFF_TIME_IN_SEC,
     RETRY_MAX_ALLOWED_NUMBER,
-    SDK_VERSION,
 )
 from openfga_sdk.exceptions import ApiValueError, FgaValidationException
 from openfga_sdk.telemetry.attributes import TelemetryAttribute

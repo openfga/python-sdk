@@ -1381,6 +1381,7 @@ response = await fga_client.execute_api_request(
 )
 ```
 
+
 ### Retries
 
 If a network request fails with a 429 or 5xx error from the server, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.

@@ -447,7 +447,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -457,6 +459,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -541,7 +544,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -551,6 +556,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -635,7 +641,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -645,6 +653,14 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
+        if (
+            self.api_client.client_side_validation
+            and local_var_params.get("body") is None
+        ):
+            raise ApiValueError(
+                "Missing the required parameter `body` when calling `create_store`"
+            )
         return await self._execute(
             method="POST",
             path="/stores",
@@ -799,7 +815,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -809,6 +827,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -975,7 +994,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -985,6 +1006,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -1077,7 +1099,11 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["page_size", "continuation_token", "name"]
+        all_params = [
+            "page_size",
+            "continuation_token",
+            "name",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1168,7 +1194,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1178,6 +1206,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -1262,7 +1291,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1272,6 +1303,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -1358,7 +1390,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["authorization_model_id"]
+        all_params = [
+            "authorization_model_id",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1451,7 +1485,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["id"]
+        all_params = [
+            "id",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1548,7 +1584,10 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["page_size", "continuation_token"]
+        all_params = [
+            "page_size",
+            "continuation_token",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1654,7 +1693,12 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["type", "page_size", "continuation_token", "start_time"]
+        all_params = [
+            "type",
+            "page_size",
+            "continuation_token",
+            "start_time",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1752,7 +1796,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1762,6 +1808,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -1846,7 +1893,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1856,6 +1905,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -1948,7 +1998,10 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["authorization_model_id", "body"]
+        all_params = [
+            "authorization_model_id",
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -1965,6 +2018,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `authorization_model_id` when calling `write_assertions`"
             )
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
@@ -2049,7 +2103,9 @@ class OpenFgaApi:
 
         local_var_params = locals()
 
-        all_params = ["body"]
+        all_params = [
+            "body",
+        ]
         all_params.extend(self._COMMON_PARAMS)
 
         for key, val in local_var_params["kwargs"].items():
@@ -2059,6 +2115,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
+        # verify the required parameter 'body' is set
         if (
             self.api_client.client_side_validation
             and local_var_params.get("body") is None
