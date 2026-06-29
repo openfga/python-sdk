@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.10.4](https://github.com/openfga/python-sdk/compare/v0.10.3...v0.10.4) (2026-06-29)
+
+
+### Added
+
+* add support for Python 3.13 and 3.14 ([#298](https://github.com/openfga/python-sdk/issues/298)) ([23910bb](https://github.com/openfga/python-sdk/commit/23910bb9a03afed8343480357be20578e137f976))
+* draft releases, version verification, and reusable workflows ([#287](https://github.com/openfga/python-sdk/issues/287)) ([b9c7472](https://github.com/openfga/python-sdk/commit/b9c747290a4289cfb9dfb17ed006084324e5d014))
+
+
+### Miscellaneous
+
+* release 0.10.4 ([043e46f](https://github.com/openfga/python-sdk/commit/043e46f63ef484c9e309474653f3a31ad66f9b63))
+
 ## [0.10.3](https://github.com/openfga/python-sdk/compare/v0.10.2...v0.10.3) (2026-05-04)
 
 
