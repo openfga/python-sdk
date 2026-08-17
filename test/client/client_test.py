@@ -3003,6 +3003,12 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
         async with OpenFgaClient(self.configuration) as api_client:
             with self.assertRaisesRegex(
                 FgaValidationException,
+                "authorization_model_id is required when optimizing ListRelations",
+            ):
+                await api_client._get_relation_aliases(None)
+
+            with self.assertRaisesRegex(
+                FgaValidationException,
                 "store_id is required but not configured",
             ):
                 await api_client._get_relation_aliases(
