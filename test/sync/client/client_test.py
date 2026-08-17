@@ -2,7 +2,9 @@ import copy
 import json
 import uuid
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from threading import Event
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import ANY, patch
 
@@ -2999,7 +3001,17 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     def test_relation_alias_cache_evicts_model_load_errors(self):
         configuration = self.configuration
         configuration.store_id = store_id
-        options = {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+        options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "continuation_token": "ignored",
+            "headers": {"x-test": "value"},
+            "optimize_relation_aliases": True,
+            "page_size": 10,
+        }
+        expected_model_options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "headers": {"x-test": "value"},
+        }
 
         with OpenFgaClient(configuration) as api_client:
             with patch.object(
@@ -3015,7 +3027,48 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         api_client._get_relation_aliases(options)
 
                 self.assertEqual(mock_read_model.call_count, 2)
+                self.assertEqual(
+                    [request.args[0] for request in mock_read_model.call_args_list],
+                    [expected_model_options, expected_model_options],
+                )
                 self.assertEqual(api_client._relation_alias_cache, {})
+
+    def test_relation_alias_cache_shares_concurrent_model_loads(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        options = {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+        load_started = Event()
+        release_load = Event()
+        model_response = ReadAuthorizationModelResponse(
+            AuthorizationModel(
+                id="01GXSA8YR785C4FYS3C0RTG7B1",
+                schema_version="1.1",
+                type_definitions=[],
+            )
+        )
+
+        def load_model(_options):
+            load_started.set()
+            if not release_load.wait(timeout=2):
+                raise AssertionError("timed out waiting to release model load")
+            return model_response
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client,
+                "read_authorization_model",
+                side_effect=load_model,
+            ) as mock_read_model:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    first = executor.submit(api_client._get_relation_aliases, options)
+                    self.assertTrue(load_started.wait(timeout=1))
+                    second = executor.submit(api_client._get_relation_aliases, options)
+                    release_load.set()
+                    first_result = first.result(timeout=2)
+                    second_result = second.result(timeout=2)
+
+                self.assertIs(first_result, second_result)
+                self.assertEqual(mock_read_model.call_count, 1)
 
     def test_optimized_list_relations_rechecks_errors_and_missing_results(self):
         configuration = self.configuration
@@ -3050,6 +3103,14 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             for index, allowed in enumerate((True, False))
         ]
+        missing_response = ClientBatchCheckClientResponse(
+            allowed=False,
+            request=ClientCheckRequest(
+                user=body.user,
+                relation=body.relations[2],
+                object=body.object,
+            ),
+        )
 
         with OpenFgaClient(configuration) as api_client:
             with (
@@ -3061,8 +3122,8 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 patch.object(
                     api_client,
                     "client_batch_check",
-                    return_value=fallback_responses,
-                ),
+                    side_effect=[fallback_responses, [missing_response]],
+                ) as mock_fallback,
             ):
                 response = api_client._list_relations_with_groups(
                     body,
@@ -3074,6 +3135,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 )
 
         self.assertEqual(response, ["can_add_child"])
+        self.assertEqual(mock_fallback.call_count, 2)
 
     def test_optimized_list_relations_raises_fallback_errors(self):
         configuration = self.configuration

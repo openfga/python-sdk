@@ -260,6 +260,7 @@ class OpenFgaClient:
         self,
         options: dict[str, int | str | dict[str, int | str]] | None,
     ) -> dict[str, dict[str, str]]:
+        """Return cached relation aliases for the configured model."""
         authorization_model_id = self._get_authorization_model_id(options)
         if authorization_model_id is None:
             raise FgaValidationException(
@@ -291,7 +292,13 @@ class OpenFgaClient:
         self,
         options: dict[str, int | str | dict[str, int | str]] | None,
     ) -> dict[str, dict[str, str]]:
-        response = await self.read_authorization_model(options)
+        """Read the configured model and build relation alias mappings."""
+        model_options = {
+            key: options[key]
+            for key in ("authorization_model_id", "headers", "retry_params")
+            if options is not None and key in options
+        }
+        response = await self.read_authorization_model(model_options)
         if response.authorization_model is None:
             raise FgaValidationException("authorization model was not returned")
         return build_relation_aliases(response.authorization_model)
@@ -1080,6 +1087,7 @@ class OpenFgaClient:
         options: dict[str, int | str | dict[str, int | str]],
         groups: list[RelationCheckGroup],
     ) -> list[str]:
+        """Evaluate grouped checks and preserve requested relation names."""
         checks = [
             ClientBatchCheckItem(
                 user=body.user,
@@ -1100,9 +1108,7 @@ class OpenFgaClient:
 
         for group in groups:
             response = responses_by_relation.get(group.relation)
-            if response is None:
-                continue
-            if response.error is not None:
+            if response is None or response.error is not None:
                 fallback_checks = [
                     construct_check_request(
                         user=body.user,

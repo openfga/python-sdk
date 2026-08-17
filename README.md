@@ -691,10 +691,7 @@ By default, write runs in a transaction mode where any invalid operation (deleti
 
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-    # Optionally collapse relations that are pure aliases of the same relation.
-    # This requires an OpenFGA server with BatchCheck support.
-    "optimize_relation_aliases": True,
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
 body = ClientWriteRequest(
     writes=[
@@ -1171,7 +1168,10 @@ List the relations a user has on an object.
 
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    # Optionally collapse relations that are pure aliases of the same relation.
+    # This requires an OpenFGA server with BatchCheck support.
+    "optimize_relation_aliases": True,
 }
 body = ClientListRelationsRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",

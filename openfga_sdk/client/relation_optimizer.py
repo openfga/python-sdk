@@ -65,6 +65,7 @@ def group_relations(
 
 
 def _pure_computed_userset_target(rewrite: Userset) -> str | None:
+    """Return the target when a rewrite is only a same-object computed userset."""
     computed_userset = rewrite.computed_userset
     if computed_userset is None or not computed_userset.relation:
         return None
@@ -88,6 +89,7 @@ def _pure_computed_userset_target(rewrite: Userset) -> str | None:
 
 
 def _resolve_alias(relation: str, direct_aliases: dict[str, str]) -> str | None:
+    """Resolve an alias chain, returning none when it contains a cycle."""
     visited = set()
     current = relation
 

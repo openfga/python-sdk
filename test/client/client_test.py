@@ -2997,7 +2997,17 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     async def test_relation_alias_cache_evicts_model_load_errors(self):
         configuration = self.configuration
         configuration.store_id = store_id
-        options = {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+        options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "continuation_token": "ignored",
+            "headers": {"x-test": "value"},
+            "optimize_relation_aliases": True,
+            "page_size": 10,
+        }
+        expected_model_options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "headers": {"x-test": "value"},
+        }
 
         async with OpenFgaClient(configuration) as api_client:
             with patch.object(
@@ -3013,6 +3023,10 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                         await api_client._get_relation_aliases(options)
 
                 self.assertEqual(mock_read_model.await_count, 2)
+                self.assertEqual(
+                    [request.args[0] for request in mock_read_model.await_args_list],
+                    [expected_model_options, expected_model_options],
+                )
                 self.assertEqual(api_client._relation_alias_cache, {})
 
     async def test_relation_alias_cache_evicts_cancelled_loads(self):
@@ -3032,7 +3046,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
             self.assertNotIn(cache_key, api_client._relation_alias_cache)
 
-    async def test_optimized_list_relations_ignores_missing_batch_results(self):
+    async def test_optimized_list_relations_rechecks_missing_batch_results(self):
         configuration = self.configuration
         configuration.store_id = store_id
         body = ClientListRelationsRequest(
@@ -3040,12 +3054,30 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             relations=["can_add_child", "can_add_records"],
             object="document:roadmap",
         )
+        fallback_responses = [
+            ClientBatchCheckClientResponse(
+                allowed=allowed,
+                request=ClientCheckRequest(
+                    user=body.user,
+                    relation=body.relations[index],
+                    object=body.object,
+                ),
+            )
+            for index, allowed in enumerate((True, False))
+        ]
 
         async with OpenFgaClient(configuration) as api_client:
-            with patch.object(
-                api_client,
-                "batch_check",
-                return_value=ClientBatchCheckResponse(result=[]),
+            with (
+                patch.object(
+                    api_client,
+                    "batch_check",
+                    return_value=ClientBatchCheckResponse(result=[]),
+                ),
+                patch.object(
+                    api_client,
+                    "client_batch_check",
+                    return_value=fallback_responses,
+                ),
             ):
                 response = await api_client._list_relations_with_groups(
                     body,
@@ -3053,7 +3085,7 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                     [RelationCheckGroup(relation="can_edit", indexes=(0, 1))],
                 )
 
-        self.assertEqual(response, [])
+        self.assertEqual(response, ["can_add_child"])
 
     async def test_optimized_list_relations_raises_fallback_errors(self):
         configuration = self.configuration
