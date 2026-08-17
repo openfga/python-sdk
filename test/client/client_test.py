@@ -2967,20 +2967,35 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     async def test_list_relations_optimization_requires_model_id(self, mock_request):
         configuration = self.configuration
         configuration.store_id = store_id
+        requests = [
+            ClientListRelationsRequest(
+                user="user:anne",
+                relations=["can_view", "viewer"],
+                object="document:roadmap",
+            ),
+            ClientListRelationsRequest(
+                user="user:*",
+                relations=["can_view", "viewer"],
+                object="document:roadmap",
+            ),
+            ClientListRelationsRequest(
+                user="user:anne",
+                relations=["can_view", "viewer"],
+                object="document",
+            ),
+        ]
 
         async with OpenFgaClient(configuration) as api_client:
-            with self.assertRaisesRegex(
-                FgaValidationException,
-                "authorization_model_id is required when optimizing ListRelations",
-            ):
-                await api_client.list_relations(
-                    ClientListRelationsRequest(
-                        user="user:anne",
-                        relations=["can_view", "viewer"],
-                        object="document:roadmap",
-                    ),
-                    options={"optimize_relation_aliases": True},
-                )
+            for request in requests:
+                with self.subTest(user=request.user, object=request.object):
+                    with self.assertRaisesRegex(
+                        FgaValidationException,
+                        "authorization_model_id is required when optimizing ListRelations",
+                    ):
+                        await api_client.list_relations(
+                            request,
+                            options={"optimize_relation_aliases": True},
+                        )
 
         mock_request.assert_not_called()
 
@@ -3045,6 +3060,45 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 await api_client._get_relation_aliases(options)
 
             self.assertNotIn(cache_key, api_client._relation_alias_cache)
+
+    async def test_close_cancels_shared_relation_alias_loads(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        options = {"authorization_model_id": authorization_model_id}
+        load_started = asyncio.Event()
+        load_cancelled = asyncio.Event()
+        wait_forever = asyncio.Event()
+
+        async def load_model(_options):
+            load_started.set()
+            try:
+                await wait_forever.wait()
+            except asyncio.CancelledError:
+                load_cancelled.set()
+                raise
+
+        api_client = OpenFgaClient(configuration)
+        with patch.object(
+            api_client,
+            "read_authorization_model",
+            side_effect=load_model,
+        ):
+            caller = asyncio.create_task(api_client._get_relation_aliases(options))
+            await asyncio.wait_for(load_started.wait(), timeout=1)
+            caller.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await caller
+
+            cache_key = (store_id, authorization_model_id)
+            cached_load = api_client._relation_alias_cache[cache_key]
+            self.assertFalse(cached_load.done())
+
+            await api_client.close()
+
+        self.assertTrue(cached_load.cancelled())
+        self.assertTrue(load_cancelled.is_set())
+        self.assertEqual(api_client._relation_alias_cache, {})
 
     async def test_optimized_list_relations_rechecks_missing_batch_results(self):
         configuration = self.configuration

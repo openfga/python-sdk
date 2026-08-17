@@ -2971,20 +2971,35 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
     def test_list_relations_optimization_requires_model_id(self, mock_request):
         configuration = self.configuration
         configuration.store_id = store_id
+        requests = [
+            ClientListRelationsRequest(
+                user="user:anne",
+                relations=["can_view", "viewer"],
+                object="document:roadmap",
+            ),
+            ClientListRelationsRequest(
+                user="user:*",
+                relations=["can_view", "viewer"],
+                object="document:roadmap",
+            ),
+            ClientListRelationsRequest(
+                user="user:anne",
+                relations=["can_view", "viewer"],
+                object="document",
+            ),
+        ]
 
         with OpenFgaClient(configuration) as api_client:
-            with self.assertRaisesRegex(
-                FgaValidationException,
-                "authorization_model_id is required when optimizing ListRelations",
-            ):
-                api_client.list_relations(
-                    ClientListRelationsRequest(
-                        user="user:anne",
-                        relations=["can_view", "viewer"],
-                        object="document:roadmap",
-                    ),
-                    options={"optimize_relation_aliases": True},
-                )
+            for request in requests:
+                with self.subTest(user=request.user, object=request.object):
+                    with self.assertRaisesRegex(
+                        FgaValidationException,
+                        "authorization_model_id is required when optimizing ListRelations",
+                    ):
+                        api_client.list_relations(
+                            request,
+                            options={"optimize_relation_aliases": True},
+                        )
 
         mock_request.assert_not_called()
 

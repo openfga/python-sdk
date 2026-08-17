@@ -1042,17 +1042,20 @@ class OpenFgaClient:
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
 
-        if options.get("optimize_relation_aliases") is True and is_concrete_user(
-            body.user
-        ):
-            object_type, separator, _ = body.object.partition(":")
-            if separator and object_type:
-                aliases_by_type = self._get_relation_aliases(options)
-                groups = group_relations(
-                    body.relations, aliases_by_type.get(object_type, {})
+        if options.get("optimize_relation_aliases") is True:
+            if self._get_authorization_model_id(options) is None:
+                raise FgaValidationException(
+                    "authorization_model_id is required when optimizing ListRelations"
                 )
-                if any(len(group.indexes) > 1 for group in groups):
-                    return self._list_relations_with_groups(body, options, groups)
+            if is_concrete_user(body.user):
+                object_type, separator, _ = body.object.partition(":")
+                if separator and object_type:
+                    aliases_by_type = self._get_relation_aliases(options)
+                    groups = group_relations(
+                        body.relations, aliases_by_type.get(object_type, {})
+                    )
+                    if any(len(group.indexes) > 1 for group in groups):
+                        return self._list_relations_with_groups(body, options, groups)
 
         request_body = [
             construct_check_request(
