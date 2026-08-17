@@ -37,6 +37,12 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.relation_optimizer import (
+    RelationCheckGroup,
+    build_relation_aliases,
+    group_relations,
+    is_concrete_user,
+)
 from openfga_sdk.constants import (
     CLIENT_BULK_REQUEST_ID_HEADER,
     CLIENT_MAX_BATCH_SIZE,
@@ -172,6 +178,9 @@ class OpenFgaClient:
         self._client_configuration = configuration
         self._api_client = ApiClient(configuration)
         self._api = OpenFgaApi(self._api_client)
+        self._relation_alias_cache: dict[
+            tuple[str, str], asyncio.Task[dict[str, dict[str, str]]]
+        ] = {}
 
         # Set default headers from configuration
         if configuration.headers:
@@ -246,6 +255,46 @@ class OpenFgaClient:
         Return the authorization model id
         """
         return self._client_configuration.authorization_model_id
+
+    async def _get_relation_aliases(
+        self,
+        options: dict[str, int | str | dict[str, int | str]] | None,
+    ) -> dict[str, dict[str, str]]:
+        authorization_model_id = self._get_authorization_model_id(options)
+        if authorization_model_id is None:
+            raise FgaValidationException(
+                "authorization_model_id is required when optimizing ListRelations"
+            )
+
+        store_id = self.get_store_id()
+        if store_id is None or store_id == "":
+            raise FgaValidationException("store_id is required but not configured")
+
+        cache_key = (store_id, authorization_model_id)
+        task = self._relation_alias_cache.get(cache_key)
+        if task is None:
+            task = asyncio.create_task(self._load_relation_aliases(options))
+            self._relation_alias_cache[cache_key] = task
+
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            if task.cancelled() and self._relation_alias_cache.get(cache_key) is task:
+                self._relation_alias_cache.pop(cache_key, None)
+            raise
+        except Exception:
+            if self._relation_alias_cache.get(cache_key) is task:
+                self._relation_alias_cache.pop(cache_key, None)
+            raise
+
+    async def _load_relation_aliases(
+        self,
+        options: dict[str, int | str | dict[str, int | str]] | None,
+    ) -> dict[str, dict[str, str]]:
+        response = await self.read_authorization_model(options)
+        if response.authorization_model is None:
+            raise FgaValidationException("authorization model was not returned")
+        return build_relation_aliases(response.authorization_model)
 
     #################
     # Stores
@@ -983,11 +1032,24 @@ class OpenFgaClient:
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         :param consistency(options) - The type of consistency preferred for the request
+        :param optimize_relation_aliases(options) - Collapse pure relation aliases before evaluation. Defaults to false
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListRelations")
         options = set_heading_if_not_set(
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
+
+        if options.get("optimize_relation_aliases") is True and is_concrete_user(
+            body.user
+        ):
+            object_type, separator, _ = body.object.partition(":")
+            if separator and object_type:
+                aliases_by_type = await self._get_relation_aliases(options)
+                groups = group_relations(
+                    body.relations, aliases_by_type.get(object_type, {})
+                )
+                if any(len(group.indexes) > 1 for group in groups):
+                    return await self._list_relations_with_groups(body, options, groups)
 
         request_body = [
             construct_check_request(
@@ -1011,6 +1073,69 @@ class OpenFgaClient:
         result_iterator = filter(_check_allowed, result)
         result_list = list(result_iterator)
         return [i.request.relation for i in result_list]
+
+    async def _list_relations_with_groups(
+        self,
+        body: ClientListRelationsRequest,
+        options: dict[str, int | str | dict[str, int | str]],
+        groups: list[RelationCheckGroup],
+    ) -> list[str]:
+        checks = [
+            ClientBatchCheckItem(
+                user=body.user,
+                relation=group.relation,
+                object=body.object,
+                contextual_tuples=body.contextual_tuples,
+                context=body.context,
+            )
+            for group in groups
+        ]
+        batch_response = await self.batch_check(
+            ClientBatchCheckRequest(checks=checks), options
+        )
+        responses_by_relation = {
+            response.request.relation: response for response in batch_response.result
+        }
+        allowed = [False] * len(body.relations)
+
+        for group in groups:
+            response = responses_by_relation.get(group.relation)
+            if response is None:
+                continue
+            if response.error is not None:
+                fallback_checks = [
+                    construct_check_request(
+                        user=body.user,
+                        relation=body.relations[index],
+                        object=body.object,
+                        contextual_tuples=body.contextual_tuples,
+                        context=body.context,
+                    )
+                    for index in group.indexes
+                ]
+                fallback_responses = await self.client_batch_check(
+                    fallback_checks, options
+                )
+                first_error = next(
+                    (
+                        fallback.error
+                        for fallback in fallback_responses
+                        if fallback.error is not None
+                    ),
+                    None,
+                )
+                if first_error is not None:
+                    raise first_error
+                for index, fallback in zip(group.indexes, fallback_responses):
+                    allowed[index] = fallback.allowed
+                continue
+
+            for index in group.indexes:
+                allowed[index] = response.allowed
+
+        return [
+            relation for index, relation in enumerate(body.relations) if allowed[index]
+        ]
 
     async def list_users(
         self,

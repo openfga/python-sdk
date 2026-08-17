@@ -2883,6 +2883,101 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
+    def test_list_relations_optimizes_relation_aliases(self, mock_request):
+        """ListRelations can collapse pure aliases using a cached model."""
+
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        model_response = json.dumps(
+            {
+                "authorization_model": {
+                    "id": authorization_model_id,
+                    "schema_version": "1.1",
+                    "type_definitions": [
+                        {
+                            "type": "document",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_edit": {"this": {}},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+
+        def mock_optimized_requests(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(model_response, 200)
+
+            checks = kwargs["body"]["checks"]
+            self.assertEqual(len(checks), 1)
+            self.assertEqual(checks[0]["tuple_key"]["relation"], "can_edit")
+            correlation_id = checks[0]["correlation_id"]
+            return mock_response(
+                json.dumps({"result": {correlation_id: {"allowed": True}}}),
+                200,
+            )
+
+        mock_request.side_effect = mock_optimized_requests
+        configuration = self.configuration
+        configuration.store_id = store_id
+        request = ClientListRelationsRequest(
+            user="user:anne",
+            relations=["can_add_child", "can_add_records"],
+            object="document:roadmap",
+        )
+
+        with OpenFgaClient(configuration) as api_client:
+            for _ in range(2):
+                response = api_client.list_relations(
+                    request,
+                    options={
+                        "authorization_model_id": authorization_model_id,
+                        "optimize_relation_aliases": True,
+                    },
+                )
+                self.assertEqual(response, ["can_add_child", "can_add_records"])
+
+        model_requests = [
+            call
+            for call in mock_request.call_args_list
+            if "/authorization-models/" in call.args[1]
+        ]
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        self.assertEqual(len(model_requests), 1)
+        self.assertEqual(len(batch_requests), 2)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_list_relations_optimization_requires_model_id(self, mock_request):
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "authorization_model_id is required when optimizing ListRelations",
+            ):
+                api_client.list_relations(
+                    ClientListRelationsRequest(
+                        user="user:anne",
+                        relations=["can_view", "viewer"],
+                        object="document:roadmap",
+                    ),
+                    options={"optimize_relation_aliases": True},
+                )
+
+        mock_request.assert_not_called()
+
+    @patch.object(rest.RESTClientObject, "request")
     def test_list_relations_unauthorized(self, mock_request):
         """Test case for list relations with 401 response"""
 
