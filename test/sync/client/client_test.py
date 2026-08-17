@@ -13,7 +13,14 @@ from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
+from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
+from openfga_sdk.client.models.batch_check_single_response import (
+    ClientBatchCheckSingleResponse,
+)
 from openfga_sdk.client.models.check_request import ClientCheckRequest
+from openfga_sdk.client.models.client_batch_check_response import (
+    ClientBatchCheckClientResponse,
+)
 from openfga_sdk.client.models.expand_request import ClientExpandRequest
 from openfga_sdk.client.models.list_objects_request import ClientListObjectsRequest
 from openfga_sdk.client.models.list_relations_request import ClientListRelationsRequest
@@ -24,6 +31,7 @@ from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.client.models.write_request import ClientWriteRequest
 from openfga_sdk.client.models.write_single_response import ClientWriteSingleResponse
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.relation_optimizer import RelationCheckGroup
 from openfga_sdk.configuration import RetryParams
 from openfga_sdk.exceptions import (
     FgaValidationException,
@@ -33,6 +41,7 @@ from openfga_sdk.exceptions import (
 )
 from openfga_sdk.models.assertion import Assertion
 from openfga_sdk.models.authorization_model import AuthorizationModel
+from openfga_sdk.models.check_error import CheckError
 from openfga_sdk.models.check_response import CheckResponse
 from openfga_sdk.models.consistency_preference import ConsistencyPreference
 from openfga_sdk.models.create_store_request import CreateStoreRequest
@@ -2976,6 +2985,147 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 )
 
         mock_request.assert_not_called()
+
+    def test_relation_alias_cache_requires_store_id(self):
+        with OpenFgaClient(self.configuration) as api_client:
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "store_id is required but not configured",
+            ):
+                api_client._get_relation_aliases(
+                    {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+                )
+
+    def test_relation_alias_cache_evicts_model_load_errors(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        options = {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client,
+                "read_authorization_model",
+                return_value=ReadAuthorizationModelResponse(),
+            ) as mock_read_model:
+                for _ in range(2):
+                    with self.assertRaisesRegex(
+                        FgaValidationException,
+                        "authorization model was not returned",
+                    ):
+                        api_client._get_relation_aliases(options)
+
+                self.assertEqual(mock_read_model.call_count, 2)
+                self.assertEqual(api_client._relation_alias_cache, {})
+
+    def test_optimized_list_relations_rechecks_errors_and_missing_results(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        body = ClientListRelationsRequest(
+            user="user:anne",
+            relations=["can_add_child", "can_add_records", "can_view"],
+            object="document:roadmap",
+        )
+        batch_response = ClientBatchCheckResponse(
+            result=[
+                ClientBatchCheckSingleResponse(
+                    allowed=False,
+                    request=ClientTuple(
+                        user=body.user,
+                        relation="can_edit",
+                        object=body.object,
+                    ),
+                    correlation_id="optimized",
+                    error=CheckError(message="optimized check failed"),
+                )
+            ]
+        )
+        fallback_responses = [
+            ClientBatchCheckClientResponse(
+                allowed=allowed,
+                request=ClientCheckRequest(
+                    user=body.user,
+                    relation=body.relations[index],
+                    object=body.object,
+                ),
+            )
+            for index, allowed in enumerate((True, False))
+        ]
+
+        with OpenFgaClient(configuration) as api_client:
+            with (
+                patch.object(
+                    api_client,
+                    "batch_check",
+                    return_value=batch_response,
+                ),
+                patch.object(
+                    api_client,
+                    "client_batch_check",
+                    return_value=fallback_responses,
+                ),
+            ):
+                response = api_client._list_relations_with_groups(
+                    body,
+                    {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                    [
+                        RelationCheckGroup(relation="can_edit", indexes=(0, 1)),
+                        RelationCheckGroup(relation="can_view", indexes=(2,)),
+                    ],
+                )
+
+        self.assertEqual(response, ["can_add_child"])
+
+    def test_optimized_list_relations_raises_fallback_errors(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        body = ClientListRelationsRequest(
+            user="user:anne",
+            relations=["can_add_child", "can_add_records"],
+            object="document:roadmap",
+        )
+        batch_response = ClientBatchCheckResponse(
+            result=[
+                ClientBatchCheckSingleResponse(
+                    allowed=False,
+                    request=ClientTuple(
+                        user=body.user,
+                        relation="can_edit",
+                        object=body.object,
+                    ),
+                    correlation_id="optimized",
+                    error=CheckError(message="optimized check failed"),
+                )
+            ]
+        )
+        fallback_response = ClientBatchCheckClientResponse(
+            allowed=False,
+            request=ClientCheckRequest(
+                user=body.user,
+                relation=body.relations[0],
+                object=body.object,
+            ),
+            error=ValueError("fallback check failed"),
+        )
+
+        with OpenFgaClient(configuration) as api_client:
+            with (
+                patch.object(
+                    api_client,
+                    "batch_check",
+                    return_value=batch_response,
+                ),
+                patch.object(
+                    api_client,
+                    "client_batch_check",
+                    return_value=[fallback_response],
+                ),
+            ):
+                with self.assertRaisesRegex(ValueError, "fallback check failed"):
+                    api_client._list_relations_with_groups(
+                        body,
+                        {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
+                        [RelationCheckGroup(relation="can_edit", indexes=(0, 1))],
+                    )
 
     @patch.object(rest.RESTClientObject, "request")
     def test_list_relations_unauthorized(self, mock_request):

@@ -35,6 +35,10 @@ def test_build_relation_aliases_only_includes_pure_aliases():
                             ]
                         )
                     ),
+                    "mixed_rewrite": Userset(
+                        computed_userset=ObjectRelation(relation="viewer"),
+                        union=Usersets(child=[Userset(this={})]),
+                    ),
                     "other_object": Userset(
                         computed_userset=ObjectRelation(
                             object="document:other", relation="viewer"
