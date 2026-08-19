@@ -2517,30 +2517,18 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 }
             }
         )
-        batch_call_count = 0
 
         def mock_optimized_requests(method, url, **kwargs):
-            nonlocal batch_call_count
             if method == "GET":
                 return mock_response(model_response, 200)
 
-            batch_call_count += 1
             checks = kwargs["body"]["checks"]
             self.assertEqual(len(checks), 1)
             self.assertEqual(checks[0]["tuple_key"]["relation"], "can_edit")
             self.assertEqual(checks[0]["correlation_id"], "child")
-            if batch_call_count == 1:
-                result = {"child": {"allowed": True}}
-            else:
-                result = {
-                    "child": {
-                        "error": {
-                            "input_error": "validation_error",
-                            "message": "optimized check failed",
-                        }
-                    }
-                }
-            return mock_response(json.dumps({"result": result}), 200)
+            return mock_response(
+                json.dumps({"result": {"child": {"allowed": True}}}), 200
+            )
 
         mock_request.side_effect = mock_optimized_requests
         configuration = self.configuration
@@ -2570,9 +2558,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             allowed_response = api_client.batch_check(
                 ClientBatchCheckRequest(checks=checks), options
             )
-            error_response = api_client.batch_check(
-                ClientBatchCheckRequest(checks=checks), options
-            )
 
         self.assertEqual(
             [item.correlation_id for item in allowed_response.result],
@@ -2583,17 +2568,6 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             checks,
         )
         self.assertTrue(all(item.allowed for item in allowed_response.result))
-        self.assertEqual(
-            [item.correlation_id for item in error_response.result],
-            ["child", "records"],
-        )
-        self.assertTrue(all(not item.allowed for item in error_response.result))
-        self.assertTrue(
-            all(
-                item.error.message == "optimized check failed"
-                for item in error_response.result
-            )
-        )
         model_requests = [
             call
             for call in mock_request.call_args_list
@@ -2605,7 +2579,200 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             if call.args[1].endswith("/batch-check")
         ]
         self.assertEqual(len(model_requests), 1)
-        self.assertEqual(len(batch_requests), 2)
+        self.assertEqual(len(batch_requests), 1)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_batch_check_optimization_preserves_group_boundaries(self, mock_request):
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        model_response = json.dumps(
+            {
+                "authorization_model": {
+                    "id": authorization_model_id,
+                    "schema_version": "1.1",
+                    "type_definitions": [
+                        {
+                            "type": "document",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_edit": {"this": {}},
+                            },
+                        },
+                        {
+                            "type": "folder",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_manage"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_manage"}
+                                },
+                                "can_manage": {"this": {}},
+                            },
+                        },
+                    ],
+                }
+            }
+        )
+        expected_submitted_checks = [
+            {
+                "tuple_key": {
+                    "user": "user:anne",
+                    "relation": "can_edit",
+                    "object": "document:roadmap",
+                },
+                "correlation_id": "document-roadmap-anne-child",
+            },
+            {
+                "tuple_key": {
+                    "user": "user:bob",
+                    "relation": "can_edit",
+                    "object": "document:roadmap",
+                },
+                "correlation_id": "document-roadmap-bob-child",
+            },
+            {
+                "tuple_key": {
+                    "user": "user:anne",
+                    "relation": "can_edit",
+                    "object": "document:budget",
+                },
+                "correlation_id": "document-budget-anne-child",
+            },
+            {
+                "tuple_key": {
+                    "user": "user:anne",
+                    "relation": "can_manage",
+                    "object": "folder:roadmap",
+                },
+                "correlation_id": "folder-roadmap-anne-child",
+            },
+        ]
+
+        def mock_optimized_requests(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(model_response, 200)
+
+            self.assertEqual(kwargs["body"]["checks"], expected_submitted_checks)
+            return mock_response(
+                json.dumps(
+                    {
+                        "result": {
+                            "document-roadmap-anne-child": {"allowed": True},
+                            "document-roadmap-bob-child": {
+                                "error": {
+                                    "input_error": "validation_error",
+                                    "message": "bob check failed",
+                                }
+                            },
+                            "document-budget-anne-child": {"allowed": False},
+                            "folder-roadmap-anne-child": {"allowed": True},
+                        }
+                    }
+                ),
+                200,
+            )
+
+        mock_request.side_effect = mock_optimized_requests
+        checks = [
+            ClientBatchCheckItem(
+                user=user,
+                relation=relation,
+                object=object_name,
+                correlation_id=correlation_id,
+            )
+            for user, relation, object_name, correlation_id in (
+                (
+                    "user:anne",
+                    "can_add_child",
+                    "document:roadmap",
+                    "document-roadmap-anne-child",
+                ),
+                (
+                    "user:anne",
+                    "can_add_records",
+                    "document:roadmap",
+                    "document-roadmap-anne-records",
+                ),
+                (
+                    "user:bob",
+                    "can_add_child",
+                    "document:roadmap",
+                    "document-roadmap-bob-child",
+                ),
+                (
+                    "user:bob",
+                    "can_add_records",
+                    "document:roadmap",
+                    "document-roadmap-bob-records",
+                ),
+                (
+                    "user:anne",
+                    "can_add_child",
+                    "document:budget",
+                    "document-budget-anne-child",
+                ),
+                (
+                    "user:anne",
+                    "can_add_records",
+                    "document:budget",
+                    "document-budget-anne-records",
+                ),
+                (
+                    "user:anne",
+                    "can_add_child",
+                    "folder:roadmap",
+                    "folder-roadmap-anne-child",
+                ),
+                (
+                    "user:anne",
+                    "can_add_records",
+                    "folder:roadmap",
+                    "folder-roadmap-anne-records",
+                ),
+            )
+        ]
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            response = api_client.batch_check(
+                ClientBatchCheckRequest(checks=checks),
+                options={
+                    "authorization_model_id": authorization_model_id,
+                    "optimize_relation_aliases": True,
+                },
+            )
+
+        results_by_id = {item.correlation_id: item for item in response.result}
+        self.assertEqual(set(results_by_id), {check.correlation_id for check in checks})
+        expected_allowed = (True, True, False, False, False, False, True, True)
+        for check, allowed in zip(checks, expected_allowed, strict=True):
+            result = results_by_id[check.correlation_id]
+            self.assertIs(result.request, check)
+            self.assertEqual(result.request.user, check.user)
+            self.assertEqual(result.request.object, check.object)
+            self.assertEqual(result.request.relation, check.relation)
+            self.assertEqual(result.allowed, allowed)
+
+        self.assertEqual(
+            results_by_id["document-roadmap-bob-child"].error.message,
+            "bob check failed",
+        )
+        self.assertEqual(
+            results_by_id["document-roadmap-bob-records"].error.message,
+            "bob check failed",
+        )
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        self.assertEqual(len(batch_requests), 1)
 
     @patch.object(rest.RESTClientObject, "request")
     def test_batch_check_optimization_requires_model_id(self, mock_request):
