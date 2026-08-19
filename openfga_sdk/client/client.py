@@ -2,7 +2,7 @@ import asyncio
 import uuid
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, cast
 
 from openfga_sdk.api.open_fga_api import OpenFgaApi
 from openfga_sdk.api_client import ApiClient
@@ -37,6 +37,10 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.client.relation_optimizer import (
+    build_relation_aliases,
+    group_batch_checks,
+)
 from openfga_sdk.constants import (
     CLIENT_BULK_REQUEST_ID_HEADER,
     CLIENT_MAX_BATCH_SIZE,
@@ -172,6 +176,9 @@ class OpenFgaClient:
         self._client_configuration = configuration
         self._api_client = ApiClient(configuration)
         self._api = OpenFgaApi(self._api_client)
+        self._relation_alias_cache: dict[
+            tuple[str, str], asyncio.Task[dict[str, dict[str, str]]]
+        ] = {}
 
         # Set default headers from configuration
         if configuration.headers:
@@ -185,6 +192,14 @@ class OpenFgaClient:
         await self.close()
 
     async def close(self):
+        """Cancel cached model loads and close the API client."""
+        tasks = list(self._relation_alias_cache.values())
+        self._relation_alias_cache.clear()
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
         await self._api.close()
 
     def _get_authorization_model_id(
@@ -246,6 +261,53 @@ class OpenFgaClient:
         Return the authorization model id
         """
         return self._client_configuration.authorization_model_id
+
+    async def _get_relation_aliases(
+        self,
+        options: dict[str, int | str | dict[str, int | str]] | None,
+    ) -> dict[str, dict[str, str]]:
+        """Return cached relation aliases for the configured model."""
+        authorization_model_id = self._get_authorization_model_id(options)
+        if authorization_model_id is None:
+            raise FgaValidationException(
+                "authorization_model_id is required when optimizing BatchCheck"
+            )
+
+        store_id = self.get_store_id()
+        if store_id is None or store_id == "":
+            raise FgaValidationException("store_id is required but not configured")
+
+        cache_key = (store_id, authorization_model_id)
+        task = self._relation_alias_cache.get(cache_key)
+        if task is None:
+            task = asyncio.create_task(self._load_relation_aliases(options))
+            self._relation_alias_cache[cache_key] = task
+
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            if task.cancelled() and self._relation_alias_cache.get(cache_key) is task:
+                self._relation_alias_cache.pop(cache_key, None)
+            raise
+        except Exception:
+            if self._relation_alias_cache.get(cache_key) is task:
+                self._relation_alias_cache.pop(cache_key, None)
+            raise
+
+    async def _load_relation_aliases(
+        self,
+        options: dict[str, int | str | dict[str, int | str]] | None,
+    ) -> dict[str, dict[str, str]]:
+        """Read the configured model and build relation alias mappings."""
+        model_options = {
+            key: options[key]
+            for key in ("authorization_model_id", "headers", "retry_params")
+            if options is not None and key in options
+        }
+        response = await self.read_authorization_model(model_options)
+        if response.authorization_model is None:
+            raise FgaValidationException("authorization model was not returned")
+        return build_relation_aliases(response.authorization_model)
 
     #################
     # Stores
@@ -784,6 +846,7 @@ class OpenFgaClient:
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
+        :param optimize_relation_aliases(options) - Collapse equivalent pure relation aliases. Defaults to false
         """
         options = set_heading_if_not_set(
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
@@ -809,42 +872,73 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
+        optimize_relation_aliases = options.get("optimize_relation_aliases") is True
+        if (
+            optimize_relation_aliases
+            and self._get_authorization_model_id(options) is None
+        ):
+            raise FgaValidationException(
+                "authorization_model_id is required when optimizing BatchCheck"
+            )
+
         id_to_check: dict[str, ClientBatchCheckItem] = {}
+        for check in body.checks:
+            if check.correlation_id is None:
+                check.correlation_id = str(uuid.uuid4())
 
-        def track_and_transform(checks):
-            transformed = []
-            for check in checks:
-                if check.correlation_id is None:
-                    check.correlation_id = str(uuid.uuid4())
+            correlation_id = cast(str, check.correlation_id)
+            if correlation_id in id_to_check:
+                raise FgaValidationException(
+                    f"Duplicate correlation_id ({correlation_id}) provided"
+                )
+            id_to_check[correlation_id] = check
 
-                if check.correlation_id in id_to_check:
-                    raise FgaValidationException(
-                        f"Duplicate correlation_id ({check.correlation_id}) provided"
-                    )
+        aliases_by_type = (
+            await self._get_relation_aliases(options)
+            if optimize_relation_aliases
+            else {}
+        )
+        groups = group_batch_checks(body.checks, aliases_by_type)
+        submitted_to_original_ids: dict[str, tuple[str, ...]] = {}
+        submitted_checks: list[ClientBatchCheckItem] = []
 
-                id_to_check[check.correlation_id] = check
+        for group in groups:
+            representative = body.checks[group.indexes[0]]
+            submitted_check = representative
+            if len(group.indexes) > 1:
+                submitted_check = ClientBatchCheckItem(
+                    user=representative.user,
+                    relation=group.relation,
+                    object=representative.object,
+                    correlation_id=representative.correlation_id,
+                    contextual_tuples=representative.contextual_tuples,
+                    context=representative.context,
+                )
 
-                transformed.append(construct_batch_item(check))
-            return transformed
+            submitted_id = cast(str, submitted_check.correlation_id)
+            submitted_to_original_ids[submitted_id] = tuple(
+                cast(str, body.checks[index].correlation_id) for index in group.indexes
+            )
+            submitted_checks.append(submitted_check)
 
         checks = [
-            track_and_transform(
-                body.checks[i * max_batch_size : (i + 1) * max_batch_size]
-            )
-            for i in range((len(body.checks) + max_batch_size - 1) // max_batch_size)
+            [construct_batch_item(check) for check in chunk]
+            for chunk in _chuck_array(submitted_checks, max_batch_size)
         ]
 
         result = []
         sem = asyncio.Semaphore(max_parallel_requests)
 
         def map_response(id, result):
-            check = id_to_check[id]
-            return ClientBatchCheckSingleResponse(
-                allowed=result.allowed,
-                request=check,
-                correlation_id=id,
-                error=result.error,
-            )
+            return [
+                ClientBatchCheckSingleResponse(
+                    allowed=result.allowed,
+                    request=id_to_check[original_id],
+                    correlation_id=original_id,
+                    error=result.error,
+                )
+                for original_id in submitted_to_original_ids[id]
+            ]
 
         async def coro(checks):
             res = await self._single_batch_check(
@@ -857,9 +951,8 @@ class OpenFgaClient:
                 options,
             )
 
-            result.extend(
-                [map_response(c_id, c_result) for c_id, c_result in res.result.items()]
-            )
+            for correlation_id, check_result in res.result.items():
+                result.extend(map_response(correlation_id, check_result))
 
         batch_check_coros = [coro(request) for request in checks]
         await asyncio.gather(*batch_check_coros)

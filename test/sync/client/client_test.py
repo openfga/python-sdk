@@ -2,7 +2,9 @@ import copy
 import json
 import uuid
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from threading import Event
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import ANY, patch
 
@@ -2488,6 +2490,236 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
                 _request_timeout=None,
             )
             api_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_batch_check_optimizes_relation_aliases(self, mock_request):
+        """BatchCheck can collapse pure aliases using a cached model."""
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        model_response = json.dumps(
+            {
+                "authorization_model": {
+                    "id": authorization_model_id,
+                    "schema_version": "1.1",
+                    "type_definitions": [
+                        {
+                            "type": "document",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_edit": {"this": {}},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+        batch_call_count = 0
+
+        def mock_optimized_requests(method, url, **kwargs):
+            nonlocal batch_call_count
+            if method == "GET":
+                return mock_response(model_response, 200)
+
+            batch_call_count += 1
+            checks = kwargs["body"]["checks"]
+            self.assertEqual(len(checks), 1)
+            self.assertEqual(checks[0]["tuple_key"]["relation"], "can_edit")
+            self.assertEqual(checks[0]["correlation_id"], "child")
+            if batch_call_count == 1:
+                result = {"child": {"allowed": True}}
+            else:
+                result = {
+                    "child": {
+                        "error": {
+                            "input_error": "validation_error",
+                            "message": "optimized check failed",
+                        }
+                    }
+                }
+            return mock_response(json.dumps({"result": result}), 200)
+
+        mock_request.side_effect = mock_optimized_requests
+        configuration = self.configuration
+        configuration.store_id = store_id
+        checks = [
+            ClientBatchCheckItem(
+                user="user:anne",
+                relation="can_add_child",
+                object="document:roadmap",
+                correlation_id="child",
+                context={"view_count": 1},
+            ),
+            ClientBatchCheckItem(
+                user="user:anne",
+                relation="can_add_records",
+                object="document:roadmap",
+                correlation_id="records",
+                context={"view_count": 1},
+            ),
+        ]
+        options = {
+            "authorization_model_id": authorization_model_id,
+            "optimize_relation_aliases": True,
+        }
+
+        with OpenFgaClient(configuration) as api_client:
+            allowed_response = api_client.batch_check(
+                ClientBatchCheckRequest(checks=checks), options
+            )
+            error_response = api_client.batch_check(
+                ClientBatchCheckRequest(checks=checks), options
+            )
+
+        self.assertEqual(
+            [item.correlation_id for item in allowed_response.result],
+            ["child", "records"],
+        )
+        self.assertEqual(
+            [item.request for item in allowed_response.result],
+            checks,
+        )
+        self.assertTrue(all(item.allowed for item in allowed_response.result))
+        self.assertEqual(
+            [item.correlation_id for item in error_response.result],
+            ["child", "records"],
+        )
+        self.assertTrue(all(not item.allowed for item in error_response.result))
+        self.assertTrue(
+            all(
+                item.error.message == "optimized check failed"
+                for item in error_response.result
+            )
+        )
+        model_requests = [
+            call
+            for call in mock_request.call_args_list
+            if "/authorization-models/" in call.args[1]
+        ]
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        self.assertEqual(len(model_requests), 1)
+        self.assertEqual(len(batch_requests), 2)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_batch_check_optimization_requires_model_id(self, mock_request):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        body = ClientBatchCheckRequest(
+            checks=[
+                ClientBatchCheckItem(
+                    user="user:anne",
+                    relation="can_view",
+                    object="document:roadmap",
+                )
+            ]
+        )
+
+        with OpenFgaClient(configuration) as api_client:
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "authorization_model_id is required when optimizing BatchCheck",
+            ):
+                api_client.batch_check(
+                    body,
+                    options={"optimize_relation_aliases": True},
+                )
+
+        mock_request.assert_not_called()
+
+    def test_relation_alias_cache_requires_store_id(self):
+        with OpenFgaClient(self.configuration) as api_client:
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "authorization_model_id is required when optimizing BatchCheck",
+            ):
+                api_client._get_relation_aliases(None)
+
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "store_id is required but not configured",
+            ):
+                api_client._get_relation_aliases(
+                    {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+                )
+
+    def test_relation_alias_cache_evicts_model_load_errors(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "continuation_token": "ignored",
+            "headers": {"x-test": "value"},
+            "optimize_relation_aliases": True,
+            "page_size": 10,
+        }
+        expected_model_options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "headers": {"x-test": "value"},
+        }
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client,
+                "read_authorization_model",
+                return_value=ReadAuthorizationModelResponse(),
+            ) as mock_read_model:
+                for _ in range(2):
+                    with self.assertRaisesRegex(
+                        FgaValidationException,
+                        "authorization model was not returned",
+                    ):
+                        api_client._get_relation_aliases(options)
+
+                self.assertEqual(mock_read_model.call_count, 2)
+                self.assertEqual(
+                    [request.args[0] for request in mock_read_model.call_args_list],
+                    [expected_model_options, expected_model_options],
+                )
+                self.assertEqual(api_client._relation_alias_cache, {})
+
+    def test_relation_alias_cache_shares_concurrent_model_loads(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        options = {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+        load_started = Event()
+        release_load = Event()
+        model_response = ReadAuthorizationModelResponse(
+            AuthorizationModel(
+                id="01GXSA8YR785C4FYS3C0RTG7B1",
+                schema_version="1.1",
+                type_definitions=[],
+            )
+        )
+
+        def load_model(_options):
+            load_started.set()
+            if not release_load.wait(timeout=2):
+                raise AssertionError("timed out waiting to release model load")
+            return model_response
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client,
+                "read_authorization_model",
+                side_effect=load_model,
+            ) as mock_read_model:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    first = executor.submit(api_client._get_relation_aliases, options)
+                    self.assertTrue(load_started.wait(timeout=1))
+                    second = executor.submit(api_client._get_relation_aliases, options)
+                    release_load.set()
+                    first_result = first.result(timeout=2)
+                    second_result = second.result(timeout=2)
+
+                self.assertIs(first_result, second_result)
+                self.assertEqual(mock_read_model.call_count, 1)
 
     def test_batch_check_errors_dupe_cor_id(self):
         """Test case for duplicate correlation_id being provided to batch_check"""
