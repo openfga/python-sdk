@@ -2,7 +2,9 @@ import copy
 import json
 import uuid
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from threading import Event
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import ANY, patch
 
@@ -2489,6 +2491,403 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             api_client.close()
 
+    @patch.object(rest.RESTClientObject, "request")
+    def test_batch_check_optimizes_relation_aliases(self, mock_request):
+        """BatchCheck can collapse pure aliases using a cached model."""
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        model_response = json.dumps(
+            {
+                "authorization_model": {
+                    "id": authorization_model_id,
+                    "schema_version": "1.1",
+                    "type_definitions": [
+                        {
+                            "type": "document",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_edit": {"this": {}},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+
+        def mock_optimized_requests(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(model_response, 200)
+
+            checks = kwargs["body"]["checks"]
+            self.assertEqual(len(checks), 1)
+            self.assertEqual(checks[0]["tuple_key"]["relation"], "can_edit")
+            self.assertEqual(checks[0]["correlation_id"], "child")
+            return mock_response(
+                json.dumps({"result": {"child": {"allowed": True}}}), 200
+            )
+
+        mock_request.side_effect = mock_optimized_requests
+        configuration = self.configuration
+        configuration.store_id = store_id
+        checks = [
+            ClientBatchCheckItem(
+                user="user:anne",
+                relation="can_add_child",
+                object="document:roadmap",
+                correlation_id="child",
+                context={"view_count": 1},
+            ),
+            ClientBatchCheckItem(
+                user="user:anne",
+                relation="can_add_records",
+                object="document:roadmap",
+                correlation_id="records",
+                context={"view_count": 1},
+            ),
+        ]
+        options = {
+            "authorization_model_id": authorization_model_id,
+            "optimize_relation_aliases": True,
+        }
+
+        with OpenFgaClient(configuration) as api_client:
+            allowed_response = api_client.batch_check(
+                ClientBatchCheckRequest(checks=checks), options
+            )
+
+        self.assertEqual(
+            [item.correlation_id for item in allowed_response.result],
+            ["child", "records"],
+        )
+        self.assertEqual(
+            [item.request for item in allowed_response.result],
+            checks,
+        )
+        self.assertTrue(all(item.allowed for item in allowed_response.result))
+        model_requests = [
+            call
+            for call in mock_request.call_args_list
+            if "/authorization-models/" in call.args[1]
+        ]
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        self.assertEqual(len(model_requests), 1)
+        self.assertEqual(len(batch_requests), 1)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_batch_check_optimization_preserves_group_boundaries(self, mock_request):
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        model_response = json.dumps(
+            {
+                "authorization_model": {
+                    "id": authorization_model_id,
+                    "schema_version": "1.1",
+                    "type_definitions": [
+                        {
+                            "type": "document",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_edit": {"this": {}},
+                            },
+                        },
+                        {
+                            "type": "folder",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_manage"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_manage"}
+                                },
+                                "can_manage": {"this": {}},
+                            },
+                        },
+                    ],
+                }
+            }
+        )
+        expected_submitted_checks = [
+            {
+                "tuple_key": {
+                    "user": "user:anne",
+                    "relation": "can_edit",
+                    "object": "document:roadmap",
+                },
+                "correlation_id": "document-roadmap-anne-child",
+            },
+            {
+                "tuple_key": {
+                    "user": "user:bob",
+                    "relation": "can_edit",
+                    "object": "document:roadmap",
+                },
+                "correlation_id": "document-roadmap-bob-child",
+            },
+            {
+                "tuple_key": {
+                    "user": "user:anne",
+                    "relation": "can_edit",
+                    "object": "document:budget",
+                },
+                "correlation_id": "document-budget-anne-child",
+            },
+            {
+                "tuple_key": {
+                    "user": "user:anne",
+                    "relation": "can_manage",
+                    "object": "folder:roadmap",
+                },
+                "correlation_id": "folder-roadmap-anne-child",
+            },
+        ]
+
+        def mock_optimized_requests(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(model_response, 200)
+
+            self.assertEqual(kwargs["body"]["checks"], expected_submitted_checks)
+            return mock_response(
+                json.dumps(
+                    {
+                        "result": {
+                            "document-roadmap-anne-child": {"allowed": True},
+                            "document-roadmap-bob-child": {
+                                "error": {
+                                    "input_error": "validation_error",
+                                    "message": "bob check failed",
+                                }
+                            },
+                            "document-budget-anne-child": {"allowed": False},
+                            "folder-roadmap-anne-child": {"allowed": True},
+                        }
+                    }
+                ),
+                200,
+            )
+
+        mock_request.side_effect = mock_optimized_requests
+        checks = [
+            ClientBatchCheckItem(
+                user=user,
+                relation=relation,
+                object=object_name,
+                correlation_id=correlation_id,
+            )
+            for user, relation, object_name, correlation_id in (
+                (
+                    "user:anne",
+                    "can_add_child",
+                    "document:roadmap",
+                    "document-roadmap-anne-child",
+                ),
+                (
+                    "user:anne",
+                    "can_add_records",
+                    "document:roadmap",
+                    "document-roadmap-anne-records",
+                ),
+                (
+                    "user:bob",
+                    "can_add_child",
+                    "document:roadmap",
+                    "document-roadmap-bob-child",
+                ),
+                (
+                    "user:bob",
+                    "can_add_records",
+                    "document:roadmap",
+                    "document-roadmap-bob-records",
+                ),
+                (
+                    "user:anne",
+                    "can_add_child",
+                    "document:budget",
+                    "document-budget-anne-child",
+                ),
+                (
+                    "user:anne",
+                    "can_add_records",
+                    "document:budget",
+                    "document-budget-anne-records",
+                ),
+                (
+                    "user:anne",
+                    "can_add_child",
+                    "folder:roadmap",
+                    "folder-roadmap-anne-child",
+                ),
+                (
+                    "user:anne",
+                    "can_add_records",
+                    "folder:roadmap",
+                    "folder-roadmap-anne-records",
+                ),
+            )
+        ]
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            response = api_client.batch_check(
+                ClientBatchCheckRequest(checks=checks),
+                options={
+                    "authorization_model_id": authorization_model_id,
+                    "optimize_relation_aliases": True,
+                },
+            )
+
+        results_by_id = {item.correlation_id: item for item in response.result}
+        self.assertEqual(set(results_by_id), {check.correlation_id for check in checks})
+        expected_allowed = (True, True, False, False, False, False, True, True)
+        for check, allowed in zip(checks, expected_allowed, strict=True):
+            result = results_by_id[check.correlation_id]
+            self.assertIs(result.request, check)
+            self.assertEqual(result.request.user, check.user)
+            self.assertEqual(result.request.object, check.object)
+            self.assertEqual(result.request.relation, check.relation)
+            self.assertEqual(result.allowed, allowed)
+
+        self.assertEqual(
+            results_by_id["document-roadmap-bob-child"].error.message,
+            "bob check failed",
+        )
+        self.assertEqual(
+            results_by_id["document-roadmap-bob-records"].error.message,
+            "bob check failed",
+        )
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        self.assertEqual(len(batch_requests), 1)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_batch_check_optimization_requires_model_id(self, mock_request):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        body = ClientBatchCheckRequest(
+            checks=[
+                ClientBatchCheckItem(
+                    user="user:anne",
+                    relation="can_view",
+                    object="document:roadmap",
+                )
+            ]
+        )
+
+        with OpenFgaClient(configuration) as api_client:
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "authorization_model_id is required when optimizing BatchCheck",
+            ):
+                api_client.batch_check(
+                    body,
+                    options={"optimize_relation_aliases": True},
+                )
+
+        mock_request.assert_not_called()
+
+    def test_relation_alias_cache_requires_store_id(self):
+        with OpenFgaClient(self.configuration) as api_client:
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "authorization_model_id is required when optimizing BatchCheck",
+            ):
+                api_client._get_relation_aliases(None)
+
+            with self.assertRaisesRegex(
+                FgaValidationException,
+                "store_id is required but not configured",
+            ):
+                api_client._get_relation_aliases(
+                    {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+                )
+
+    def test_relation_alias_cache_evicts_model_load_errors(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "continuation_token": "ignored",
+            "headers": {"x-test": "value"},
+            "optimize_relation_aliases": True,
+            "page_size": 10,
+        }
+        expected_model_options = {
+            "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+            "headers": {"x-test": "value"},
+        }
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client,
+                "read_authorization_model",
+                return_value=ReadAuthorizationModelResponse(),
+            ) as mock_read_model:
+                for _ in range(2):
+                    with self.assertRaisesRegex(
+                        FgaValidationException,
+                        "authorization model was not returned",
+                    ):
+                        api_client._get_relation_aliases(options)
+
+                self.assertEqual(mock_read_model.call_count, 2)
+                self.assertEqual(
+                    [request.args[0] for request in mock_read_model.call_args_list],
+                    [expected_model_options, expected_model_options],
+                )
+                self.assertEqual(api_client._relation_alias_cache, {})
+
+    def test_relation_alias_cache_shares_concurrent_model_loads(self):
+        configuration = self.configuration
+        configuration.store_id = store_id
+        options = {"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"}
+        load_started = Event()
+        release_load = Event()
+        model_response = ReadAuthorizationModelResponse(
+            AuthorizationModel(
+                id="01GXSA8YR785C4FYS3C0RTG7B1",
+                schema_version="1.1",
+                type_definitions=[],
+            )
+        )
+
+        def load_model(_options):
+            load_started.set()
+            if not release_load.wait(timeout=2):
+                raise AssertionError("timed out waiting to release model load")
+            return model_response
+
+        with OpenFgaClient(configuration) as api_client:
+            with patch.object(
+                api_client,
+                "read_authorization_model",
+                side_effect=load_model,
+            ) as mock_read_model:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    first = executor.submit(api_client._get_relation_aliases, options)
+                    self.assertTrue(load_started.wait(timeout=1))
+                    second = executor.submit(api_client._get_relation_aliases, options)
+                    release_load.set()
+                    first_result = first.result(timeout=2)
+                    second_result = second.result(timeout=2)
+
+                self.assertIs(first_result, second_result)
+                self.assertEqual(mock_read_model.call_count, 1)
+
     def test_batch_check_errors_dupe_cor_id(self):
         """Test case for duplicate correlation_id being provided to batch_check"""
 
@@ -2794,20 +3193,19 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     def test_list_relations(self, mock_request):
-        """Test case for list relations
-
-        Check whether a user is authorized to access an object
-        """
-
-        def mock_check_requests(*args, **kwargs):
-            body = kwargs.get("body")
-            tuple_key = body.get("tuple_key")
-            if tuple_key["relation"] == "owner":
-                return mock_response('{"allowed": false, "resolution": "1234"}', 200)
-            return mock_response('{"allowed": true, "resolution": "1234"}', 200)
-
-        # First, mock the response
-        mock_request.side_effect = mock_check_requests
+        """ListRelations delegates to one BatchCheck and preserves input order."""
+        mock_request.return_value = mock_response(
+            json.dumps(
+                {
+                    "result": {
+                        "2": {"allowed": True},
+                        "1": {"allowed": False},
+                        "0": {"allowed": True},
+                    }
+                }
+            ),
+            200,
+        )
 
         configuration = self.configuration
         configuration.store_id = store_id
@@ -2825,62 +3223,178 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             )
             self.assertEqual(api_response, ["reader", "viewer"])
 
-            # Make sure the API was called with the right data
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "reader",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
+        mock_request.assert_called_once_with(
+            "POST",
+            "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/batch-check",
+            headers=ANY,
+            query_params=[],
+            post_params=[],
+            body={
+                "checks": [
+                    {
+                        "tuple_key": {
+                            "object": "document:2021-budget",
+                            "relation": relation,
+                            "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                        },
+                        "correlation_id": str(index),
+                    }
+                    for index, relation in enumerate(["reader", "owner", "viewer"])
+                ],
+                "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                "consistency": "MINIMIZE_LATENCY",
+            },
+            _preload_content=ANY,
+            _request_timeout=None,
+        )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_list_relations_forwards_relation_alias_optimization(self, mock_request):
+        authorization_model_id = "01GXSA8YR785C4FYS3C0RTG7B1"
+        model_response = json.dumps(
+            {
+                "authorization_model": {
+                    "id": authorization_model_id,
+                    "schema_version": "1.1",
+                    "type_definitions": [
+                        {
+                            "type": "document",
+                            "relations": {
+                                "can_add_child": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_add_records": {
+                                    "computedUserset": {"relation": "can_edit"}
+                                },
+                                "can_edit": {"this": {}},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+
+        def mock_optimized_requests(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(model_response, 200)
+
+            self.assertTrue(url.endswith("/batch-check"))
+            checks = kwargs["body"]["checks"]
+            self.assertEqual(len(checks), 1)
+            self.assertEqual(
+                checks[0]["tuple_key"],
+                {
+                    "user": "user:anne",
+                    "relation": "can_edit",
+                    "object": "document:roadmap",
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
             )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "owner",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
+            return mock_response(
+                json.dumps(
+                    {"result": {checks[0]["correlation_id"]: {"allowed": True}}}
+                ),
+                200,
+            )
+
+        mock_request.side_effect = mock_optimized_requests
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            response = api_client.list_relations(
+                ClientListRelationsRequest(
+                    user="user:anne",
+                    relations=["can_add_child", "can_add_records"],
+                    object="document:roadmap",
+                ),
+                options={
+                    "authorization_model_id": authorization_model_id,
+                    "optimize_relation_aliases": True,
                 },
-                _preload_content=ANY,
-                _request_timeout=None,
             )
-            mock_request.assert_any_call(
-                "POST",
-                "http://api.fga.example/stores/01YCP46JKYM8FJCQ37NMBYHE5X/check",
-                headers=ANY,
-                query_params=[],
-                post_params=[],
-                body={
-                    "tuple_key": {
-                        "object": "document:2021-budget",
-                        "relation": "viewer",
-                        "user": "user:81684243-9356-4421-8fbf-a4f8d36aa31b",
-                    },
-                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-                    "consistency": "MINIMIZE_LATENCY",
-                },
-                _preload_content=ANY,
-                _request_timeout=None,
+
+        self.assertEqual(response, ["can_add_child", "can_add_records"])
+        model_requests = [
+            call
+            for call in mock_request.call_args_list
+            if "/authorization-models/" in call.args[1]
+        ]
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        self.assertEqual(len(model_requests), 1)
+        self.assertEqual(len(batch_requests), 1)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_list_relations_falls_back_after_batch_item_error(self, mock_request):
+        def mock_requests(method, url, **kwargs):
+            if url.endswith("/batch-check"):
+                return mock_response(
+                    json.dumps(
+                        {
+                            "result": {
+                                "0": {
+                                    "error": {
+                                        "input_error": "validation_error",
+                                        "message": "batch item failed",
+                                    }
+                                },
+                                "1": {"allowed": False},
+                            }
+                        }
+                    ),
+                    200,
+                )
+
+            relation = kwargs["body"]["tuple_key"]["relation"]
+            return mock_response(json.dumps({"allowed": relation == "reader"}), 200)
+
+        mock_request.side_effect = mock_requests
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            response = api_client.list_relations(
+                ClientListRelationsRequest(
+                    user="user:anne",
+                    relations=["reader", "owner"],
+                    object="document:roadmap",
+                ),
+                options={"authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"},
             )
-            api_client.close()
+
+        self.assertEqual(response, ["reader"])
+        batch_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/batch-check")
+        ]
+        check_requests = [
+            call
+            for call in mock_request.call_args_list
+            if call.args[1].endswith("/check")
+        ]
+        self.assertEqual(len(batch_requests), 1)
+        self.assertEqual(len(check_requests), 2)
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_list_relations_with_no_relations(self, mock_request):
+        configuration = self.configuration
+        configuration.store_id = store_id
+
+        with OpenFgaClient(configuration) as api_client:
+            response = api_client.list_relations(
+                ClientListRelationsRequest(
+                    user="user:anne",
+                    relations=[],
+                    object="document:roadmap",
+                )
+            )
+
+        self.assertEqual(response, [])
+        mock_request.assert_not_called()
 
     @patch.object(rest.RESTClientObject, "request")
     def test_list_relations_unauthorized(self, mock_request):
