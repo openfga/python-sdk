@@ -529,9 +529,7 @@ Read a particular authorization model.
 
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
-    # Optionally collapse relations that are pure aliases of the same relation.
-    "optimize_relation_aliases": True,
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
 }
 
 response = await fga_client.read_authorization_model(options)
@@ -1179,7 +1177,9 @@ List the relations a user has on an object.
 
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    # Optionally collapse relations that are pure aliases of the same relation.
+    "optimize_relation_aliases": True,
 }
 body = ClientListRelationsRequest(
     user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
