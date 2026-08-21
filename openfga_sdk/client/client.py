@@ -1076,21 +1076,62 @@ class OpenFgaClient:
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
         :param retryParams.minWaitInMs(options) - Override the minimum wait before a retry is initiated
         :param consistency(options) - The type of consistency preferred for the request
+        :param optimize_relation_aliases(options) - Collapse equivalent pure relation aliases. Defaults to false
         """
         options = set_heading_if_not_set(options, CLIENT_METHOD_HEADER, "ListRelations")
         options = set_heading_if_not_set(
             options, CLIENT_BULK_REQUEST_ID_HEADER, str(uuid.uuid4())
         )
 
+        if not body.relations:
+            return []
+
+        checks = [
+            ClientBatchCheckItem(
+                user=body.user,
+                relation=relation,
+                object=body.object,
+                correlation_id=str(index),
+                contextual_tuples=body.contextual_tuples,
+                context=body.context,
+            )
+            for index, relation in enumerate(body.relations)
+        ]
+        batch_response = await self.batch_check(
+            ClientBatchCheckRequest(checks=checks), options
+        )
+        results_by_id = {
+            response.correlation_id: response for response in batch_response.result
+        }
+
+        if any(
+            check.correlation_id not in results_by_id
+            or results_by_id[cast(str, check.correlation_id)].error is not None
+            for check in checks
+        ):
+            return await self._list_relations_with_individual_checks(body, options)
+
+        return [
+            check.relation
+            for check in checks
+            if results_by_id[cast(str, check.correlation_id)].allowed
+        ]
+
+    async def _list_relations_with_individual_checks(
+        self,
+        body: ClientListRelationsRequest,
+        options: dict[str, int | str | dict[str, int | str]],
+    ) -> list[str]:
+        """Preserve the existing ListRelations error behavior as a fallback."""
         request_body = [
             construct_check_request(
                 user=body.user,
-                relation=i,
+                relation=relation,
                 object=body.object,
                 contextual_tuples=body.contextual_tuples,
                 context=body.context,
             )
-            for i in body.relations
+            for relation in body.relations
         ]
         result = await self.client_batch_check(request_body, options)
 

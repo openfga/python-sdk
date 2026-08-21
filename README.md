@@ -529,7 +529,9 @@ Read a particular authorization model.
 
 options = {
     # You can rely on the model id set in the configuration or override it for this specific request
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1"
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    # Optionally collapse relations that are pure aliases of the same relation.
+    "optimize_relation_aliases": True,
 }
 
 response = await fga_client.read_authorization_model(options)
@@ -1199,6 +1201,13 @@ response = await fga_client.list_relations(body, options)
 
 # response.relations = ["can_view", "can_edit"]
 ```
+
+`ListRelations` evaluates the requested relations through `BatchCheck`. When
+`optimize_relation_aliases` is enabled, it forwards the option to `BatchCheck`,
+which reads and caches the pinned authorization model and evaluates pure aliases
+of the same relation once. `ListRelations` still returns the original requested
+relation names in input order. The optimization is disabled by default and
+requires an authorization model ID.
 
 #### List Users
 
