@@ -1656,6 +1656,53 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             mock_request.assert_called()
             self.assertEqual(mock_request.call_count, 1)
 
+    @patch("asyncio.sleep")
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_500_error_per_request_retry_params_does_not_use_min_wait_as_max_retry(
+        self, mock_request, mock_sleep
+    ):
+        """
+        Per-request RetryParams(max_retry=0, min_wait_in_ms=100) must attempt once.
+
+        A copy-paste bug assigned min_wait_in_ms onto max_retry, which turned this
+        into 101 attempts.
+        """
+        response_body = """
+{
+  "code": "internal_error",
+  "message": "Internal Server Error"
+}
+        """
+        mock_request.side_effect = ServiceException(
+            http_resp=http_mock_response(response_body, 500)
+        )
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        configuration.retry_params = openfga_sdk.configuration.RetryParams(
+            max_retry=3, min_wait_in_ms=10
+        )
+
+        async with openfga_sdk.ApiClient(configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            body = CheckRequest(
+                tuple_key=TupleKey(
+                    object="document:2021-budget",
+                    relation="reader",
+                    user="user:81684243-9356-4421-8fbf-a4f8d36aa31b",
+                ),
+            )
+            with self.assertRaises(ServiceException):
+                await api_instance.check(
+                    body=body,
+                    _retry_params=openfga_sdk.configuration.RetryParams(
+                        max_retry=0, min_wait_in_ms=100
+                    ),
+                )
+            mock_request.assert_called()
+            self.assertEqual(mock_request.call_count, 1)
+            mock_sleep.assert_not_called()
+
     @patch.object(rest.RESTClientObject, "request")
     async def test_500_error_retry(self, mock_request):
         """

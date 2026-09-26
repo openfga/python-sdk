@@ -254,7 +254,7 @@ class ApiClient:
             if _retry_params.max_retry is not None:
                 max_retry = _retry_params.max_retry
             if _retry_params.min_wait_in_ms is not None:
-                max_retry = _retry_params.min_wait_in_ms
+                min_wait_in_ms = _retry_params.min_wait_in_ms
             if _retry_params.max_wait_in_sec is not None:
                 max_wait_in_sec = _retry_params.max_wait_in_sec
 
