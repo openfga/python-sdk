@@ -15,7 +15,7 @@ from setuptools import find_packages, setup
 
 NAME = "example1"
 VERSION = "0.0.1"
-REQUIRES = ["openfga-sdk >= 0.10.4"]  # x-release-please-version
+REQUIRES = ["openfga-sdk >= 0.10.5"]  # x-release-please-version
 
 setup(
     name=NAME,
