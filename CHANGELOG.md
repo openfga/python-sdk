@@ -13,10 +13,6 @@
 * fix README TOC order to match section order ([#316](https://github.com/openfga/python-sdk/issues/316)) ([1b9f90f](https://github.com/openfga/python-sdk/commit/1b9f90f8a399b460acd663e61c05a4c403a0bd06))
 
 
-### Miscellaneous
-
-* release 0.10.5 ([f8b9063](https://github.com/openfga/python-sdk/commit/f8b906394d4c4bfb608549349856f6f8cb67c74c))
-
 ## [0.10.4](https://github.com/openfga/python-sdk/compare/v0.10.3...v0.10.4) (2026-06-29)
 
 
