@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.10.5](https://github.com/openfga/python-sdk/compare/v0.10.4...v0.10.5) (2026-09-29)
+
+
+### Fixed
+
+* apply per-request min_wait_in_ms to wait, not max_retry ([#320](https://github.com/openfga/python-sdk/issues/320)) ([c190a4f](https://github.com/openfga/python-sdk/commit/c190a4f24499bac3987fb316b413ac2f9ccd6d56)), closes [#319](https://github.com/openfga/python-sdk/issues/319)
+
+
+### Documentation
+
+* fix README TOC order to match section order ([#316](https://github.com/openfga/python-sdk/issues/316)) ([1b9f90f](https://github.com/openfga/python-sdk/commit/1b9f90f8a399b460acd663e61c05a4c403a0bd06))
+
+
 ## [0.10.4](https://github.com/openfga/python-sdk/compare/v0.10.3...v0.10.4) (2026-06-29)
 
 
