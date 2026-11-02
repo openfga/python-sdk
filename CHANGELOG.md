@@ -118,7 +118,7 @@
 
 - feat: remove client-side validation - thanks @GMorris-professional (#155)
 - feat: add support for `start_time` parameter in `ReadChanges` endpoint (#156) - Note, this feature requires v1.8.0 of OpenFGA or newer
-- feat!: add support for `BatchCheck` API (#154) - Note, this feature requires v1.8.2 of OpenFGA or newer
+- feat!: add support for `BatchCheck` API (#154) - Note, this feature requires v1.8.0 of OpenFGA or newer
 - fix: change default max retry limit to 3 from 15 - thanks @ovindu-a (#155)
 
 BREAKING CHANGE:
