@@ -38,6 +38,9 @@ def random_time(loop_count, min_wait_in_ms) -> float:
     """
     minimum = math.ceil(2**loop_count * min_wait_in_ms)
     maximum = math.ceil(2 ** (loop_count + 1) * min_wait_in_ms)
+    # randrange() raises on an empty range, e.g. when min_wait_in_ms is 0
+    if maximum <= minimum:
+        return minimum / 1000
     return random.randrange(minimum, maximum) / 1000
 
 
