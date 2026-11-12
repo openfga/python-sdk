@@ -13,7 +13,11 @@ from openfga_sdk.constants import (
     TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC,
 )
 from openfga_sdk.credentials import Credentials
-from openfga_sdk.exceptions import AuthenticationError
+from openfga_sdk.exceptions import (
+    AuthenticationError,
+    RateLimitExceededError,
+    ServiceException,
+)
 from openfga_sdk.oauth2_common import _TokenState, jitter
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
@@ -103,16 +107,24 @@ class OAuth2Client:
         )
 
         for attempt in range(max_retry + 1):
-            raw_response = await client.request(
-                method="POST",
-                url=token_url,
-                headers=headers,
-                query_params=None,
-                body=None,
-                _preload_content=True,
-                _request_timeout=None,
-                post_params=post_params,
-            )
+            try:
+                raw_response = await client.request(
+                    method="POST",
+                    url=token_url,
+                    headers=headers,
+                    query_params=None,
+                    body=None,
+                    _preload_content=True,
+                    _request_timeout=None,
+                    post_params=post_params,
+                )
+            except (RateLimitExceededError, ServiceException) as err:
+                # The REST client raises on 429 and 5xx responses instead of returning them,
+                # so retry here, like the status check below intends. 501 isn't retried.
+                if attempt < max_retry and err.status != 501:
+                    await asyncio.sleep(jitter(attempt, min_wait_in_ms))
+                    continue
+                raise
 
             if 500 <= raw_response.status <= 599 or raw_response.status == 429:
                 if attempt < max_retry and raw_response.status != 501:
