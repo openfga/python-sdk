@@ -12,6 +12,11 @@
 
 * release 0.10.6 ([7b59223](https://github.com/openfga/python-sdk/commit/7b5922322ace1314c139b3fbf577816d22bcb766))
 
+
+### Security
+
+* Fixed [GHSA-4q64-52jh-rg9v](https://github.com/openfga/python-sdk/security/advisories/GHSA-4q64-52jh-rg9v), where the API token or client secret could be written to the debug log when debug mode is enabled. ([4d88caa](https://github.com/openfga/python-sdk/commit/4d88caabe10b3dff59f3b80ca3739f9d5b08e986))
+
 ## [0.10.5](https://github.com/openfga/python-sdk/compare/v0.10.4...v0.10.5) (2026-09-29)
 
 
