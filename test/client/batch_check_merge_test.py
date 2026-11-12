@@ -11,6 +11,7 @@ from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
+from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
 from openfga_sdk.exceptions import (
     FgaValidationException,
     ForbiddenException,
@@ -93,8 +94,11 @@ class FakeServer:
     Answers model reads and BatchCheck requests, and records what was sent.
     """
 
-    def __init__(self, model_error=None, answer=None):
+    def __init__(self, model_error=None, answer=None, model_body=None):
         self.model_error = model_error
+        self.model_body = (
+            {"authorization_model": MODEL} if model_body is None else model_body
+        )
         self.answer = answer or (
             lambda check: {"allowed": check["tuple_key"]["relation"] == "viewer"}
         )
@@ -108,7 +112,7 @@ class FakeServer:
             self.model_read_headers.append(kwargs.get("headers") or {})
             if self.model_error is not None:
                 raise self.model_error
-            return mock_response(json.dumps({"authorization_model": MODEL}))
+            return mock_response(json.dumps(self.model_body))
 
         if method == "POST" and url == BATCH_CHECK_URL:
             body = kwargs["body"]
@@ -284,6 +288,14 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         self.assertIsNotNone(items[3].correlation_id)
         self.assertEqual(response.result[3].correlation_id, items[3].correlation_id)
 
+    def test_checks_sent_defaults_to_none_and_can_be_set(self):
+        response = ClientBatchCheckResponse([])
+        self.assertIsNone(response.checks_sent)
+
+        response.checks_sent = 3
+
+        self.assertEqual(response.checks_sent, 3)
+
     @patch.object(rest.RESTClientObject, "request")
     async def test_no_checks_sends_nothing(self, mock_request):
         async with OpenFgaClient(self.configuration) as client:
@@ -320,6 +332,22 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         self.assertEqual(
             [r.allowed for r in response.result], [True, False, False, False]
         )
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_sends_unmerged_when_the_model_response_is_empty(self, mock_request):
+        server = FakeServer(model_body={})
+        mock_request.side_effect = server
+
+        async with OpenFgaClient(self.configuration) as client:
+            with self.assertLogs("openfga_sdk.client.client", "WARNING") as logs:
+                response = await self.batch_check(client, checks())
+
+        self.assertEqual(len(logs.records), 1)
+        self.assertEqual(
+            sent_checks(server),
+            [("a", "viewer"), ("b", "can_view"), ("c", "can_share"), ("d", "editor")],
+        )
+        self.assertEqual(response.checks_sent, 4)
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_copies_an_error_to_every_check_in_the_group(self, mock_request):

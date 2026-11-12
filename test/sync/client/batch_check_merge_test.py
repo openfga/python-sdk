@@ -34,8 +34,11 @@ class FakeServer:
     Answers model reads and BatchCheck requests, and records what was sent.
     """
 
-    def __init__(self, model_error=None, answer=None):
+    def __init__(self, model_error=None, answer=None, model_body=None):
         self.model_error = model_error
+        self.model_body = (
+            {"authorization_model": MODEL} if model_body is None else model_body
+        )
         self.answer = answer or (
             lambda check: {"allowed": check["tuple_key"]["relation"] == "viewer"}
         )
@@ -49,7 +52,7 @@ class FakeServer:
             self.model_read_headers.append(kwargs.get("headers") or {})
             if self.model_error is not None:
                 raise self.model_error
-            return mock_response(json.dumps({"authorization_model": MODEL}))
+            return mock_response(json.dumps(self.model_body))
 
         if method == "POST" and url == BATCH_CHECK_URL:
             body = kwargs["body"]
@@ -240,6 +243,22 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
             ],
             403,
         )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_sends_unmerged_when_the_model_response_is_empty(self, mock_request):
+        server = FakeServer(model_body={})
+        mock_request.side_effect = server
+
+        with OpenFgaClient(self.configuration) as client:
+            with self.assertLogs("openfga_sdk.sync.client.client", "WARNING") as logs:
+                response = self.batch_check(client, checks())
+
+        self.assertEqual(len(logs.records), 1)
+        self.assertEqual(
+            sent_checks(server),
+            [("a", "viewer"), ("b", "can_view"), ("c", "can_share"), ("d", "editor")],
+        )
+        self.assertEqual(response.checks_sent, 4)
 
     @patch.object(rest.RESTClientObject, "request")
     def test_copies_an_error_to_every_check_in_the_group(self, mock_request):
