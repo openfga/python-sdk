@@ -21,17 +21,22 @@ If you configure the OpenTelemetry SDK, these metrics will be exported and sent 
 
 ### Supported Metrics
 
-| Metric Name                      | Type      | Enabled by Default | Description                                                                       |
-| -------------------------------- | --------- | ------------------ | --------------------------------------------------------------------------------- |
-| `fga-client.request.duration`    | Histogram | Yes                | Total request time for FGA requests, in milliseconds                              |
-| `fga-client.query.duration`      | Histogram | Yes                | Time taken by the FGA server to process and evaluate the request, in milliseconds |
-| `fga-client.credentials.request` | Counter   | Yes                | Total number of new token requests initiated using the Client Credentials flow    |
-| `fga-client.request`             | Counter   | No                 | Total number of requests made to the FGA server                                   |
+| Metric Name                               | Type      | Enabled by Default | Description                                                                                   |
+| ----------------------------------------- | --------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| `fga-client.request.duration`             | Histogram | Yes                | Total request time for FGA requests, in milliseconds                                          |
+| `fga-client.query.duration`               | Histogram | Yes                | Time taken by the FGA server to process and evaluate the request, in milliseconds             |
+| `fga-client.credentials.request`          | Counter   | Yes                | Total number of new token requests initiated using the Client Credentials flow                |
+| `fga-client.request`                      | Counter   | No                 | Total number of requests made to the FGA server                                               |
+| `fga-client.batch_check.checks_requested` | Counter   | Yes                | Checks passed to `batch_check` with `merge_equivalent_checks` on                              |
+| `fga-client.batch_check.checks_sent`      | Counter   | Yes                | Checks actually sent by `batch_check` with `merge_equivalent_checks` on                       |
+| `fga-client.batch_check.merge_fallback`   | Counter   | Yes                | `batch_check` calls sent unmerged because the authorization model could not be read           |
+| `fga-client.model_cache.lookup`           | Counter   | Yes                | Authorization model cache lookups by `merge_equivalent_checks`, with a `hit` or `miss` result |
 
 ### Supported Attributes
 
 | Attribute Name                        | Type   | Enabled by Default | Description                                                                       |
 | ------------------------------------- | ------ | ------------------ | --------------------------------------------------------------------------------- |
+| `fga-client.model_cache.result`       | string | Yes                | Result of an authorization model cache lookup (`hit`/`miss`)                      |
 | `fga-client.request.batch_check_size` | int    | No                 | The total size of the `check` list in a `BatchCheck` call                         |
 | `fga-client.request.client_id`        | string | Yes                | Client ID associated with the request, if any                                     |
 | `fga-client.request.method`           | string | Yes                | FGA method/action that was performed (e.g., Check, ListObjects) in TitleCase      |

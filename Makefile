@@ -1,4 +1,7 @@
-.PHONY: sync test lint fmt fix check doc
+.PHONY: sync test lint fmt fix check doc update-equivalent-checks-cases
+
+# openfga/language commit to copy the shared equivalent-checks cases from
+LANGUAGE_REF ?= 5afcf707e44aa21d8ae17e47938b3f0164a13cc7
 
 # Install/update dependencies
 sync:
@@ -26,6 +29,11 @@ fix:
 	uv run ruff check --fix .
 	uv run ruff format .
 
+# Copy the shared equivalent-checks cases from openfga/language
+# Usage: make update-equivalent-checks-cases LANGUAGE_REF=<commit>
+update-equivalent-checks-cases:
+	curl -fsSL https://raw.githubusercontent.com/openfga/language/$(LANGUAGE_REF)/tests/data/equivalent-checks-cases.json -o test/data/equivalent-checks-cases.json
+
 # Run checks (lint + test)
 check: lint fmt test
 
@@ -39,4 +47,5 @@ doc:
 	@echo "  fmt     - Format code"
 	@echo "  fix     - Fix fixable linting and formatting issues"
 	@echo "  check   - Run both linting and tests"
+	@echo "  update-equivalent-checks-cases - Copy the shared equivalent-checks cases from openfga/language (LANGUAGE_REF=<commit>)"
 	@echo "  doc     - Show this help message"

@@ -965,6 +965,31 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 # ]
 ```
 
+###### Merge equivalent checks (beta)
+
+Set `merge_equivalent_checks` to `True` to send checks that are certain to get the same answer only once. The SDK copies each answer back, so you still get one result per check you passed in.
+
+It merges:
+- **Aliases:** with `define can_view: viewer`, checking both `viewer` and `can_view` for the same user and object sends one check. Chains like `define can_share: can_view` work too.
+- **Exact repeats:** the same user, relation, object, context and contextual tuples.
+
+```python
+options = {
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",  # required, here or in the configuration
+    "merge_equivalent_checks": True,
+}
+response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), options)
+# response.checks_sent: how many checks this call actually sent
+```
+
+- **Off by default.** With it off, nothing changes.
+- **Needs an authorization model ID.** Without one, the call fails before anything is sent.
+- **Reads the model once per client.** The SDK reads the model on first use and caches it. Create the client once and reuse it.
+- **Falls back safely.** If the model can't be read (for example, no read access), the SDK logs a warning and sends the checks unmerged.
+- **Errors are shared.** If a merged check returns an error, every check it stands for gets that error.
+- **Correlation IDs** must match `^[\w\d-]{1,36}$` (ASCII). Missing ones are generated.
+- **Telemetry:** see the `fga-client.batch_check.*` and `fga-client.model_cache.lookup` metrics in [OpenTelemetry](docs/opentelemetry.md).
+
 ##### Client Batch Check
 
 

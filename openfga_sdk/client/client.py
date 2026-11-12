@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import uuid
 
 from collections.abc import AsyncIterator
@@ -7,6 +8,13 @@ from typing import Any
 from openfga_sdk.api.open_fga_api import OpenFgaApi
 from openfga_sdk.api_client import ApiClient
 from openfga_sdk.client.configuration import ClientConfiguration
+from openfga_sdk.client.equivalent_checks import (
+    expand,
+    resolve,
+    unmerged,
+    validate_correlation_ids,
+)
+from openfga_sdk.client.model_cache import AsyncModelCache
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
     ClientBatchCheckItem,
@@ -71,7 +79,11 @@ from openfga_sdk.models.write_authorization_model_request import (
     WriteAuthorizationModelRequest,
 )
 from openfga_sdk.models.write_request import WriteRequest
+from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.validation import is_well_formed_ulid_string
+
+
+logger = logging.getLogger(__name__)
 
 
 def _chuck_array(array, max_size):
@@ -127,6 +139,16 @@ def options_to_kwargs(
     return kwargs
 
 
+def _model_read_kwargs(
+    options: dict[str, int | str | dict[str, int | str]] | None = None,
+) -> dict[str, int | str | dict[str, int | str]]:
+    """
+    Return the kwargs a BatchCheck call passes on to its authorization model read
+    """
+    kwargs = options_to_kwargs(options)
+    return {key: kwargs[key] for key in ("_headers", "_retry_params") if key in kwargs}
+
+
 def options_to_transaction_info(
     options: dict[str, int | str | dict[str, int | str]] | None = None,
 ):
@@ -172,6 +194,7 @@ class OpenFgaClient:
         self._client_configuration = configuration
         self._api_client = ApiClient(configuration)
         self._api = OpenFgaApi(self._api_client)
+        self._model_cache = AsyncModelCache()
 
         # Set default headers from configuration
         if configuration.headers:
@@ -185,6 +208,7 @@ class OpenFgaClient:
         await self.close()
 
     async def close(self):
+        await self._model_cache.close()
         await self._api.close()
 
     def _get_authorization_model_id(
@@ -780,6 +804,7 @@ class OpenFgaClient:
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
         :param max_batch_size(options) - Max number of checks to include in a request. Defaults to 50
+        :param merge_equivalent_checks(options) - Beta. Send checks that are certain to get the same answer only once. Requires an authorization model id
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
@@ -808,6 +833,11 @@ class OpenFgaClient:
                 max_batch_size = int(options["max_batch_size"])
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
+
+        if options.get("merge_equivalent_checks") is True:
+            return await self._merged_batch_check(
+                body, options, max_parallel_requests, max_batch_size
+            )
 
         id_to_check: dict[str, ClientBatchCheckItem] = {}
 
@@ -865,6 +895,116 @@ class OpenFgaClient:
         await asyncio.gather(*batch_check_coros)
 
         return ClientBatchCheckResponse(result)
+
+    async def _merged_batch_check(
+        self,
+        body: ClientBatchCheckRequest,
+        options: dict[str, int | str | dict[str, int | str]],
+        max_parallel_requests: int,
+        max_batch_size: int,
+    ) -> ClientBatchCheckResponse:
+        """
+        Run a BatchCheck with merge_equivalent_checks on
+        """
+        # Reading the model and sending the checks must use the same model.
+        authorization_model_id = self._get_authorization_model_id(options)
+        if authorization_model_id is None:
+            raise FgaValidationException(
+                "authorization_model_id is required when merge_equivalent_checks is on"
+            )
+        store_id = self._api_client._get_store_id()
+
+        checks = body.checks
+        for check in checks:
+            if check.correlation_id is None:
+                check.correlation_id = str(uuid.uuid4())
+        validate_correlation_ids(checks)
+
+        if not checks:
+            return ClientBatchCheckResponse([], checks_sent=0)
+
+        telemetry = self._api_client._telemetry.metrics
+        telemetry_configuration = self._api_client.configuration.telemetry
+        attributes = {
+            TelemetryAttributes.fga_client_request_store_id: store_id,
+            TelemetryAttributes.fga_client_request_model_id: authorization_model_id,
+        }
+
+        async def load_model():
+            try:
+                response = await self._api.read_authorization_model(
+                    authorization_model_id, **_model_read_kwargs(options)
+                )
+                if response.authorization_model is None:
+                    raise ValueError("The authorization model response is empty")
+                return response.authorization_model
+            except Exception as err:
+                logger.warning(
+                    "merge_equivalent_checks: couldn't read authorization model %s in store %s (status: %s). "
+                    "Sending checks unmerged.",
+                    authorization_model_id,
+                    store_id,
+                    getattr(err, "status", None),
+                )
+                raise
+
+        lookup = await self._model_cache.get(
+            (store_id, authorization_model_id), load_model
+        )
+        telemetry.modelCacheLookup(
+            attributes={
+                **attributes,
+                TelemetryAttributes.fga_client_model_cache_result: (
+                    "hit" if lookup.hit else "miss"
+                ),
+            },
+            configuration=telemetry_configuration,
+        )
+
+        if lookup.model is not None:
+            groups = resolve(lookup.model, checks)
+        else:
+            groups = unmerged(checks)
+            telemetry.batchCheckMergeFallback(
+                attributes={
+                    **attributes,
+                    TelemetryAttributes.http_response_status_code: getattr(
+                        lookup.error, "status", None
+                    ),
+                },
+                configuration=telemetry_configuration,
+            )
+
+        results = {}
+        sem = asyncio.Semaphore(max_parallel_requests)
+        consistency = self._get_consistency(options)
+
+        async def send(chunk):
+            response = await self._single_batch_check(
+                BatchCheckRequest(
+                    checks=[construct_batch_item(group.check) for group in chunk],
+                    authorization_model_id=authorization_model_id,
+                    consistency=consistency,
+                ),
+                sem,
+                options,
+            )
+            results.update(response.result or {})
+
+        await asyncio.gather(
+            *[send(chunk) for chunk in _chuck_array(groups, max_batch_size)]
+        )
+
+        telemetry.batchCheckChecksRequested(
+            len(checks), attributes=attributes, configuration=telemetry_configuration
+        )
+        telemetry.batchCheckChecksSent(
+            len(groups), attributes=attributes, configuration=telemetry_configuration
+        )
+
+        return ClientBatchCheckResponse(
+            expand(checks, groups, results), checks_sent=len(groups)
+        )
 
     async def expand(
         self,
