@@ -1,4 +1,5 @@
 import copy
+import http.client
 
 from unittest.mock import Mock
 
@@ -247,6 +248,15 @@ class TestConfigurationLogging:
         assert configuration.debug
         configuration.debug = False
         assert not configuration.debug
+
+    def test_configuration_debug_does_not_enable_http_client_debugging(
+        self, configuration
+    ):
+        configuration.debug = True
+        try:
+            assert http.client.HTTPConnection.debuglevel == 0
+        finally:
+            configuration.debug = False
 
     def test_configuration_logger_file(self, configuration):
         assert configuration.logger_file is None

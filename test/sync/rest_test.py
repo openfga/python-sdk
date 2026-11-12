@@ -1,4 +1,5 @@
 import json
+import logging
 import ssl
 
 from unittest.mock import MagicMock, patch
@@ -323,6 +324,53 @@ def test_request_preload_content():
     assert isinstance(resp, RESTResponse)
     assert resp.status == 200
     assert resp.data == b'{"some":"data"}'
+
+
+def test_request_redacts_tokens_in_debug_log(caplog):
+    mock_config = MagicMock(
+        spec=[
+            "verify_ssl",
+            "ssl_ca_cert",
+            "cert_file",
+            "key_file",
+            "assert_hostname",
+            "retries",
+            "socket_options",
+            "connection_pool_maxsize",
+            "timeout_millisec",
+            "proxy",
+            "proxy_headers",
+        ]
+    )
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.timeout_millisec = 5000
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_pool_manager = MagicMock()
+    client.pool_manager = mock_pool_manager
+
+    token_response = b'{"access_token":"secret-access-token","expires_in":3600}'
+    mock_raw_response = MagicMock()
+    mock_raw_response.status = 200
+    mock_raw_response.reason = "OK"
+    mock_raw_response.data = token_response
+
+    mock_pool_manager.request.return_value = mock_raw_response
+
+    with caplog.at_level(logging.DEBUG, logger="openfga_sdk"):
+        resp = client.request(
+            method="POST", url="https://issuer.example.com/oauth/token"
+        )
+
+    assert resp.data == token_response
+    assert "secret-access-token" not in caplog.text
+    assert '"access_token": "[REDACTED]"' in caplog.text
 
 
 def test_request_no_preload_content():

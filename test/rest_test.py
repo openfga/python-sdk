@@ -1,4 +1,5 @@
 import json
+import logging
 
 from unittest.mock import AsyncMock, MagicMock
 
@@ -254,6 +255,40 @@ async def test_request_preload_content():
     assert resp.status == 200
     assert resp.reason == "OK"
     assert resp.data == b'{"some":"data"}'
+
+
+@pytest.mark.asyncio
+async def test_request_redacts_tokens_in_debug_log(caplog):
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+
+    mock_session = MagicMock()
+    client.pool_manager = mock_session
+
+    token_response = b'{"access_token":"secret-access-token","expires_in":3600}'
+    mock_raw_response = MagicMock()
+    mock_raw_response.status = 200
+    mock_raw_response.reason = "OK"
+    mock_raw_response.read = AsyncMock(return_value=token_response)
+    mock_session.request = AsyncMock(return_value=mock_raw_response)
+
+    with caplog.at_level(logging.DEBUG, logger="openfga_sdk"):
+        resp = await client.request(
+            method="POST", url="https://issuer.example.com/oauth/token"
+        )
+
+    assert resp.data == token_response
+    assert "secret-access-token" not in caplog.text
+    assert '"access_token": "[REDACTED]"' in caplog.text
 
 
 @pytest.mark.asyncio
