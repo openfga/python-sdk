@@ -110,7 +110,7 @@ def options_to_kwargs(
     options: dict[str, int | str | dict[str, int | str]] | None = None,
 ) -> dict[str, int | str | dict[str, int | str]]:
     """
-    Return kwargs with continuation_token and page_size
+    Return the API kwargs for the client options
     """
     kwargs = {}
     if options is not None:
@@ -124,6 +124,8 @@ def options_to_kwargs(
             kwargs["_headers"] = options["headers"]
         if options.get("retry_params"):
             kwargs["_retry_params"] = options["retry_params"]
+        if options.get("store_id"):
+            kwargs["_store_id"] = options["store_id"]
     return kwargs
 
 

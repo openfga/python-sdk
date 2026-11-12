@@ -35,6 +35,7 @@ class OpenFgaApi:
         "_headers",
         "_retry_params",
         "_streaming",
+        "_store_id",
     ]
 
     _COMMON_ERROR_RESPONSE_TYPES = {
@@ -71,6 +72,16 @@ class OpenFgaApi:
     async def close(self):
         await self.api_client.close()
 
+    def _resolve_store_id(self, options: dict | None = None) -> str:
+        """
+        Return the store ID passed for this request in `_store_id`, falling back
+        to the store ID in the api_client's configuration.
+        """
+        store_id = (options or {}).get("_store_id")
+        if store_id:
+            return store_id
+        return self.api_client._get_store_id()
+
     async def _execute(
         self,
         method: str,
@@ -103,7 +114,8 @@ class OpenFgaApi:
 
         telemetry_attributes: dict[TelemetryAttribute, str | bool | int | float] = {
             TelemetryAttributes.fga_client_request_method: operation_name,
-            TelemetryAttributes.fga_client_request_store_id: self.api_client.get_store_id(),
+            TelemetryAttributes.fga_client_request_store_id: options.get("_store_id")
+            or self.api_client.get_store_id(),
             TelemetryAttributes.fga_client_request_model_id: options.get(
                 "authorization_model_id", ""
             ),
@@ -467,11 +479,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `batch_check`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `batch_check`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/batch-check",
@@ -564,11 +572,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `check`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `check`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/check",
@@ -739,11 +743,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `delete_store`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="DELETE",
             path=f"/stores/{store_id}",
@@ -835,11 +835,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `expand`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `expand`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/expand",
@@ -918,11 +914,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `get_store`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}",
@@ -1014,11 +1006,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `list_objects`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `list_objects`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/list-objects",
@@ -1214,11 +1202,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `list_users`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `list_users`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/list-users",
@@ -1311,11 +1295,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `read`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `read`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/read",
@@ -1409,11 +1389,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `authorization_model_id` when calling `read_assertions`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `read_assertions`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}/assertions/{authorization_model_id}",
@@ -1504,11 +1480,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `id` when calling `read_authorization_model`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `read_authorization_model`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="GET",
             path=f"/stores/{store_id}/authorization-models/{id}",
@@ -1597,11 +1569,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `read_authorization_models`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         query_params = []
         if local_var_params.get("page_size") is not None:
             query_params.append(("page_size", local_var_params["page_size"]))
@@ -1708,11 +1676,7 @@ class OpenFgaApi:
                 )
             local_var_params[key] = val
         del local_var_params["kwargs"]
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `read_changes`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         query_params = []
         if local_var_params.get("type") is not None:
             query_params.append(("type", local_var_params["type"]))
@@ -1816,11 +1780,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `streamed_list_objects`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `streamed_list_objects`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/streamed-list-objects",
@@ -1913,11 +1873,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `write`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `write`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/write",
@@ -2026,11 +1982,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `write_assertions`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `write_assertions`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="PUT",
             path=f"/stores/{store_id}/assertions/{authorization_model_id}",
@@ -2123,11 +2075,7 @@ class OpenFgaApi:
             raise ApiValueError(
                 "Missing the required parameter `body` when calling `write_authorization_model`"
             )
-        if self.api_client._get_store_id() is None:
-            raise ApiValueError(
-                "Store ID expected in api_client's configuration when calling `write_authorization_model`"
-            )
-        store_id = self.api_client._get_store_id()
+        store_id = self._resolve_store_id(local_var_params)
         return await self._execute(
             method="POST",
             path=f"/stores/{store_id}/authorization-models",

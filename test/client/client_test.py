@@ -313,6 +313,84 @@ class TestOpenFgaClient(IsolatedAsyncioTestCase):
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
+    async def test_get_store_with_store_id_option(self, mock_request):
+        """get_store uses the store_id from the options over the configured one"""
+        other_store_id = "01JD9Z1F6Y0XWAGKM9KYQ8GXMC"
+        response_body = f"""
+{{
+    "id": "{other_store_id}",
+    "name": "store2",
+    "created_at": "2022-07-25T21:15:37.524Z",
+    "updated_at": "2022-07-25T21:15:37.524Z"
+}}
+            """
+        mock_request.return_value = mock_response(response_body, 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            api_response = await api_client.get_store(
+                options={"store_id": other_store_id}
+            )
+            self.assertEqual(api_response.id, other_store_id)
+            mock_request.assert_called_once_with(
+                "GET",
+                f"http://api.fga.example/stores/{other_store_id}",
+                headers=ANY,
+                body=None,
+                query_params=[],
+                post_params=[],
+                _preload_content=ANY,
+                _request_timeout=None,
+            )
+            # the configured store ID is left alone
+            self.assertEqual(api_client.get_store_id(), store_id)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_check_with_store_id_option(self, mock_request):
+        """check uses the store_id from the options over the configured one"""
+        other_store_id = "01JD9Z1F6Y0XWAGKM9KYQ8GXMC"
+        mock_request.return_value = mock_response('{"allowed": true}', 200)
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            api_response = await api_client.check(
+                body=ClientCheckRequest(
+                    user="user:anne",
+                    relation="reader",
+                    object="document:budget",
+                ),
+                options={
+                    "store_id": other_store_id,
+                    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+                },
+            )
+            self.assertTrue(api_response.allowed)
+            self.assertEqual(
+                mock_request.call_args.args[1],
+                f"http://api.fga.example/stores/{other_store_id}/check",
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_read_authorization_models_with_store_id_option_and_no_configured_store(
+        self, mock_request
+    ):
+        """a store_id in the options is enough when none is configured"""
+        other_store_id = "01JD9Z1F6Y0XWAGKM9KYQ8GXMC"
+        mock_request.return_value = mock_response(
+            '{"authorization_models": [], "continuation_token": ""}', 200
+        )
+        configuration = self.configuration
+        configuration.store_id = None
+        async with OpenFgaClient(configuration) as api_client:
+            await api_client.read_authorization_models(
+                options={"store_id": other_store_id}
+            )
+            self.assertEqual(
+                mock_request.call_args.args[1],
+                f"http://api.fga.example/stores/{other_store_id}/authorization-models",
+            )
+
+    @patch.object(rest.RESTClientObject, "request")
     async def test_delete_store(self, mock_request):
         """Test case for delete_store
 
