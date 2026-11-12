@@ -6,6 +6,7 @@ import pytest
 from openfga_sdk.client.equivalent_checks import (
     EquivalentCheckGroup,
     expand,
+    merge_enabled,
     resolve,
     unmerged,
     validate_correlation_ids,
@@ -141,11 +142,33 @@ def test_unmerged_sends_every_check_as_is():
 
 @pytest.mark.parametrize(
     "correlation_id",
-    ["", "has space", "x" * 37, "é", "a/b", 1],
+    ["", "has space", "x" * 37, "é", "a/b", "a\n", 1],
 )
 def test_validate_correlation_ids_rejects_invalid_ids(correlation_id):
     with pytest.raises(FgaValidationException, match="is invalid"):
         validate_correlation_ids([check(correlation_id)])
+
+
+@pytest.mark.parametrize(
+    "options, enabled",
+    [
+        (None, False),
+        ({}, False),
+        ({"merge_equivalent_checks": None}, False),
+        ({"merge_equivalent_checks": False}, False),
+        ({"merge_equivalent_checks": True}, True),
+    ],
+)
+def test_merge_enabled(options, enabled):
+    assert merge_enabled(options) is enabled
+
+
+@pytest.mark.parametrize("value", ["true", 1, "yes"])
+def test_merge_enabled_rejects_values_that_are_not_bools(value):
+    with pytest.raises(
+        FgaValidationException, match="merge_equivalent_checks must be a bool"
+    ):
+        merge_enabled({"merge_equivalent_checks": value})
 
 
 def test_validate_correlation_ids_accepts_valid_ids():

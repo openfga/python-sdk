@@ -8,6 +8,7 @@ from typing import Any
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.equivalent_checks import (
     expand,
+    merge_enabled,
     resolve,
     unmerged,
     validate_correlation_ids,
@@ -829,7 +830,7 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
-        if options.get("merge_equivalent_checks") is True:
+        if merge_enabled(options):
             return self._merged_batch_check(
                 body, options, max_parallel_requests, max_batch_size
             )

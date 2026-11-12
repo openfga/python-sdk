@@ -42,6 +42,19 @@ class EquivalentCheckGroup:
     members: list[ClientBatchCheckItem]
 
 
+def merge_enabled(options: dict | None) -> bool:
+    """
+    Return whether the `merge_equivalent_checks` option is on. Raise if it isn't a bool,
+    so a value like "true" can't silently leave it off.
+    """
+    value = (options or {}).get("merge_equivalent_checks")
+    if value is not None and not isinstance(value, bool):
+        raise FgaValidationException(
+            f"merge_equivalent_checks must be a bool, got {type(value).__name__}"
+        )
+    return value is True
+
+
 def validate_correlation_ids(checks: list[ClientBatchCheckItem]) -> None:
     """
     Raise if a correlation ID doesn't match the API rule, or is used twice.
@@ -49,7 +62,8 @@ def validate_correlation_ids(checks: list[ClientBatchCheckItem]) -> None:
     seen: set[str] = set()
     for check in checks:
         correlation_id = check.correlation_id
-        if not isinstance(correlation_id, str) or not CORRELATION_ID_PATTERN.match(
+        # fullmatch, since `$` alone would also accept a trailing newline
+        if not isinstance(correlation_id, str) or not CORRELATION_ID_PATTERN.fullmatch(
             correlation_id
         ):
             raise FgaValidationException(

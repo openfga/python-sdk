@@ -99,11 +99,13 @@ class FakeServer:
             lambda check: {"allowed": check["tuple_key"]["relation"] == "viewer"}
         )
         self.model_reads = 0
+        self.model_read_headers = []
         self.sent = []
 
     def __call__(self, method, url, **kwargs):
         if method == "GET" and url == MODEL_URL:
             self.model_reads += 1
+            self.model_read_headers.append(kwargs.get("headers") or {})
             if self.model_error is not None:
                 raise self.model_error
             return mock_response(json.dumps({"authorization_model": MODEL}))
@@ -221,8 +223,32 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         mock_request.assert_not_called()
 
     @patch.object(rest.RESTClientObject, "request")
+    async def test_rejects_an_option_value_that_is_not_a_bool(self, mock_request):
+        async with OpenFgaClient(self.configuration) as client:
+            with self.assertRaisesRegex(
+                FgaValidationException, "merge_equivalent_checks must be a bool"
+            ):
+                await self.batch_check(
+                    client, checks(), options={"merge_equivalent_checks": "true"}
+                )
+
+        mock_request.assert_not_called()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_reads_the_model_with_the_callers_headers(self, mock_request):
+        server = FakeServer()
+        mock_request.side_effect = server
+
+        async with OpenFgaClient(self.configuration) as client:
+            await self.batch_check(
+                client, checks(), options={"headers": {"X-Custom": "1"}}
+            )
+
+        self.assertEqual(server.model_read_headers[0].get("X-Custom"), "1")
+
+    @patch.object(rest.RESTClientObject, "request")
     async def test_rejects_invalid_correlation_ids(self, mock_request):
-        for correlation_id in ["has space", "x" * 37, "é"]:
+        for correlation_id in ["has space", "x" * 37, "é", "a\n"]:
             items = checks()
             items[0].correlation_id = correlation_id
 
