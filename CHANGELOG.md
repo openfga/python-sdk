@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.6](https://github.com/openfga/python-sdk/compare/v0.10.5...v0.10.6) (2026-11-12)
+
+
+### Documentation
+
+* correct minimum OpenFGA version for BatchCheck in changelog ([#329](https://github.com/openfga/python-sdk/issues/329)) ([c5d3305](https://github.com/openfga/python-sdk/commit/c5d3305c34ce2fabfc534aafe32972facd96a41b))
+
+
+### Miscellaneous
+
+* release 0.10.6 ([7b59223](https://github.com/openfga/python-sdk/commit/7b5922322ace1314c139b3fbf577816d22bcb766))
+
 ## [0.10.5](https://github.com/openfga/python-sdk/compare/v0.10.4...v0.10.5) (2026-09-29)
 
 
