@@ -982,7 +982,7 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 # response.checks_sent: how many checks this call actually sent
 ```
 
-- **Off by default.** With it off, nothing changes. The value must be a bool, or the call fails with a validation error.
+- **Off by default.** With it off, nothing changes. Leaving it out or passing `None` keeps it off; any other non-bool value, like `"true"`, fails with a validation error.
 - **Needs an authorization model ID.** Without one, the call fails before anything is sent.
 - **Reads each model once per client.** The SDK reads a model the first time it needs it and caches it. Create the client once and reuse it.
 - **Falls back safely.** If the model can't be read (for example, no read access), the SDK logs a warning and sends the checks unmerged.

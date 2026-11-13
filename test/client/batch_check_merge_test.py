@@ -410,6 +410,26 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
             with self.assertRaises(ValidationException):
                 await self.batch_check(client, checks())
 
+    @patch.object(TelemetryMetrics, "batchCheckChecksSent")
+    @patch.object(TelemetryMetrics, "batchCheckChecksRequested")
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_counts_checks_even_when_a_request_fails(
+        self, mock_request, mock_requested, mock_sent
+    ):
+        def handle(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(json.dumps({"authorization_model": MODEL}))
+            raise ValidationException(http_resp=http_mock_response("{}", 400))
+
+        mock_request.side_effect = handle
+
+        async with OpenFgaClient(self.configuration) as client:
+            with self.assertRaises(ValidationException):
+                await self.batch_check(client, checks())
+
+        self.assertEqual(mock_requested.call_args.args, (4,))
+        self.assertEqual(mock_sent.call_args.args, (2,))
+
     @patch.object(rest.RESTClientObject, "request")
     async def test_option_off_is_unchanged(self, mock_request):
         server = FakeServer()

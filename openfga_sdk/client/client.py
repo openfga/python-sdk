@@ -976,6 +976,14 @@ class OpenFgaClient:
                 configuration=telemetry_configuration,
             )
 
+        # Every chunk is sent even if another one fails, so count them up front.
+        telemetry.batchCheckChecksRequested(
+            len(checks), attributes=attributes, configuration=telemetry_configuration
+        )
+        telemetry.batchCheckChecksSent(
+            len(groups), attributes=attributes, configuration=telemetry_configuration
+        )
+
         results = {}
         sem = asyncio.Semaphore(max_parallel_requests)
         consistency = self._get_consistency(options)
@@ -994,13 +1002,6 @@ class OpenFgaClient:
 
         await asyncio.gather(
             *[send(chunk) for chunk in _chuck_array(groups, max_batch_size)]
-        )
-
-        telemetry.batchCheckChecksRequested(
-            len(checks), attributes=attributes, configuration=telemetry_configuration
-        )
-        telemetry.batchCheckChecksSent(
-            len(groups), attributes=attributes, configuration=telemetry_configuration
         )
 
         return ClientBatchCheckResponse(

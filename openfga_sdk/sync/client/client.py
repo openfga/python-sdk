@@ -971,6 +971,14 @@ class OpenFgaClient:
                 configuration=telemetry_configuration,
             )
 
+        # Every chunk is sent even if another one fails, so count them up front.
+        telemetry.batchCheckChecksRequested(
+            len(checks), attributes=attributes, configuration=telemetry_configuration
+        )
+        telemetry.batchCheckChecksSent(
+            len(groups), attributes=attributes, configuration=telemetry_configuration
+        )
+
         consistency = self._get_consistency(options)
 
         def send(chunk):
@@ -987,13 +995,6 @@ class OpenFgaClient:
         with ThreadPoolExecutor(max_workers=max_parallel_requests) as executor:
             for response in executor.map(send, _chuck_array(groups, max_batch_size)):
                 results.update(response.result or {})
-
-        telemetry.batchCheckChecksRequested(
-            len(checks), attributes=attributes, configuration=telemetry_configuration
-        )
-        telemetry.batchCheckChecksSent(
-            len(groups), attributes=attributes, configuration=telemetry_configuration
-        )
 
         return ClientBatchCheckResponse(
             expand(checks, groups, results), checks_sent=len(groups)

@@ -44,8 +44,8 @@ class EquivalentCheckGroup:
 
 def merge_enabled(options: dict | None) -> bool:
     """
-    Return whether the `merge_equivalent_checks` option is on. Raise if it isn't a bool,
-    so a value like "true" can't silently leave it off.
+    Return whether the `merge_equivalent_checks` option is on. Missing or None means off,
+    like other options. Raise for any other non-bool, so "true" can't silently leave it off.
     """
     value = (options or {}).get("merge_equivalent_checks")
     if value is not None and not isinstance(value, bool):

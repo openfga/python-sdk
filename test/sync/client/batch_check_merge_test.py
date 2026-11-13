@@ -6,7 +6,11 @@ from unittest.mock import patch
 
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
-from openfga_sdk.exceptions import FgaValidationException, ForbiddenException
+from openfga_sdk.exceptions import (
+    FgaValidationException,
+    ForbiddenException,
+    ValidationException,
+)
 from openfga_sdk.sync import rest
 from openfga_sdk.sync.client.client import OpenFgaClient
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
@@ -305,6 +309,26 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
                 result.error.message, "No result returned for correlation_id (merged-1)"
             )
         self.assertTrue(response.result[3].allowed)
+
+    @patch.object(TelemetryMetrics, "batchCheckChecksSent")
+    @patch.object(TelemetryMetrics, "batchCheckChecksRequested")
+    @patch.object(rest.RESTClientObject, "request")
+    def test_a_failed_request_fails_the_call_and_still_counts_checks(
+        self, mock_request, mock_requested, mock_sent
+    ):
+        def handle(method, url, **kwargs):
+            if method == "GET":
+                return mock_response(json.dumps({"authorization_model": MODEL}))
+            raise ValidationException(http_resp=http_mock_response("{}", 400))
+
+        mock_request.side_effect = handle
+
+        with OpenFgaClient(self.configuration) as client:
+            with self.assertRaises(ValidationException):
+                self.batch_check(client, checks())
+
+        self.assertEqual(mock_requested.call_args.args, (4,))
+        self.assertEqual(mock_sent.call_args.args, (2,))
 
     @patch.object(rest.RESTClientObject, "request")
     def test_option_off_is_unchanged(self, mock_request):
