@@ -38,6 +38,9 @@ class TelemetryAttributes:
     fga_client_user: TelemetryAttribute = TelemetryAttribute(
         name="fga-client.user",
     )
+    fga_client_model_cache_result: TelemetryAttribute = TelemetryAttribute(
+        name="fga-client.model_cache.result",
+    )
     http_client_request_duration: TelemetryAttribute = TelemetryAttribute(
         name="http.client.request.duration",
         format="int",
@@ -78,6 +81,7 @@ class TelemetryAttributes:
         fga_client_request_store_id,
         fga_client_response_model_id,
         fga_client_user,
+        fga_client_model_cache_result,
         http_client_request_duration,
         http_host,
         http_request_method,

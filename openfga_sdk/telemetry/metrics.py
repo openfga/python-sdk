@@ -63,6 +63,101 @@ class TelemetryMetrics:
 
         return self._histograms[histogram.name]
 
+    def _add(
+        self,
+        counter: TelemetryCounter,
+        value: int,
+        attributes: dict[TelemetryAttribute, str | bool | int | float] | None,
+        configuration: TelemetryConfiguration | None,
+    ) -> Counter:
+        instrument = self.counter(counter)
+
+        if isMetricEnabled(configuration, counter):
+            attribute_filters = None
+
+            if isinstance(configuration, TelemetryConfiguration) and isinstance(
+                configuration.metrics, TelemetryMetricsConfiguration
+            ):
+                metric_configuration = configuration.metrics.getMetrics(
+                    filter_enabled=False
+                ).get(counter)
+
+                if isinstance(metric_configuration, TelemetryMetricConfiguration):
+                    attribute_filters = metric_configuration.getAttributes()
+
+            prepared_attributes = TelemetryAttributes.prepare(
+                attributes,
+                filter=attribute_filters,
+            )
+
+            instrument.add(amount=value, attributes=prepared_attributes)
+
+        return instrument
+
+    def batchCheckChecksRequested(
+        self,
+        value: int,
+        attributes: dict[TelemetryAttribute, str | bool | int | float] | None = None,
+        configuration: TelemetryConfiguration | None = None,
+    ) -> Counter:
+        """
+        Record the checks passed to BatchCheck with merge_equivalent_checks on.
+        """
+        return self._add(
+            TelemetryCounters.fga_client_batch_check_checks_requested,
+            value,
+            attributes,
+            configuration,
+        )
+
+    def batchCheckChecksSent(
+        self,
+        value: int,
+        attributes: dict[TelemetryAttribute, str | bool | int | float] | None = None,
+        configuration: TelemetryConfiguration | None = None,
+    ) -> Counter:
+        """
+        Record the checks sent by BatchCheck with merge_equivalent_checks on.
+        """
+        return self._add(
+            TelemetryCounters.fga_client_batch_check_checks_sent,
+            value,
+            attributes,
+            configuration,
+        )
+
+    def modelCacheLookup(
+        self,
+        value: int = 1,
+        attributes: dict[TelemetryAttribute, str | bool | int | float] | None = None,
+        configuration: TelemetryConfiguration | None = None,
+    ) -> Counter:
+        """
+        Record an authorization model cache lookup.
+        """
+        return self._add(
+            TelemetryCounters.fga_client_model_cache_lookup,
+            value,
+            attributes,
+            configuration,
+        )
+
+    def batchCheckMergeFallback(
+        self,
+        value: int = 1,
+        attributes: dict[TelemetryAttribute, str | bool | int | float] | None = None,
+        configuration: TelemetryConfiguration | None = None,
+    ) -> Counter:
+        """
+        Record a BatchCheck call sent unmerged because the authorization model couldn't be read.
+        """
+        return self._add(
+            TelemetryCounters.fga_client_batch_check_merge_fallback,
+            value,
+            attributes,
+            configuration,
+        )
+
     def request(
         self,
         value: int = 1,
