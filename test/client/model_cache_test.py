@@ -1,8 +1,9 @@
 import asyncio
+import sys
 import threading
 import time
 
-from unittest import IsolatedAsyncioTestCase, TestCase
+from unittest import IsolatedAsyncioTestCase, TestCase, skipIf
 
 from openfga_sdk.client.model_cache import AsyncModelCache, ModelCache
 
@@ -60,6 +61,25 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         self.assertIs(second.error, error)
         self.assertIsNone(second.model)
         self.assertEqual(reads, 1)
+
+        clock.now = 60
+        await cache.get(KEY, load)
+        self.assertEqual(reads, 2)
+
+    @skipIf(sys.version_info < (3, 12), "eager tasks need Python 3.12+")
+    async def test_retries_a_failed_read_that_finished_eagerly(self):
+        asyncio.get_running_loop().set_task_factory(asyncio.eager_task_factory)
+        clock = FakeClock()
+        cache = AsyncModelCache(failure_ttl=60, clock=clock)
+        reads = 0
+
+        async def load():
+            nonlocal reads
+            reads += 1
+            raise RuntimeError("forbidden")
+
+        await cache.get(KEY, load)
+        self.assertEqual(cache._loading, {})
 
         clock.now = 60
         await cache.get(KEY, load)

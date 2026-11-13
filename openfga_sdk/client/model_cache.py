@@ -103,7 +103,9 @@ class AsyncModelCache(_ModelCacheState):
         if task is None:
             task = asyncio.ensure_future(self._load(key, load))
             task.add_done_callback(_retrieve_exception)
-            self._loading[key] = task
+            # An eager task can finish before it's registered, so don't keep a done one.
+            if not task.done():
+                self._loading[key] = task
 
         # Shielded, so a cancelled caller doesn't cancel the read other callers share.
         try:
