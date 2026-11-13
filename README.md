@@ -967,7 +967,7 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 
 ###### Merge equivalent checks (beta)
 
-Set `merge_equivalent_checks` to `True` to send checks that are certain to get the same answer only once. The SDK copies each answer back, so you still get one result per check you passed in.
+Set `merge_equivalent_checks` to `True` to send checks that are certain to get the same answer only once. The SDK copies each answer back, so you still get one result per check you passed in. It's in beta, so its behavior may change based on feedback.
 
 It merges:
 - **Aliases:** with `define can_view: viewer`, checking both `viewer` and `can_view` for the same user and object sends one check. Chains like `define can_share: can_view` work too.
