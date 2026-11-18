@@ -18,6 +18,7 @@ from openfga_sdk._version import USER_AGENT as DEFAULT_USER_AGENT
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import (
     MAX_BACKOFF_TIME_IN_SEC,
+    RETRY_AFTER_HEADER_NAME,
     RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC,
 )
 from openfga_sdk.exceptions import (
@@ -425,7 +426,7 @@ class ApiClient:
                 return (return_data, response_data.status, response_data.headers)
 
     def _parse_retry_after_header(self, headers) -> int:
-        retry_after_header = headers.get("retry-after")
+        retry_after_header = headers.get(RETRY_AFTER_HEADER_NAME.lower())
         if not retry_after_header:
             raise ValueError("Retry-After header is not present")
 
