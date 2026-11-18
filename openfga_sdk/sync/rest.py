@@ -168,9 +168,8 @@ class RESTClientObject:
         if hasattr(configuration, "retries") and configuration.retries is not None:
             addition_pool_args["retries"] = configuration.retries
         else:
-            # The SDK handles 429/5xx retries itself (see ApiClient.call_api), so
-            # stop urllib3 from also retrying those statuses on idempotent methods
-            # and sleeping for an uncapped Retry-After value before we see them.
+            # The SDK retries 429/5xx itself; keep urllib3 from also retrying
+            # idempotent requests and sleeping for an uncapped Retry-After.
             addition_pool_args["retries"] = urllib3.Retry(
                 total=3, respect_retry_after_header=False
             )
