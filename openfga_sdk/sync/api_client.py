@@ -429,13 +429,18 @@ class ApiClient:
             raise ValueError("Retry-After header is not present")
 
         try:
-            parsed_http_date = self.__deserialize_datetime(retry_after_header).replace(
-                tzinfo=datetime.timezone.utc
-            )
-            now = datetime.datetime.now(datetime.timezone.utc)
-            wait_time_in_sec = (parsed_http_date - now).total_seconds()
-        except ApiException:
             wait_time_in_sec = int(retry_after_header)
+            if wait_time_in_sec == 0:
+                return 0
+        except (TypeError, ValueError):
+            try:
+                parsed_http_date = self.__deserialize_datetime(
+                    retry_after_header
+                ).replace(tzinfo=datetime.timezone.utc)
+                now = datetime.datetime.now(datetime.timezone.utc)
+                wait_time_in_sec = (parsed_http_date - now).total_seconds()
+            except ApiException as e:
+                raise ValueError("Retry-After header is invalid") from e
 
         if (
             wait_time_in_sec > RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC
