@@ -301,6 +301,7 @@ class ApiClient:
                         configuration=self.configuration.telemetry,
                     )
 
+                    wait_time_in_sec: float
                     try:
                         wait_time_in_sec = self._parse_retry_after_header(e.header)
                     except ValueError:
@@ -435,7 +436,7 @@ class ApiClient:
         except ValueError:
             try:
                 retry_at = parsedate_to_datetime(retry_after_header)
-            except ValueError as e:
+            except (OverflowError, ValueError) as e:
                 raise ValueError("Retry-After header is invalid") from e
             if retry_at.tzinfo is None:
                 retry_at = retry_at.replace(tzinfo=datetime.timezone.utc)

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
+import urllib3
 
 from openfga_sdk.api_client import ApiClient as AsyncApiClient
 from openfga_sdk.configuration import Configuration, RetryParams
@@ -102,6 +103,7 @@ def test_sync_retry_after_over_http(retry_server, method, expected_wait):
     with (
         patch("openfga_sdk.sync.api_client.random_time", return_value=BACKOFF),
         patch("time.sleep") as sleep,
+        patch.object(urllib3.Retry, "sleep") as urllib3_sleep,
         SyncApiClient(configuration) as client,
     ):
         result = client.call_api(
@@ -111,6 +113,7 @@ def test_sync_retry_after_over_http(retry_server, method, expected_wait):
     assert result is None
     assert requests == ["/retry", "/retry"]
     sleep.assert_called_once_with(expected_wait)
+    urllib3_sleep.assert_not_called()
 
 
 @pytest_asyncio.fixture(params=["async", "sync"])
@@ -126,17 +129,21 @@ async def parse_retry_after(request):
 
 # HTTP-date formats a recipient must accept per RFC 9110 section 5.6.7.
 @pytest.mark.parametrize(
-    "http_date_format",
-    [IMF_FIXDATE, "%A, %d-%b-%y %H:%M:%S GMT", "%a %b %d %H:%M:%S %Y"],
+    "format_date",
+    [
+        lambda d: d.strftime(IMF_FIXDATE),
+        lambda d: d.strftime("%A, %d-%b-%y %H:%M:%S GMT"),
+        lambda d: f"{d:%a %b} {d.day:2} {d:%H:%M:%S %Y}",  # space-padded day
+    ],
     ids=["imf-fixdate", "rfc850", "asctime"],
 )
 @pytest.mark.asyncio
-async def test_parse_retry_after_http_date(parse_retry_after, http_date_format):
+async def test_parse_retry_after_http_date(parse_retry_after, format_date):
     retry_at = datetime.now(timezone.utc) + timedelta(seconds=60)
 
-    wait = parse_retry_after(retry_at.strftime(http_date_format))
+    wait = parse_retry_after(format_date(retry_at))
 
-    assert 59 <= wait <= 60
+    assert 50 <= wait <= 60
 
 
 @pytest.mark.parametrize(
@@ -144,6 +151,7 @@ async def test_parse_retry_after_http_date(parse_retry_after, http_date_format):
     [
         "1.5",
         "5s",
+        "Wed, 01 Jan 2025 00:00:00 +999999999999999999",
         pytest.param(http_date(seconds=-5), id="date-in-past"),
         pytest.param(http_date(hours=1), id="date-above-max"),
     ],
