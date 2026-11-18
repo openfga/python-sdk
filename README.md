@@ -1387,7 +1387,7 @@ response = await fga_client.execute_api_request(
 
 If a network request fails with a 429 or 5xx error from the server, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.
 
-The SDK honors `Retry-After` delay seconds or HTTP dates up to 30 minutes. Unparseable or out-of-range values fall back to exponential backoff.
+The SDK honors `Retry-After` delay seconds or HTTP dates up to 30 minutes. Unparseable or out-of-range values fall back to exponential backoff. The sync client applies the same rules: urllib3's built-in `Retry-After` handling is disabled unless you pass your own `urllib3.Retry` via `Configuration.retries`.
 
 To customize this behavior, create a `RetryParams` object and assign values to the `max_retry` and `min_wait_in_ms` constructor parameters. `max_retry` determines the maximum number of retries (up to 15), while `min_wait_in_ms` sets the minimum wait time between retries in milliseconds.
 

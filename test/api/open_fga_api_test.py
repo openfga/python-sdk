@@ -1465,7 +1465,8 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
               "message": "Rate Limit exceeded"
             }
         """
-        retry_after_in_sec = 5
+        min_wait_in_ms = 10
+        max_wait_in_sec = 1
         mock_http_response = http_mock_response(
             body=error_response_body,
             status=429,
@@ -1477,7 +1478,9 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         ]
 
         retry = openfga_sdk.configuration.RetryParams(
-            max_retry=1, min_wait_in_ms=10, max_wait_in_sec=1
+            max_retry=1,
+            min_wait_in_ms=min_wait_in_ms,
+            max_wait_in_sec=max_wait_in_sec,
         )
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1498,7 +1501,10 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             mock_request.assert_called()
             self.assertEqual(mock_request.call_count, 2)
-            self.assertNotEqual(mock_sleep.call_args[0][0], retry_after_in_sec)
+            # an invalid header falls back to exponential backoff
+            self.assertTrue(
+                min_wait_in_ms / 1000 <= mock_sleep.call_args[0][0] <= max_wait_in_sec
+            )
 
     @patch("asyncio.sleep")
     @patch.object(rest.RESTClientObject, "request")

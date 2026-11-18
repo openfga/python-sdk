@@ -8,6 +8,7 @@ import re
 import time
 import urllib
 
+from email.utils import parsedate_to_datetime
 from multiprocessing.pool import ThreadPool
 
 from dateutil.parser import parse  # type: ignore[import-untyped]
@@ -427,24 +428,20 @@ class ApiClient:
         if not retry_after_header:
             raise ValueError("Retry-After header is not present")
 
+        # RFC 9110: Retry-After is either delay-seconds or an HTTP-date
         try:
             wait_time_in_sec = int(retry_after_header)
-            if wait_time_in_sec == 0:
-                return 0
-        except (TypeError, ValueError):
+        except ValueError:
             try:
-                parsed_http_date = self.__deserialize_datetime(
-                    retry_after_header
-                ).replace(tzinfo=datetime.timezone.utc)
-                now = datetime.datetime.now(datetime.timezone.utc)
-                wait_time_in_sec = (parsed_http_date - now).total_seconds()
-            except ApiException as e:
+                retry_at = parsedate_to_datetime(retry_after_header)
+            except ValueError as e:
                 raise ValueError("Retry-After header is invalid") from e
+            if retry_at.tzinfo is None:
+                retry_at = retry_at.replace(tzinfo=datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.timezone.utc)
+            wait_time_in_sec = (retry_at - now).total_seconds()
 
-        if (
-            wait_time_in_sec > RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC
-            or wait_time_in_sec < 1
-        ):
+        if not 1 <= wait_time_in_sec <= RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC:
             raise ValueError("Retry-After header is invalid")
 
         return math.ceil(wait_time_in_sec)

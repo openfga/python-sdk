@@ -304,7 +304,9 @@ class Configuration:
         """Safe chars for path_param
         """
         self.retries = None
-        """Adding retries to override urllib3 default value 3
+        """urllib3 Retry configuration for the sync client. Defaults to urllib3's
+        3 connection retries with Retry-After handling disabled, since the SDK
+        implements its own 429/5xx retry logic (see RetryParams).
         """
         # Enable client side validation
         self.client_side_validation = True
