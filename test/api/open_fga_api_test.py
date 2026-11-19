@@ -1456,7 +1456,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
     ):
         """
         Test to ensure 429 errors are handled properly.
-        For this case, retry is configured and the Retry-After header is provided as an HTTP date.
+        For this case, the Retry-After header is invalid.
         """
         response_body = '{"allowed": true, "resolution": "1234"}'
         error_response_body = """
@@ -1465,12 +1465,12 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
               "message": "Rate Limit exceeded"
             }
         """
-        retry_after_in_sec = 5
-        five_seconds_from_now = f"{retry_after_in_sec}s"
+        min_wait_in_ms = 10
+        max_wait_in_sec = 1
         mock_http_response = http_mock_response(
             body=error_response_body,
             status=429,
-            headers={"Retry-After": five_seconds_from_now},
+            headers={"Retry-After": "not-a-date"},
         )
         mock_request.side_effect = [
             RateLimitExceededError(http_resp=mock_http_response),
@@ -1478,7 +1478,9 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
         ]
 
         retry = openfga_sdk.configuration.RetryParams(
-            max_retry=1, min_wait_in_ms=10, max_wait_in_sec=1
+            max_retry=1,
+            min_wait_in_ms=min_wait_in_ms,
+            max_wait_in_sec=max_wait_in_sec,
         )
         configuration = self.configuration
         configuration.store_id = store_id
@@ -1499,7 +1501,10 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
             self.assertTrue(api_response.allowed)
             mock_request.assert_called()
             self.assertEqual(mock_request.call_count, 2)
-            self.assertNotEqual(mock_sleep.call_args[0][0], retry_after_in_sec)
+            # an invalid header falls back to exponential backoff
+            self.assertTrue(
+                min_wait_in_ms / 1000 <= mock_sleep.call_args[0][0] <= max_wait_in_sec
+            )
 
     @patch("asyncio.sleep")
     @patch.object(rest.RESTClientObject, "request")
@@ -1566,7 +1571,7 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
     ):
         """
         Test to ensure 429 errors are handled properly.
-        For this case, retry is configured and the Retry-After header is provided as an HTTP date.
+        For this case, the Retry-After header is provided as delay seconds.
         """
         response_body = '{"allowed": true, "resolution": "1234"}'
         error_response_body = """
@@ -1575,11 +1580,11 @@ class TestOpenFgaApi(IsolatedAsyncioTestCase):
               "message": "Rate Limit exceeded"
             }
         """
-        retry_after_in_sec = 10
+        retry_after_in_sec = 60
         mock_http_response = http_mock_response(
             body=error_response_body,
             status=429,
-            headers={"Retry-After": retry_after_in_sec},
+            headers={"Retry-After": str(retry_after_in_sec)},
         )
         mock_request.side_effect = [
             RateLimitExceededError(http_resp=mock_http_response),
