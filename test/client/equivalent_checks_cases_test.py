@@ -64,6 +64,33 @@ def _check(check_json):
     )
 
 
+def _tuple_as_json(item):
+    result = {"user": item.user, "relation": item.relation, "object": item.object}
+    if item.condition is not None:
+        result["condition"] = {"name": item.condition.name}
+        if item.condition.context is not None:
+            result["condition"]["context"] = item.condition.context
+    return result
+
+
+def _sent_as_json(group):
+    check = group.check
+    result = {
+        "id": check.correlation_id,
+        "user": check.user,
+        "relation": check.relation,
+        "object": check.object,
+    }
+    if check.context is not None:
+        result["context"] = check.context
+    if check.contextual_tuples is not None:
+        result["contextual_tuples"] = [
+            _tuple_as_json(item) for item in check.contextual_tuples
+        ]
+    result["for"] = [member.correlation_id for member in group.members]
+    return result
+
+
 def test_cases_file_is_not_empty():
     assert len(CASES) > 0
 
@@ -74,18 +101,9 @@ def test_equivalent_checks_case(case):
 
     groups = resolve(_model(case["model"]), checks)
 
-    actual = [
-        {
-            "id": group.check.correlation_id,
-            "user": group.check.user,
-            "relation": group.check.relation,
-            "object": group.check.object,
-            "for": [member.correlation_id for member in group.members],
-        }
-        for group in groups
-    ]
-    assert actual == case["expected_sent"]
+    assert [_sent_as_json(group) for group in groups] == case["expected_sent"]
 
+    # `==` treats 1 and 1.0 as equal, so also make sure the first check's values are sent unchanged.
     for group in groups:
         first = group.members[0]
         assert group.check.context is first.context
