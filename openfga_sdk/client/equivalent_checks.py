@@ -27,6 +27,9 @@ CORRELATION_ID_PATTERN = re.compile(r"^[\w\d-]{1,36}$", re.ASCII)
 
 _MISSING = ("missing",)
 
+# Values nested deeper than this are sent as is, so comparing them can't run out of stack.
+_MAX_DEPTH = 100
+
 
 class _Unmergeable(Exception):
     """A value the SDK can't compare exactly, so the check is sent as is."""
@@ -323,11 +326,14 @@ def _contextual_tuples_key(contextual_tuples) -> tuple | frozenset:
     return frozenset(Counter(items).items())
 
 
-def _canonical(value) -> tuple:
+def _canonical(value, depth: int = 0) -> tuple:
     """
     A hashable form of a JSON value, equal only for values the server sees as equal.
     Numbers compare as doubles, including the sign of zero.
     """
+    if depth > _MAX_DEPTH:
+        raise _Unmergeable()
+
     if value is None:
         return ("null",)
 
@@ -349,7 +355,7 @@ def _canonical(value) -> tuple:
         return ("string", value)
 
     if isinstance(value, list):
-        return ("list", tuple(_canonical(item) for item in value))
+        return ("list", tuple(_canonical(item, depth + 1) for item in value))
 
     if isinstance(value, dict):
         if not all(isinstance(key, str) for key in value):
@@ -357,7 +363,9 @@ def _canonical(value) -> tuple:
 
         return (
             "object",
-            frozenset((key, _canonical(item)) for key, item in value.items()),
+            frozenset(
+                (key, _canonical(item, depth + 1)) for key, item in value.items()
+            ),
         )
 
     raise _Unmergeable()

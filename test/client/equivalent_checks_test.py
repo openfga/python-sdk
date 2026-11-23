@@ -42,6 +42,13 @@ MODEL = AuthorizationModel(
 )
 
 
+def nested(depth):
+    value = 1
+    for _ in range(depth):
+        value = {"k": value}
+    return value
+
+
 def check(correlation_id, relation="can_view", context=None, contextual_tuples=None):
     return ClientBatchCheckItem(
         user="user:anne",
@@ -74,8 +81,9 @@ def sent(groups):
         datetime.datetime(2026, 1, 1),
         {1: "non-string key"},
         {"nested": [object()]},
+        nested(600),
     ],
-    ids=["nan", "inf", "huge-int", "tuple", "datetime", "int-key", "object"],
+    ids=["nan", "inf", "huge-int", "tuple", "datetime", "int-key", "object", "deep"],
 )
 def test_values_that_cannot_be_compared_are_sent_as_is(value):
     groups = resolve(
