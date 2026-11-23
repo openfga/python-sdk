@@ -5331,14 +5331,27 @@
       "model": {
         "conditions": {
           "in_region": {
-            "expression": "region == \"eu\" && x > 0.0",
+            "expression": "region == \"eu\"",
             "name": "in_region",
             "parameters": {
+              "limits": {
+                "generic_types": [
+                  {
+                    "type_name": "TYPE_NAME_DOUBLE"
+                  }
+                ],
+                "type_name": "TYPE_NAME_MAP"
+              },
               "region": {
                 "type_name": "TYPE_NAME_STRING"
               },
-              "x": {
-                "type_name": "TYPE_NAME_DOUBLE"
+              "tags": {
+                "generic_types": [
+                  {
+                    "type_name": "TYPE_NAME_STRING"
+                  }
+                ],
+                "type_name": "TYPE_NAME_LIST"
               }
             }
           }
@@ -5391,17 +5404,11 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "level": 1,
-                    "items": [
-                      1,
-                      {
-                        "k": "v",
-                        "count": 2
-                      }
-                    ]
-                  }
+                  "limits": {
+                    "read": 1,
+                    "write": 2
+                  },
+                  "tags": ["x", "y"]
                 }
               }
             }
@@ -5420,17 +5427,11 @@
               "condition": {
                 "name": "in_region",
                 "context": {
-                  "meta": {
-                    "items": [
-                      1.0,
-                      {
-                        "count": 2.0,
-                        "k": "v"
-                      }
-                    ],
-                    "level": 1.0
+                  "tags": ["x", "y"],
+                  "limits": {
+                    "write": 2.0,
+                    "read": 1.0
                   },
-                  "x": 1.0,
                   "region": "eu"
                 }
               }
@@ -5453,17 +5454,11 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "level": 1,
-                    "items": [
-                      1,
-                      {
-                        "k": "v",
-                        "count": 2
-                      }
-                    ]
-                  }
+                  "limits": {
+                    "read": 1,
+                    "write": 2
+                  },
+                  "tags": ["x", "y"]
                 }
               }
             }
@@ -5477,14 +5472,27 @@
       "model": {
         "conditions": {
           "in_region": {
-            "expression": "region == \"eu\" && x > 0.0",
+            "expression": "region == \"eu\"",
             "name": "in_region",
             "parameters": {
+              "limits": {
+                "generic_types": [
+                  {
+                    "type_name": "TYPE_NAME_DOUBLE"
+                  }
+                ],
+                "type_name": "TYPE_NAME_MAP"
+              },
               "region": {
                 "type_name": "TYPE_NAME_STRING"
               },
-              "x": {
-                "type_name": "TYPE_NAME_DOUBLE"
+              "tags": {
+                "generic_types": [
+                  {
+                    "type_name": "TYPE_NAME_STRING"
+                  }
+                ],
+                "type_name": "TYPE_NAME_LIST"
               }
             }
           }
@@ -5537,10 +5545,10 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "items": [0]
-                  }
+                  "limits": {
+                    "read": 0
+                  },
+                  "tags": ["x"]
                 }
               }
             }
@@ -5560,10 +5568,10 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "items": [-0.0]
-                  }
+                  "limits": {
+                    "read": -0.0
+                  },
+                  "tags": ["x"]
                 }
               }
             }
@@ -5583,10 +5591,10 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "items": [false]
-                  }
+                  "limits": {
+                    "read": 0
+                  },
+                  "tags": ["y"]
                 }
               }
             }
@@ -5608,10 +5616,10 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "items": [0]
-                  }
+                  "limits": {
+                    "read": 0
+                  },
+                  "tags": ["x"]
                 }
               }
             }
@@ -5632,10 +5640,10 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "items": [-0.0]
-                  }
+                  "limits": {
+                    "read": -0.0
+                  },
+                  "tags": ["x"]
                 }
               }
             }
@@ -5656,10 +5664,10 @@
                 "name": "in_region",
                 "context": {
                   "region": "eu",
-                  "x": 1,
-                  "meta": {
-                    "items": [false]
-                  }
+                  "limits": {
+                    "read": 0
+                  },
+                  "tags": ["y"]
                 }
               }
             }

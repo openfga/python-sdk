@@ -1,7 +1,7 @@
 .PHONY: sync test lint fmt fix check doc update-equivalent-checks-cases
 
 # openfga/language commit to copy the shared equivalent-checks cases from
-LANGUAGE_REF ?= 2dca4214bc8b05cf8e889e9c75df65065826f793
+LANGUAGE_REF ?= bca096c2f02edcdbf753be641d90aadb9476e45e
 
 # Install/update dependencies
 sync:
