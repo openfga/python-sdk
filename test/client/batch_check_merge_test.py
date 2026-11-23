@@ -17,6 +17,7 @@ from openfga_sdk.exceptions import (
     ForbiddenException,
     ValidationException,
 )
+from openfga_sdk.models.consistency_preference import ConsistencyPreference
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.metrics import TelemetryMetrics
 
@@ -249,6 +250,20 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
             )
 
         self.assertEqual(server.model_read_headers[0].get("X-Custom"), "1")
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_sends_the_consistency_option(self, mock_request):
+        server = FakeServer()
+        mock_request.side_effect = server
+
+        async with OpenFgaClient(self.configuration) as client:
+            await self.batch_check(
+                client,
+                checks(),
+                options={"consistency": ConsistencyPreference.HIGHER_CONSISTENCY},
+            )
+
+        self.assertEqual(server.sent[0]["consistency"], "HIGHER_CONSISTENCY")
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_rejects_invalid_correlation_ids(self, mock_request):
