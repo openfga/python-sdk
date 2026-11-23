@@ -6,6 +6,13 @@ import time
 from unittest import IsolatedAsyncioTestCase, TestCase, skipIf
 
 from openfga_sdk.client.model_cache import AsyncModelCache, ModelCache
+from openfga_sdk.exceptions import (
+    ForbiddenException,
+    RateLimitExceededError,
+    ServiceException,
+    UnauthorizedException,
+    ValidationException,
+)
 
 
 KEY = ("store", "model")
@@ -46,7 +53,7 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         clock = FakeClock()
         cache = AsyncModelCache(failure_ttl=60, clock=clock)
         reads = 0
-        error = RuntimeError("forbidden")
+        error = ForbiddenException(status=403)
 
         async def load():
             nonlocal reads
@@ -177,7 +184,7 @@ class TestModelCache(TestCase):
         clock = FakeClock()
         cache = ModelCache(failure_ttl=60, clock=clock)
         reads = 0
-        error = RuntimeError("forbidden")
+        error = ForbiddenException(status=403)
 
         def load():
             nonlocal reads
@@ -192,6 +199,28 @@ class TestModelCache(TestCase):
         clock.now = 60
         cache.get(KEY, load)
         self.assertEqual(reads, 2)
+
+    def test_only_a_403_or_429_is_remembered(self):
+        for error, remembered in [
+            (ForbiddenException(status=403), True),
+            (RateLimitExceededError(status=429), True),
+            (UnauthorizedException(status=401), False),
+            (ValidationException(status=400), False),
+            (ServiceException(status=500), False),
+            (TimeoutError(), False),
+        ]:
+            with self.subTest(error=type(error).__name__):
+                cache = ModelCache()
+                reads = 0
+
+                def load():
+                    nonlocal reads
+                    reads += 1
+                    raise error
+
+                cache.get(KEY, load)
+                cache.get(KEY, load)
+                self.assertEqual(reads, 1 if remembered else 2)
 
     def test_drops_the_least_recently_used_model(self):
         cache = ModelCache(max_models=2)
@@ -242,7 +271,7 @@ class TestModelCache(TestCase):
         def get(key):
             def load():
                 reads.append(key)
-                raise RuntimeError(key)
+                raise ForbiddenException(status=403)
 
             return cache.get(key, load)
 

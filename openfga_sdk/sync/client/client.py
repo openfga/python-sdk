@@ -13,7 +13,7 @@ from openfga_sdk.client.equivalent_checks import (
     unmerged,
     validate_correlation_ids,
 )
-from openfga_sdk.client.model_cache import ModelCache
+from openfga_sdk.client.model_cache import ModelCache, model_not_found
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
     ClientBatchCheckItem,
@@ -937,6 +937,8 @@ class OpenFgaClient:
                     raise ValueError("The authorization model response is empty")
                 return response.authorization_model
             except Exception as err:
+                if model_not_found(err):
+                    raise
                 logger.warning(
                     "merge_equivalent_checks: couldn't read authorization model %s in store %s (status: %s). "
                     "Sending checks unmerged.",
@@ -959,6 +961,9 @@ class OpenFgaClient:
 
         if lookup.model is not None:
             groups = resolve(lookup.model, checks)
+        elif model_not_found(lookup.error):
+            # BatchCheck would fail with the same error, so fail before sending anything.
+            raise lookup.error
         else:
             groups = unmerged(checks)
             telemetry.batchCheckMergeFallback(

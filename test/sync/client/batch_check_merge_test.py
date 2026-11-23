@@ -24,6 +24,7 @@ from test.client.batch_check_merge_test import (
     STORE_ID,
     checks,
     http_mock_response,
+    model_not_found,
     sent_checks,
 )
 
@@ -55,7 +56,7 @@ class FakeServer:
             self.model_reads += 1
             self.model_read_headers.append(kwargs.get("headers") or {})
             if self.model_error is not None:
-                raise self.model_error
+                raise self.model_error()
             return mock_response(json.dumps(self.model_body))
 
         if method == "POST" and url == BATCH_CHECK_URL:
@@ -221,7 +222,7 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
     def test_sends_unmerged_when_the_model_cannot_be_read(
         self, mock_request, mock_fallback
     ):
-        server = FakeServer(model_error=forbidden())
+        server = FakeServer(model_error=forbidden)
         mock_request.side_effect = server
 
         with OpenFgaClient(self.configuration) as client:
@@ -247,6 +248,18 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
             ],
             403,
         )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_fails_before_sending_when_the_model_does_not_exist(self, mock_request):
+        server = FakeServer(model_error=model_not_found)
+        mock_request.side_effect = server
+
+        with OpenFgaClient(self.configuration) as client:
+            with self.assertRaises(ValidationException) as raised:
+                self.batch_check(client, checks())
+
+        self.assertEqual(raised.exception.code, "authorization_model_not_found")
+        self.assertEqual(server.sent, [])
 
     @patch.object(rest.RESTClientObject, "request")
     def test_sends_unmerged_when_the_model_response_is_empty(self, mock_request):

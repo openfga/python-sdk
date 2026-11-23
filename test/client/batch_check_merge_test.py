@@ -112,7 +112,7 @@ class FakeServer:
             self.model_reads += 1
             self.model_read_headers.append(kwargs.get("headers") or {})
             if self.model_error is not None:
-                raise self.model_error
+                raise self.model_error()
             return mock_response(json.dumps(self.model_body))
 
         if method == "POST" and url == BATCH_CHECK_URL:
@@ -145,6 +145,14 @@ def sent_checks(server):
 
 def forbidden():
     return ForbiddenException(http_resp=http_mock_response("{}", 403))
+
+
+def model_not_found():
+    body = {
+        "code": "authorization_model_not_found",
+        "message": f"Authorization Model '{MODEL_ID}' not found",
+    }
+    return ValidationException(http_resp=http_mock_response(json.dumps(body), 400))
 
 
 class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
@@ -322,7 +330,7 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_sends_unmerged_when_the_model_cannot_be_read(self, mock_request):
-        server = FakeServer(model_error=forbidden())
+        server = FakeServer(model_error=forbidden)
         mock_request.side_effect = server
 
         async with OpenFgaClient(self.configuration) as client:
@@ -347,6 +355,25 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         self.assertEqual(
             [r.allowed for r in response.result], [True, False, False, False]
         )
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_fails_before_sending_when_the_model_does_not_exist(
+        self, mock_request
+    ):
+        server = FakeServer(model_error=model_not_found)
+        mock_request.side_effect = server
+
+        async with OpenFgaClient(self.configuration) as client:
+            with self.assertNoLogs("openfga_sdk.client.client", "WARNING"):
+                for _ in range(2):
+                    with self.assertRaises(ValidationException) as raised:
+                        await self.batch_check(client, checks())
+                    self.assertEqual(
+                        raised.exception.code, "authorization_model_not_found"
+                    )
+
+        self.assertEqual(server.sent, [])
+        self.assertEqual(server.model_reads, 2)
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_sends_unmerged_when_the_model_response_is_empty(self, mock_request):
@@ -500,7 +527,7 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
     async def test_records_the_fallback_with_its_status_code(
         self, mock_request, mock_fallback
     ):
-        mock_request.side_effect = FakeServer(model_error=forbidden())
+        mock_request.side_effect = FakeServer(model_error=forbidden)
 
         async with OpenFgaClient(self.configuration) as client:
             with self.assertLogs("openfga_sdk.client.client", "WARNING"):
