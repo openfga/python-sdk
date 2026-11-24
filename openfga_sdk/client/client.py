@@ -805,7 +805,7 @@ class OpenFgaClient:
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
         :param max_batch_size(options) - Max number of checks to include in a request. Defaults to 50
-        :param merge_equivalent_checks(options) - Beta. Send checks that are certain to get the same answer only once. Requires an authorization model id and read access to that model
+        :param merge_equivalent_checks(options) - Send checks that are certain to get the same answer only once. Requires an authorization model id and read access to that model
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
