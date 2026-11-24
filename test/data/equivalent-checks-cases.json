@@ -1,5 +1,5 @@
 {
-  "note": "Generated from equivalent-checks-cases.yaml, with every model as JSON. Don't edit this file: edit the YAML file and run `make generate-equivalent-checks-json`.",
+  "note": "Generated from equivalent-checks-cases.yaml, with every model as JSON. Don't edit this file: edit the YAML file and run `make -C pkg/go generate-equivalent-checks-json`.",
   "cases": [
     {
       "name": "merges an alias with the relation it points to",
