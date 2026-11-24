@@ -3,11 +3,18 @@ import sys
 import threading
 import time
 
+from types import SimpleNamespace
 from unittest import IsolatedAsyncioTestCase, TestCase, skipIf
 
-from openfga_sdk.client.model_cache import AsyncModelCache, ModelCache
+from openfga_sdk.client.model_cache import (
+    AsyncModelCache,
+    ModelCache,
+    model_read_fails_call,
+)
 from openfga_sdk.exceptions import (
+    AuthenticationError,
     ForbiddenException,
+    NotFoundException,
     RateLimitExceededError,
     ServiceException,
     UnauthorizedException,
@@ -53,7 +60,7 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         clock = FakeClock()
         cache = AsyncModelCache(failure_ttl=60, clock=clock)
         reads = 0
-        error = ForbiddenException(status=403)
+        error = RateLimitExceededError(status=429)
 
         async def load():
             nonlocal reads
@@ -184,7 +191,7 @@ class TestModelCache(TestCase):
         clock = FakeClock()
         cache = ModelCache(failure_ttl=60, clock=clock)
         reads = 0
-        error = ForbiddenException(status=403)
+        error = RateLimitExceededError(status=429)
 
         def load():
             nonlocal reads
@@ -200,10 +207,10 @@ class TestModelCache(TestCase):
         cache.get(KEY, load)
         self.assertEqual(reads, 2)
 
-    def test_only_a_403_or_429_is_remembered(self):
+    def test_only_a_429_is_remembered(self):
         for error, remembered in [
-            (ForbiddenException(status=403), True),
             (RateLimitExceededError(status=429), True),
+            (ForbiddenException(status=403), False),
             (UnauthorizedException(status=401), False),
             (ValidationException(status=400), False),
             (ServiceException(status=500), False),
@@ -271,7 +278,7 @@ class TestModelCache(TestCase):
         def get(key):
             def load():
                 reads.append(key)
-                raise ForbiddenException(status=403)
+                raise RateLimitExceededError(status=429)
 
             return cache.get(key, load)
 
@@ -295,3 +302,32 @@ class TestModelCache(TestCase):
             cache.get(KEY, interrupt)
 
         self.assertEqual(cache.get(KEY, lambda: "model").model, "model")
+
+
+def with_code(error, code):
+    error.parsed_exception = SimpleNamespace(code=code)
+    return error
+
+
+class TestModelReadFailsCall(TestCase):
+    def test_fails_when_the_model_is_missing_or_the_credentials_cannot_read_it(self):
+        for error, fails in [
+            (
+                with_code(
+                    ValidationException(status=400), "authorization_model_not_found"
+                ),
+                True,
+            ),
+            (with_code(NotFoundException(status=404), "store_id_not_found"), True),
+            (UnauthorizedException(status=401), True),
+            (ForbiddenException(status=403), True),
+            (AuthenticationError(status=500), True),
+            (with_code(ValidationException(status=400), "validation_error"), False),
+            (RateLimitExceededError(status=429), False),
+            (ServiceException(status=500), False),
+            (TimeoutError(), False),
+            (ValueError("The authorization model response is empty"), False),
+            (None, False),
+        ]:
+            with self.subTest(error=repr(error)):
+                self.assertEqual(model_read_fails_call(error), fails)

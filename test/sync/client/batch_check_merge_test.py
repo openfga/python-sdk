@@ -9,6 +9,7 @@ from openfga_sdk.client.models.batch_check_request import ClientBatchCheckReques
 from openfga_sdk.exceptions import (
     FgaValidationException,
     ForbiddenException,
+    UnauthorizedException,
     ValidationException,
 )
 from openfga_sdk.sync import rest
@@ -21,11 +22,15 @@ from test.client.batch_check_merge_test import (
     MODEL,
     MODEL_ID,
     MODEL_URL,
+    NO_RETRY,
     STORE_ID,
     checks,
+    forbidden,
     http_mock_response,
     model_not_found,
+    rate_limited,
     sent_checks,
+    unauthorized,
 )
 
 
@@ -74,10 +79,6 @@ class FakeServer:
             )
 
         raise AssertionError(f"Unexpected request: {method} {url}")
-
-
-def forbidden():
-    return ForbiddenException(http_resp=http_mock_response("{}", 403))
 
 
 class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
@@ -222,16 +223,16 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
     def test_sends_unmerged_when_the_model_cannot_be_read(
         self, mock_request, mock_fallback
     ):
-        server = FakeServer(model_error=forbidden)
+        server = FakeServer(model_error=rate_limited)
         mock_request.side_effect = server
 
         with OpenFgaClient(self.configuration) as client:
             with self.assertLogs("openfga_sdk.sync.client.client", "WARNING") as logs:
-                response = self.batch_check(client, checks())
-            self.batch_check(client, checks())
+                response = self.batch_check(client, checks(), NO_RETRY)
+            self.batch_check(client, checks(), NO_RETRY)
 
         self.assertEqual(len(logs.records), 1)
-        self.assertIn("403", logs.output[0])
+        self.assertIn("429", logs.output[0])
         self.assertEqual(server.model_reads, 1)
         unmerged = [
             ("a", "viewer"),
@@ -246,7 +247,7 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
             mock_fallback.call_args.kwargs["attributes"][
                 TelemetryAttributes.http_response_status_code
             ],
-            403,
+            429,
         )
 
     @patch.object(rest.RESTClientObject, "request")
@@ -260,6 +261,27 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
 
         self.assertEqual(raised.exception.code, "authorization_model_not_found")
         self.assertEqual(server.sent, [])
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_fails_before_sending_when_the_credentials_cannot_read_the_model(
+        self, mock_request
+    ):
+        for model_error, error_type in [
+            (unauthorized, UnauthorizedException),
+            (forbidden, ForbiddenException),
+        ]:
+            with self.subTest(status=error_type.__name__):
+                server = FakeServer(model_error=model_error)
+                mock_request.side_effect = server
+
+                with OpenFgaClient(self.configuration) as client:
+                    with self.assertNoLogs("openfga_sdk.sync.client.client", "WARNING"):
+                        for _ in range(2):
+                            with self.assertRaises(error_type):
+                                self.batch_check(client, checks())
+
+                self.assertEqual(server.sent, [])
+                self.assertEqual(server.model_reads, 2)
 
     @patch.object(rest.RESTClientObject, "request")
     def test_sends_unmerged_when_the_model_response_is_empty(self, mock_request):

@@ -985,8 +985,9 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 - **Off by default.** With it off, nothing changes. Leaving it out or passing `None` keeps it off; any other non-bool value, like `"true"`, fails with a validation error.
 - **Needs an authorization model ID.** Without one, the call fails before anything is sent.
 - **Reads each model once per client.** The SDK reads a model the first time it needs it and caches it. Create the client once and reuse it.
-- **Falls back safely.** If the model can't be read (for example, no read access), the SDK logs a warning and sends the checks unmerged. A 403 or 429 is remembered for about a minute; other failures are retried on the next call.
+- **Needs read access to the model.** If the credentials can't read the model (a 401 or 403, or the token request fails), the call fails with that error before any check is sent. Turn the option off for credentials that can only run checks.
 - **Fails early if the model doesn't exist.** If the model or store isn't found, the call fails with that error before any check is sent, as BatchCheck would.
+- **Falls back on other read failures.** If the read fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks unmerged. A 429 is remembered for about a minute; other failures are retried on the next call.
 - **Errors are shared.** If a merged check returns an error, every check it stands for gets that error.
 - **Correlation IDs** must match `^[\w\d-]{1,36}$` (ASCII). Missing ones are generated.
 - **Telemetry:** see the `fga-client.batch_check.*` and `fga-client.model_cache.lookup` metrics in [OpenTelemetry](docs/opentelemetry.md).

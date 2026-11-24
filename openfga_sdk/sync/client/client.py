@@ -13,7 +13,7 @@ from openfga_sdk.client.equivalent_checks import (
     unmerged,
     validate_correlation_ids,
 )
-from openfga_sdk.client.model_cache import ModelCache, model_not_found
+from openfga_sdk.client.model_cache import ModelCache, model_read_fails_call
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
     ClientBatchCheckItem,
@@ -800,7 +800,7 @@ class OpenFgaClient:
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
         :param max_batch_size(options) - Max number of checks to include in a request. Defaults to 50
-        :param merge_equivalent_checks(options) - Beta. Send checks that are certain to get the same answer only once. Requires an authorization model id
+        :param merge_equivalent_checks(options) - Beta. Send checks that are certain to get the same answer only once. Requires an authorization model id and read access to that model
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
@@ -937,7 +937,7 @@ class OpenFgaClient:
                     raise ValueError("The authorization model response is empty")
                 return response.authorization_model
             except Exception as err:
-                if model_not_found(err):
+                if model_read_fails_call(err):
                     raise
                 logger.warning(
                     "merge_equivalent_checks: couldn't read authorization model %s in store %s (status: %s). "
@@ -961,8 +961,10 @@ class OpenFgaClient:
 
         if lookup.model is not None:
             groups = resolve(lookup.model, checks)
-        elif model_not_found(lookup.error):
-            # BatchCheck would fail with the same error, so fail before sending anything.
+        elif model_read_fails_call(lookup.error):
+            # BatchCheck would fail too if the model is missing or no token can be fetched,
+            # and falling back on a 401 or 403 would hide wrong credentials. Fail before
+            # sending anything.
             raise lookup.error
         else:
             groups = unmerged(checks)

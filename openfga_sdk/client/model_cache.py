@@ -2,9 +2,9 @@
 In-memory cache of authorization models, used by BatchCheck's `merge_equivalent_checks` option.
 
 A model never changes once it's written, so a cached model never goes stale. Only
-successful reads are cached. A 403 or 429 is remembered for a short time, so missing
-read access or rate limiting doesn't add a read to every call. Other failures aren't,
-so the next call reads again. Calls for the same model share one in-flight read.
+successful reads are cached. A 429 is remembered for a short time, so rate limiting
+doesn't add a read to every call. Other failures aren't, so the next call reads again.
+Calls for the same model share one in-flight read.
 """
 
 import asyncio
@@ -16,23 +16,30 @@ from collections.abc import Awaitable, Callable
 from concurrent.futures import Future
 from dataclasses import dataclass
 
-from openfga_sdk.exceptions import ApiException
+from openfga_sdk.exceptions import ApiException, AuthenticationError
 from openfga_sdk.models.authorization_model import AuthorizationModel
 
 
 MAX_MODELS = 32
 FAILURE_TTL_SECONDS = 60.0
-REMEMBERED_FAILURE_STATUSES = frozenset({403, 429})
+REMEMBERED_FAILURE_STATUSES = frozenset({429})
+CREDENTIAL_FAILURE_STATUSES = frozenset({401, 403})
 NOT_FOUND_CODES = frozenset({"authorization_model_not_found", "store_id_not_found"})
 
 ModelCacheKey = tuple[str, str]
 
 
-def model_not_found(error: Exception | None) -> bool:
+def model_read_fails_call(error: Exception | None) -> bool:
     """
-    Whether a model read failed because the model or store doesn't exist
+    Whether a model read error fails the BatchCheck call instead of sending the checks
+    unmerged: the model or store doesn't exist, or the credentials can't read the model
+    (a 401 or 403, or the token request failed)
     """
-    return isinstance(error, ApiException) and error.code in NOT_FOUND_CODES
+    if isinstance(error, AuthenticationError):
+        return True
+    return isinstance(error, ApiException) and (
+        error.code in NOT_FOUND_CODES or error.status in CREDENTIAL_FAILURE_STATUSES
+    )
 
 
 @dataclass

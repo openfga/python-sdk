@@ -12,9 +12,12 @@ from openfga_sdk.client.client import OpenFgaClient
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
 from openfga_sdk.client.models.batch_check_response import ClientBatchCheckResponse
+from openfga_sdk.configuration import RetryParams
 from openfga_sdk.exceptions import (
     FgaValidationException,
     ForbiddenException,
+    RateLimitExceededError,
+    UnauthorizedException,
     ValidationException,
 )
 from openfga_sdk.models.consistency_preference import ConsistencyPreference
@@ -145,6 +148,17 @@ def sent_checks(server):
 
 def forbidden():
     return ForbiddenException(http_resp=http_mock_response("{}", 403))
+
+
+def unauthorized():
+    return UnauthorizedException(http_resp=http_mock_response("{}", 401))
+
+
+def rate_limited():
+    return RateLimitExceededError(http_resp=http_mock_response("{}", 429))
+
+
+NO_RETRY = {"retry_params": RetryParams(max_retry=0)}
 
 
 def model_not_found():
@@ -330,18 +344,18 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_sends_unmerged_when_the_model_cannot_be_read(self, mock_request):
-        server = FakeServer(model_error=forbidden)
+        server = FakeServer(model_error=rate_limited)
         mock_request.side_effect = server
 
         async with OpenFgaClient(self.configuration) as client:
             with self.assertLogs("openfga_sdk.client.client", "WARNING") as logs:
-                response = await self.batch_check(client, checks())
-            second = await self.batch_check(client, checks())
+                response = await self.batch_check(client, checks(), NO_RETRY)
+            second = await self.batch_check(client, checks(), NO_RETRY)
 
         self.assertEqual(len(logs.records), 1)
         self.assertIn(MODEL_ID, logs.output[0])
         self.assertIn(STORE_ID, logs.output[0])
-        self.assertIn("403", logs.output[0])
+        self.assertIn("429", logs.output[0])
         self.assertEqual(server.model_reads, 1)
         unmerged = [
             ("a", "viewer"),
@@ -374,6 +388,27 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
 
         self.assertEqual(server.sent, [])
         self.assertEqual(server.model_reads, 2)
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_fails_before_sending_when_the_credentials_cannot_read_the_model(
+        self, mock_request
+    ):
+        for model_error, error_type in [
+            (unauthorized, UnauthorizedException),
+            (forbidden, ForbiddenException),
+        ]:
+            with self.subTest(status=error_type.__name__):
+                server = FakeServer(model_error=model_error)
+                mock_request.side_effect = server
+
+                async with OpenFgaClient(self.configuration) as client:
+                    with self.assertNoLogs("openfga_sdk.client.client", "WARNING"):
+                        for _ in range(2):
+                            with self.assertRaises(error_type):
+                                await self.batch_check(client, checks())
+
+                self.assertEqual(server.sent, [])
+                self.assertEqual(server.model_reads, 2)
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_sends_unmerged_when_the_model_response_is_empty(self, mock_request):
@@ -527,14 +562,14 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
     async def test_records_the_fallback_with_its_status_code(
         self, mock_request, mock_fallback
     ):
-        mock_request.side_effect = FakeServer(model_error=forbidden)
+        mock_request.side_effect = FakeServer(model_error=rate_limited)
 
         async with OpenFgaClient(self.configuration) as client:
             with self.assertLogs("openfga_sdk.client.client", "WARNING"):
-                await self.batch_check(client, checks())
+                await self.batch_check(client, checks(), NO_RETRY)
 
         attributes = mock_fallback.call_args.kwargs["attributes"]
-        self.assertEqual(attributes[TelemetryAttributes.http_response_status_code], 403)
+        self.assertEqual(attributes[TelemetryAttributes.http_response_status_code], 429)
         self.assertEqual(
             attributes[TelemetryAttributes.fga_client_request_model_id], MODEL_ID
         )
