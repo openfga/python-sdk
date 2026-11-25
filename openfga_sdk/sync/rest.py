@@ -18,6 +18,7 @@ from openfga_sdk.exceptions import (
     UnauthorizedException,
     ValidationException,
 )
+from openfga_sdk.redaction import redact_response_body
 
 
 logger = logging.getLogger(__name__)
@@ -166,6 +167,12 @@ class RESTClientObject:
 
         if hasattr(configuration, "retries") and configuration.retries is not None:
             addition_pool_args["retries"] = configuration.retries
+        else:
+            # The SDK retries 429/5xx itself; keep urllib3 from also retrying
+            # idempotent requests and sleeping for an uncapped Retry-After.
+            addition_pool_args["retries"] = urllib3.Retry(
+                total=3, respect_retry_after_header=False
+            )
 
         if (
             hasattr(configuration, "socket_options")
@@ -495,7 +502,10 @@ class RESTClientObject:
             wrapped_response = RESTResponse(raw_response, raw_response.data)
 
             # Log the response body
-            logger.debug("response body: %s", wrapped_response.data.decode("utf-8"))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "response body: %s", redact_response_body(wrapped_response.data)
+                )
 
         # Handle any errors that may have occurred. If an exception is raised,
         # ensure the underlying response is closed so the connection is not
