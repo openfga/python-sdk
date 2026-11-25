@@ -11,7 +11,11 @@ from openfga_sdk._version import USER_AGENT
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
-from openfga_sdk.exceptions import AuthenticationError
+from openfga_sdk.exceptions import (
+    AuthenticationError,
+    RateLimitExceededError,
+    ServiceException,
+)
 from openfga_sdk.oauth2_common import _TokenState
 from openfga_sdk.sync import rest
 from openfga_sdk.sync.oauth2 import OAuth2Client
@@ -337,6 +341,91 @@ This is not a JSON response
 
         with self.assertRaises(AuthenticationError):
             client.get_authentication_header(rest_client)
+        rest_client.close()
+
+    def _client_credentials(self):
+        return Credentials(
+            method="client_credentials",
+            configuration=CredentialConfiguration(
+                client_id="myclientid",
+                client_secret="mysecret",
+                api_issuer="issuer.fga.example",
+                api_audience="myaudience",
+            ),
+        )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_get_authentication_retries_raised_429_and_5xx_errors(self, mock_request):
+        """
+        The REST client raises on 429 and 5xx responses, and those token requests should be retried
+        """
+        error_body = '{"code": "internal_error", "message": "Internal Server Error"}'
+        response_body = '{"expires_in": 120, "access_token": "AABBCCDD"}'
+
+        mock_request.side_effect = [
+            ServiceException(http_resp=mock_response(error_body, 500)),
+            RateLimitExceededError(http_resp=mock_response(error_body, 429)),
+            ServiceException(http_resp=mock_response(error_body, 503)),
+            mock_response(response_body, 200),
+        ]
+
+        configuration = Configuration()
+        configuration.retry_params.max_retry = 5
+        configuration.retry_params.min_wait_in_ms = 1
+
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        auth_header = client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 4)
+        self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+        rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_get_authentication_stops_retrying_after_max_retry(self, mock_request):
+        """
+        After max_retry retries, the last error is raised
+        """
+        error_body = '{"code": "internal_error", "message": "Internal Server Error"}'
+        mock_request.side_effect = [
+            ServiceException(http_resp=mock_response(error_body, 500)) for _ in range(3)
+        ]
+
+        configuration = Configuration()
+        configuration.retry_params.max_retry = 2
+        configuration.retry_params.min_wait_in_ms = 1
+
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        with self.assertRaises(ServiceException):
+            client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 3)
+        rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_get_authentication_does_not_retry_501(self, mock_request):
+        """
+        A 501 (Not Implemented) response is not retried
+        """
+        error_body = '{"code": "not_implemented", "message": "Not Implemented"}'
+        mock_request.side_effect = [
+            ServiceException(http_resp=mock_response(error_body, 501))
+        ]
+
+        configuration = Configuration()
+        configuration.retry_params.max_retry = 5
+        configuration.retry_params.min_wait_in_ms = 1
+
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        with self.assertRaises(ServiceException):
+            client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 1)
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
