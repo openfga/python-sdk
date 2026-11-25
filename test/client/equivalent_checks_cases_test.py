@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from openfga_sdk.client.equivalent_checks import resolve
+from openfga_sdk.client.equivalent_checks import ModelAliases, resolve
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.models.relationship_condition import RelationshipCondition
@@ -99,7 +99,7 @@ def test_cases_file_is_not_empty():
 def test_equivalent_checks_case(case):
     checks = [_check(check) for check in case["checks"]]
 
-    groups = resolve(_model(case["model"]), checks)
+    groups = resolve(ModelAliases(_model(case["model"])), checks)
 
     assert [_sent_as_json(group) for group in groups] == case["expected_sent"]
 

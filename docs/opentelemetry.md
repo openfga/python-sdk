@@ -29,7 +29,7 @@ If you configure the OpenTelemetry SDK, these metrics will be exported and sent 
 | `fga-client.request`                      | Counter   | No                 | Total number of requests made to the FGA server                                               |
 | `fga-client.batch_check.checks_requested` | Counter   | Yes                | Checks passed to `batch_check` with `merge_equivalent_checks` on                              |
 | `fga-client.batch_check.checks_sent`      | Counter   | Yes                | Checks actually sent by `batch_check` with `merge_equivalent_checks` on                       |
-| `fga-client.batch_check.merge_fallback`   | Counter   | Yes                | `batch_check` calls sent unmerged because the authorization model could not be read           |
+| `fga-client.batch_check.merge_fallback`   | Counter   | Yes                | `batch_check` calls sent unmerged because the model could not be read or the checks grouped   |
 | `fga-client.model_cache.lookup`           | Counter   | Yes                | Authorization model cache lookups by `merge_equivalent_checks`, with a `hit` or `miss` result |
 
 ### Supported Attributes

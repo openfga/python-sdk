@@ -7,8 +7,10 @@ from unittest.mock import patch
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
 from openfga_sdk.exceptions import (
+    AuthenticationError,
     FgaValidationException,
     ForbiddenException,
+    NotFoundException,
     UnauthorizedException,
     ValidationException,
 )
@@ -21,15 +23,21 @@ from test.client.batch_check_merge_test import (
     BATCH_CHECK_URL,
     MODEL,
     MODEL_ID,
-    MODEL_URL,
+    MODELS_URL,
     NO_RETRY,
+    OTHER_MODEL_ID,
     STORE_ID,
+    UNMERGED,
     checks,
     forbidden,
     http_mock_response,
     model_not_found,
     rate_limited,
     sent_checks,
+    server_error,
+    store_not_found,
+    timed_out,
+    token_request_failed,
     unauthorized,
 )
 
@@ -53,12 +61,14 @@ class FakeServer:
             lambda check: {"allowed": check["tuple_key"]["relation"] == "viewer"}
         )
         self.model_reads = 0
+        self.model_ids_read = []
         self.model_read_headers = []
         self.sent = []
 
     def __call__(self, method, url, **kwargs):
-        if method == "GET" and url == MODEL_URL:
+        if method == "GET" and url.startswith(MODELS_URL):
             self.model_reads += 1
+            self.model_ids_read.append(url.removeprefix(MODELS_URL))
             self.model_read_headers.append(kwargs.get("headers") or {})
             if self.model_error is not None:
                 raise self.model_error()
@@ -153,10 +163,56 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
         self.configuration.authorization_model_id = None
 
         with OpenFgaClient(self.configuration) as client:
-            with self.assertRaises(FgaValidationException):
+            with self.assertRaisesRegex(
+                FgaValidationException, "authorization_model_id"
+            ):
                 self.batch_check(client, checks())
 
         mock_request.assert_not_called()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_requires_a_store_id(self, mock_request):
+        self.configuration.store_id = None
+
+        with OpenFgaClient(self.configuration) as client:
+            with self.assertRaisesRegex(FgaValidationException, "store_id"):
+                self.batch_check(client, checks())
+
+        mock_request.assert_not_called()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_the_model_id_in_the_options_wins(self, mock_request):
+        server = FakeServer()
+        mock_request.side_effect = server
+
+        with OpenFgaClient(self.configuration) as client:
+            self.batch_check(
+                client, checks(), {"authorization_model_id": OTHER_MODEL_ID}
+            )
+            self.batch_check(client, checks())
+
+        self.assertEqual(server.model_ids_read, [OTHER_MODEL_ID, MODEL_ID])
+        self.assertEqual(
+            [body["authorization_model_id"] for body in server.sent],
+            [OTHER_MODEL_ID, MODEL_ID],
+        )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_uses_the_model_id_in_the_options_when_none_is_configured(
+        self, mock_request
+    ):
+        self.configuration.authorization_model_id = None
+        server = FakeServer()
+        mock_request.side_effect = server
+
+        with OpenFgaClient(self.configuration) as client:
+            response = self.batch_check(
+                client, checks(), {"authorization_model_id": OTHER_MODEL_ID}
+            )
+
+        self.assertEqual(server.model_ids_read, [OTHER_MODEL_ID])
+        self.assertEqual(server.sent[0]["authorization_model_id"], OTHER_MODEL_ID)
+        self.assertEqual(response.checks_sent, 2)
 
     @patch.object(rest.RESTClientObject, "request")
     def test_rejects_an_option_value_that_is_not_a_bool(self, mock_request):
@@ -227,20 +283,16 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
         mock_request.side_effect = server
 
         with OpenFgaClient(self.configuration) as client:
-            with self.assertLogs("openfga_sdk.sync.client.client", "WARNING") as logs:
+            with self.assertLogs(
+                "openfga_sdk.client._batch_check_merge", "WARNING"
+            ) as logs:
                 response = self.batch_check(client, checks(), NO_RETRY)
             self.batch_check(client, checks(), NO_RETRY)
 
         self.assertEqual(len(logs.records), 1)
         self.assertIn("429", logs.output[0])
         self.assertEqual(server.model_reads, 1)
-        unmerged = [
-            ("a", "viewer"),
-            ("b", "can_view"),
-            ("c", "can_share"),
-            ("d", "editor"),
-        ]
-        self.assertEqual(sent_checks(server), unmerged * 2)
+        self.assertEqual(sent_checks(server), UNMERGED * 2)
         self.assertEqual(response.checks_sent, 4)
         self.assertEqual(mock_fallback.call_count, 2)
         self.assertEqual(
@@ -249,6 +301,82 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
             ],
             429,
         )
+
+    @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
+    @patch.object(rest.RESTClientObject, "request")
+    def test_sends_unmerged_when_the_server_fails_or_times_out(
+        self, mock_request, mock_fallback
+    ):
+        for model_error, status in [(server_error, 500), (timed_out, None)]:
+            with self.subTest(error=model_error.__name__):
+                server = FakeServer(model_error=model_error)
+                mock_request.side_effect = server
+
+                with OpenFgaClient(self.configuration) as client:
+                    with self.assertLogs(
+                        "openfga_sdk.client._batch_check_merge", "WARNING"
+                    ):
+                        response = self.batch_check(client, checks(), NO_RETRY)
+                        self.batch_check(client, checks(), NO_RETRY)
+
+                self.assertEqual(sent_checks(server), UNMERGED * 2)
+                self.assertEqual(response.checks_sent, 4)
+                # Only a 429 is remembered, so the next call reads again.
+                self.assertEqual(server.model_reads, 2)
+                self.assertEqual(
+                    mock_fallback.call_args.kwargs["attributes"][
+                        TelemetryAttributes.http_response_status_code
+                    ],
+                    status,
+                )
+
+    @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
+    @patch(
+        "openfga_sdk.client._batch_check_merge.resolve",
+        side_effect=RuntimeError("boom"),
+    )
+    @patch.object(rest.RESTClientObject, "request")
+    def test_sends_unmerged_when_grouping_fails(
+        self, mock_request, _resolve, mock_fallback
+    ):
+        server = FakeServer()
+        mock_request.side_effect = server
+
+        with OpenFgaClient(self.configuration) as client:
+            with self.assertLogs(
+                "openfga_sdk.client._batch_check_merge", "WARNING"
+            ) as logs:
+                response = self.batch_check(client, checks())
+
+        self.assertIn("couldn't group the checks", logs.output[0])
+        self.assertEqual(sent_checks(server), UNMERGED)
+        self.assertEqual(response.checks_sent, 4)
+        self.assertIsNone(
+            mock_fallback.call_args.kwargs["attributes"][
+                TelemetryAttributes.http_response_status_code
+            ]
+        )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_fails_before_sending_when_the_store_does_not_exist_or_no_token(
+        self, mock_request
+    ):
+        for model_error, error_type in [
+            (store_not_found, NotFoundException),
+            (token_request_failed, AuthenticationError),
+        ]:
+            with self.subTest(error=model_error.__name__):
+                server = FakeServer(model_error=model_error)
+                mock_request.side_effect = server
+
+                with OpenFgaClient(self.configuration) as client:
+                    with self.assertNoLogs(
+                        "openfga_sdk.client._batch_check_merge", "WARNING"
+                    ):
+                        with self.assertRaises(error_type):
+                            self.batch_check(client, checks())
+
+                self.assertEqual(server.sent, [])
 
     @patch.object(rest.RESTClientObject, "request")
     def test_fails_before_sending_when_the_model_does_not_exist(self, mock_request):
@@ -275,7 +403,9 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
                 mock_request.side_effect = server
 
                 with OpenFgaClient(self.configuration) as client:
-                    with self.assertNoLogs("openfga_sdk.sync.client.client", "WARNING"):
+                    with self.assertNoLogs(
+                        "openfga_sdk.client._batch_check_merge", "WARNING"
+                    ):
                         for _ in range(2):
                             with self.assertRaises(error_type):
                                 self.batch_check(client, checks())
@@ -289,14 +419,13 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
         mock_request.side_effect = server
 
         with OpenFgaClient(self.configuration) as client:
-            with self.assertLogs("openfga_sdk.sync.client.client", "WARNING") as logs:
+            with self.assertLogs(
+                "openfga_sdk.client._batch_check_merge", "WARNING"
+            ) as logs:
                 response = self.batch_check(client, checks())
 
         self.assertEqual(len(logs.records), 1)
-        self.assertEqual(
-            sent_checks(server),
-            [("a", "viewer"), ("b", "can_view"), ("c", "can_share"), ("d", "editor")],
-        )
+        self.assertEqual(sent_checks(server), UNMERGED)
         self.assertEqual(response.checks_sent, 4)
 
     @patch.object(rest.RESTClientObject, "request")
@@ -374,10 +503,7 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
             response = client.batch_check(ClientBatchCheckRequest(checks=checks()))
 
         self.assertEqual(server.model_reads, 0)
-        self.assertEqual(
-            sent_checks(server),
-            [("a", "viewer"), ("b", "can_view"), ("c", "can_share"), ("d", "editor")],
-        )
+        self.assertEqual(sent_checks(server), UNMERGED)
         self.assertIsNone(response.checks_sent)
 
     @patch.object(TelemetryMetrics, "batchCheckChecksSent")

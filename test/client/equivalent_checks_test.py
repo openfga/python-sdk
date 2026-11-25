@@ -5,8 +5,10 @@ import pytest
 
 from openfga_sdk.client.equivalent_checks import (
     EquivalentCheckGroup,
+    ModelAliases,
     expand,
     merge_enabled,
+    prepare_checks,
     resolve,
     unmerged,
     validate_correlation_ids,
@@ -40,6 +42,7 @@ MODEL = AuthorizationModel(
         ),
     ],
 )
+ALIASES = ModelAliases(MODEL)
 
 
 def nested(depth):
@@ -85,22 +88,47 @@ def sent(groups):
     ],
     ids=["nan", "inf", "huge-int", "tuple", "datetime", "int-key", "object", "deep"],
 )
-def test_values_that_cannot_be_compared_are_sent_as_is(value):
+def test_values_that_cannot_be_compared_are_not_merged(value):
     groups = resolve(
-        MODEL,
+        ALIASES,
         [check("a", context={"x": value}), check("b", context={"x": value})],
     )
 
-    assert sent(groups) == [("a", "can_view", ["a"]), ("b", "can_view", ["b"])]
+    assert sent(groups) == [("a", "viewer", ["a"]), ("b", "viewer", ["b"])]
 
 
-def test_a_context_that_is_not_an_object_is_sent_as_is():
-    groups = resolve(MODEL, [check("a", context=["x"]), check("b", context=["x"])])
+def test_a_context_that_is_not_an_object_is_not_merged():
+    groups = resolve(ALIASES, [check("a", context=["x"]), check("b", context=["x"])])
 
-    assert sent(groups) == [("a", "can_view", ["a"]), ("b", "can_view", ["b"])]
+    assert sent(groups) == [("a", "viewer", ["a"]), ("b", "viewer", ["b"])]
 
 
-def test_values_in_a_condition_context_that_cannot_be_compared_are_sent_as_is():
+def test_a_value_that_cannot_be_compared_does_not_stop_other_checks_merging():
+    groups = resolve(
+        ALIASES,
+        [check("a", context={"x": math.nan}), check("b"), check("c")],
+    )
+
+    assert sent(groups) == [("a", "viewer", ["a"]), ("merged-1", "viewer", ["b", "c"])]
+
+
+class ContextThatMustNotBeRead(dict):
+    def items(self):
+        raise AssertionError("the context of a check with no match was read")
+
+
+def test_only_compares_context_for_checks_that_could_merge():
+    other_user = check("b", context=ContextThatMustNotBeRead(x=1))
+    other_user.user = "user:bob"
+
+    groups = resolve(
+        ALIASES, [check("a", context=ContextThatMustNotBeRead(x=1)), other_user]
+    )
+
+    assert sent(groups) == [("a", "viewer", ["a"]), ("b", "viewer", ["b"])]
+
+
+def test_values_in_a_condition_context_that_cannot_be_compared_are_not_merged():
     contextual_tuples = [
         ClientTuple(
             user="user:anne",
@@ -111,21 +139,21 @@ def test_values_in_a_condition_context_that_cannot_be_compared_are_sent_as_is():
     ]
 
     groups = resolve(
-        MODEL,
+        ALIASES,
         [
             check("a", contextual_tuples=contextual_tuples),
             check("b", contextual_tuples=contextual_tuples),
         ],
     )
 
-    assert sent(groups) == [("a", "can_view", ["a"]), ("b", "can_view", ["b"])]
+    assert sent(groups) == [("a", "viewer", ["a"]), ("b", "viewer", ["b"])]
 
 
 def test_checks_that_are_not_strings_are_sent_as_is():
     item = check("a")
     item.user = None
 
-    assert sent(resolve(MODEL, [item])) == [("a", "can_view", ["a"])]
+    assert sent(resolve(ALIASES, [item])) == [("a", "can_view", ["a"])]
 
 
 def test_a_model_without_type_definitions_sends_everything_as_is():
@@ -133,7 +161,7 @@ def test_a_model_without_type_definitions_sends_everything_as_is():
         id="01GXSA8YR785C4FYS3C0RTG7B1", schema_version="1.1", type_definitions=[]
     )
 
-    assert sent(resolve(model, [check("a"), check("b")])) == [
+    assert sent(resolve(ModelAliases(model), [check("a"), check("b")])) == [
         ("a", "can_view", ["a"]),
         ("b", "can_view", ["b"]),
     ]
@@ -255,6 +283,27 @@ def test_rewrites_that_only_look_like_aliases_are_not_merged(can_view):
         ],
     )
 
-    groups = resolve(model, [check("a", relation="viewer"), check("b")])
+    groups = resolve(ModelAliases(model), [check("a", relation="viewer"), check("b")])
 
     assert sent(groups) == [("a", "viewer", ["a"]), ("b", "can_view", ["b"])]
+
+
+def test_model_aliases_rejects_an_empty_model():
+    with pytest.raises(ValueError, match="The authorization model response is empty"):
+        ModelAliases(None)
+
+
+def test_prepare_checks_needs_a_model_id():
+    with pytest.raises(FgaValidationException, match="authorization_model_id"):
+        prepare_checks([check("a")], None)
+
+
+def test_prepare_checks_fills_in_missing_ids_and_validates_them():
+    items = [check(None), check("b")]
+    prepare_checks(items, "01GXSA8YR785C4FYS3C0RTG7B1")
+
+    assert items[0].correlation_id
+    assert items[1].correlation_id == "b"
+
+    with pytest.raises(FgaValidationException):
+        prepare_checks([check("a"), check("a")], "01GXSA8YR785C4FYS3C0RTG7B1")

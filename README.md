@@ -967,30 +967,34 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 
 ###### Merge equivalent checks
 
-Set `merge_equivalent_checks` to `True` to send checks that are certain to get the same answer only once. The SDK copies each answer back, so you still get one result per check you passed in.
+If you set `merge_equivalent_checks` to `True` in the options, the SDK sends checks that will get the same answer only once, then copies that answer back to each of them. You still get one result for every check you passed in.
 
-It merges:
-- **Aliases:** with `define can_view: viewer`, checking both `viewer` and `can_view` for the same user and object sends one check. Chains like `define can_share: can_view` work too.
-- **Exact repeats:** the same user, relation, object, context and contextual tuples.
+Two kinds of checks are merged:
+
+- Checks on a relation that is an alias of another one. With `define can_view: viewer`, a check on `can_view` and a check on `viewer` for the same user and object become one check on `viewer`. Chains like `define can_share: can_view` are followed too.
+- Exact repeats, with the same user, relation, object, context and contextual tuples.
 
 ```python
 options = {
-    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",  # required, here or in the configuration
+    # Required, either here or in the configuration
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
     "merge_equivalent_checks": True,
 }
 response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), options)
-# response.checks_sent: how many checks this call actually sent
+# response.checks_sent is how many checks were sent to the server
 ```
 
-- **Off by default.** With it off, nothing changes. Leaving it out or passing `None` keeps it off; any other non-bool value, like `"true"`, fails with a validation error.
-- **Needs an authorization model ID.** Without one, the call fails before anything is sent.
-- **Reads each model once per client.** The SDK reads a model the first time it needs it and caches it. Create the client once and reuse it.
-- **Needs read access to the model.** If the credentials can't read the model (a 401 or 403, or the token request fails), the call fails with that error before any check is sent. Turn the option off for credentials that can only run checks.
-- **Fails early if the model doesn't exist.** If the model or store isn't found, the call fails with that error before any check is sent, as BatchCheck would.
-- **Falls back on other read failures.** If the read fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks unmerged. A 429 is remembered for about a minute; other failures are retried on the next call.
-- **Errors are shared.** If a merged check returns an error, every check it stands for gets that error.
-- **Correlation IDs** must match `^[\w\d-]{1,36}$` (ASCII). Missing ones are generated.
-- **Telemetry:** see the `fga-client.batch_check.*` and `fga-client.model_cache.lookup` metrics in [OpenTelemetry](docs/opentelemetry.md).
+The option is off by default, and nothing changes while it is off. Leaving it out or setting it to `None` keeps it off. Any other value that isn't a bool, like `"true"`, fails with a validation error.
+
+To find aliases, the SDK reads the authorization model the first time it needs it and keeps it in memory, so create the client once and reuse it. The call fails before any check is sent when:
+
+- no authorization model ID is set
+- the model or the store doesn't exist
+- the credentials can't read the model (a 401 or 403, or the token request fails). If your credentials can only run checks, leave the option off.
+
+If reading the model fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks without merging them. After a 429 it waits about a minute before reading the model again. After any other failure it tries again on the next call.
+
+If a merged check returns an error, every check it stands for gets that error. Correlation IDs must match `^[\w\d-]{1,36}$` (ASCII), and missing ones are generated. For metrics, see `fga-client.batch_check.*` and `fga-client.model_cache.lookup` in [OpenTelemetry](docs/opentelemetry.md).
 
 ##### Client Batch Check
 

@@ -1,109 +1,21 @@
 """
-In-memory cache of authorization models, used by BatchCheck's `merge_equivalent_checks` option.
-
-A model never changes once it's written, so a cached model never goes stale. Only
-successful reads are cached. A 429 is remembered for a short time, so rate limiting
-doesn't add a read to every call. Other failures aren't, so the next call reads again.
-Calls for the same model share one in-flight read.
+In-memory cache of authorization models for the async client, used by BatchCheck's
+`merge_equivalent_checks` option. Calls for the same model share one in-flight read.
 """
 
 import asyncio
-import threading
-import time
 
-from collections import OrderedDict
 from collections.abc import Awaitable, Callable
-from concurrent.futures import Future
-from dataclasses import dataclass
 
-from openfga_sdk.exceptions import ApiException, AuthenticationError
-from openfga_sdk.models.authorization_model import AuthorizationModel
-
-
-MAX_MODELS = 32
-FAILURE_TTL_SECONDS = 60.0
-REMEMBERED_FAILURE_STATUSES = frozenset({429})
-CREDENTIAL_FAILURE_STATUSES = frozenset({401, 403})
-NOT_FOUND_CODES = frozenset({"authorization_model_not_found", "store_id_not_found"})
-
-ModelCacheKey = tuple[str, str]
+from openfga_sdk.client._model_cache_base import (
+    ModelCacheBase,
+    ModelCacheKey,
+    ModelLookup,
+)
+from openfga_sdk.client.equivalent_checks import ModelAliases
 
 
-def model_read_fails_call(error: Exception | None) -> bool:
-    """
-    Whether a model read error fails the BatchCheck call instead of sending the checks
-    unmerged: the model or store doesn't exist, or the credentials can't read the model
-    (a 401 or 403, or the token request failed)
-    """
-    if isinstance(error, AuthenticationError):
-        return True
-    return isinstance(error, ApiException) and (
-        error.code in NOT_FOUND_CODES or error.status in CREDENTIAL_FAILURE_STATUSES
-    )
-
-
-@dataclass
-class ModelLookup:
-    """
-    The result of a cache lookup: the model, or the error from reading it.
-    `hit` is True only when the model was already in the cache.
-    """
-
-    model: AuthorizationModel | None = None
-    hit: bool = False
-    error: Exception | None = None
-
-
-class _ModelCacheState:
-    def __init__(
-        self,
-        max_models: int = MAX_MODELS,
-        failure_ttl: float = FAILURE_TTL_SECONDS,
-        clock: Callable[[], float] = time.monotonic,
-    ) -> None:
-        self._max_models = max_models
-        self._failure_ttl = failure_ttl
-        self._clock = clock
-        self._models: OrderedDict[ModelCacheKey, AuthorizationModel] = OrderedDict()
-        self._failures: OrderedDict[ModelCacheKey, tuple[float, Exception]] = (
-            OrderedDict()
-        )
-
-    def _cached(self, key: ModelCacheKey) -> ModelLookup | None:
-        model = self._models.get(key)
-        if model is not None:
-            self._models.move_to_end(key)
-            return ModelLookup(model=model, hit=True)
-
-        failure = self._failures.get(key)
-        if failure is not None:
-            expires_at, error = failure
-            if self._clock() < expires_at:
-                return ModelLookup(error=error)
-            del self._failures[key]
-
-        return None
-
-    def _store(self, key: ModelCacheKey, model: AuthorizationModel) -> None:
-        self._failures.pop(key, None)
-        self._models[key] = model
-        self._models.move_to_end(key)
-        while len(self._models) > self._max_models:
-            self._models.popitem(last=False)
-
-    def _remember_failure(self, key: ModelCacheKey, error: Exception) -> None:
-        if not (
-            isinstance(error, ApiException)
-            and error.status in REMEMBERED_FAILURE_STATUSES
-        ):
-            return
-        self._failures[key] = (self._clock() + self._failure_ttl, error)
-        self._failures.move_to_end(key)
-        while len(self._failures) > self._max_models:
-            self._failures.popitem(last=False)
-
-
-class AsyncModelCache(_ModelCacheState):
+class AsyncModelCache(ModelCacheBase):
     """
     Model cache for the async client.
     """
@@ -115,7 +27,7 @@ class AsyncModelCache(_ModelCacheState):
     async def get(
         self,
         key: ModelCacheKey,
-        load: Callable[[], Awaitable[AuthorizationModel]],
+        load: Callable[[], Awaitable[ModelAliases]],
     ) -> ModelLookup:
         cached = self._cached(key)
         if cached is not None:
@@ -131,7 +43,7 @@ class AsyncModelCache(_ModelCacheState):
 
         # Shielded, so a cancelled caller doesn't cancel the read other callers share.
         try:
-            return ModelLookup(model=await asyncio.shield(task))
+            return ModelLookup(aliases=await asyncio.shield(task))
         except asyncio.CancelledError:
             raise
         except Exception as error:
@@ -150,74 +62,19 @@ class AsyncModelCache(_ModelCacheState):
     async def _load(
         self,
         key: ModelCacheKey,
-        load: Callable[[], Awaitable[AuthorizationModel]],
-    ) -> AuthorizationModel:
+        load: Callable[[], Awaitable[ModelAliases]],
+    ) -> ModelAliases:
         try:
-            model = await load()
+            aliases = await load()
         except Exception as error:
             self._remember_failure(key, error)
             raise
         else:
-            self._store(key, model)
-            return model
+            self._store(key, aliases)
+            return aliases
         finally:
             if self._loading.get(key) is asyncio.current_task():
                 del self._loading[key]
-
-
-class ModelCache(_ModelCacheState):
-    """
-    Model cache for the sync client. Safe to share across threads.
-    """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._lock = threading.Lock()
-        self._loading: dict[ModelCacheKey, Future] = {}
-
-    def get(
-        self,
-        key: ModelCacheKey,
-        load: Callable[[], AuthorizationModel],
-    ) -> ModelLookup:
-        with self._lock:
-            cached = self._cached(key)
-            if cached is not None:
-                return cached
-
-            future = self._loading.get(key)
-            owner = future is None
-            if owner:
-                future = Future()
-                self._loading[key] = future
-
-        if not owner:
-            try:
-                return ModelLookup(model=future.result())
-            except Exception as error:
-                return ModelLookup(error=error)
-
-        try:
-            model = load()
-        except Exception as error:
-            with self._lock:
-                self._remember_failure(key, error)
-                self._loading.pop(key, None)
-            future.set_exception(error)
-            return ModelLookup(error=error)
-        except BaseException:
-            with self._lock:
-                self._loading.pop(key, None)
-            future.set_exception(
-                RuntimeError("Reading the authorization model was interrupted")
-            )
-            raise
-
-        with self._lock:
-            self._store(key, model)
-            self._loading.pop(key, None)
-        future.set_result(model)
-        return ModelLookup(model=model)
 
 
 def _retrieve_exception(task: asyncio.Task) -> None:

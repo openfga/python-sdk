@@ -8,6 +8,7 @@ copied back to every original check. Rules: https://github.com/openfga/rfcs/pull
 import math
 import re
 import struct
+import uuid
 
 from collections import Counter
 from dataclasses import dataclass
@@ -26,6 +27,7 @@ from openfga_sdk.models.userset import Userset
 CORRELATION_ID_PATTERN = re.compile(r"^[\w\d-]{1,36}$", re.ASCII)
 
 _MISSING = ("missing",)
+_UNCOMPARABLE = ("uncomparable",)
 
 # Values nested deeper than this are sent as is, so comparing them can't run out of stack.
 _MAX_DEPTH = 100
@@ -58,6 +60,24 @@ def merge_enabled(options: dict | None) -> bool:
     return value is True
 
 
+def prepare_checks(
+    checks: list[ClientBatchCheckItem], authorization_model_id: str | None
+) -> None:
+    """
+    Check what merging needs before anything is sent: a model ID, and correlation IDs
+    that are valid and unique. Checks without a correlation ID get a generated one.
+    """
+    if authorization_model_id is None:
+        raise FgaValidationException(
+            "authorization_model_id is required when merge_equivalent_checks is on"
+        )
+
+    for check in checks:
+        if check.correlation_id is None:
+            check.correlation_id = str(uuid.uuid4())
+    validate_correlation_ids(checks)
+
+
 def validate_correlation_ids(checks: list[ClientBatchCheckItem]) -> None:
     """
     Raise if a correlation ID doesn't match the API rule, or is used twice.
@@ -86,8 +106,75 @@ def unmerged(checks: list[ClientBatchCheckItem]) -> list[EquivalentCheckGroup]:
     return [EquivalentCheckGroup(check=check, members=[check]) for check in checks]
 
 
+class ModelAliases:
+    """
+    Where every relation in a model ends after following its aliases. Worked out once
+    per model and kept in the model cache, so a call only looks relations up.
+    """
+
+    def __init__(self, model: AuthorizationModel | None) -> None:
+        if model is None:
+            raise ValueError("The authorization model response is empty")
+
+        # type -> relation -> (final relation, every relation in the chain), or None
+        # if the chain points to a missing relation or loops.
+        self._types: dict[str, dict[str, tuple[str, frozenset[str]] | None]] = {}
+        for type_definition in model.type_definitions or []:
+            relations = type_definition.relations or {}
+            self._types[type_definition.type] = {
+                relation: _resolved_chain(relations, relation) for relation in relations
+            }
+
+    def final_relation(self, check: ClientBatchCheckItem) -> str | None:
+        """
+        Return the relation to send the check with, or None to send it as is.
+        """
+        if not all(
+            isinstance(value, str)
+            for value in (check.user, check.relation, check.object)
+        ):
+            return None
+
+        object_type, separator, object_id = check.object.partition(":")
+        relations = self._types.get(object_type)
+        if not separator or relations is None or check.relation not in relations:
+            return None
+
+        user_type, separator, user_rest = check.user.partition(":")
+        if not separator or user_type not in self._types:
+            return None
+
+        user_id, userset_separator, user_relation = user_rest.partition("#")
+        if userset_separator and user_relation not in self._types[user_type]:
+            return None
+
+        resolved = relations[check.relation]
+        if resolved is None:
+            return None
+        final_relation, chain = resolved
+
+        # The server says a userset always has its own relation on its own object, at
+        # every step of a chain, so a merged check could get a different answer.
+        if (
+            userset_separator
+            and (user_type, user_id) == (object_type, object_id)
+            and user_relation in chain
+        ):
+            return None
+
+        # The server's answer can depend on which of these tuples it reads first.
+        tuple_keys = [
+            (contextual_tuple.user, contextual_tuple.relation, contextual_tuple.object)
+            for contextual_tuple in check.contextual_tuples or []
+        ]
+        if len(set(tuple_keys)) != len(tuple_keys):
+            return None
+
+        return final_relation
+
+
 def resolve(
-    model: AuthorizationModel, checks: list[ClientBatchCheckItem]
+    aliases: ModelAliases, checks: list[ClientBatchCheckItem]
 ) -> list[EquivalentCheckGroup]:
     """
     Group checks that are certain to get the same answer, and build the checks to send.
@@ -95,37 +182,39 @@ def resolve(
     The result is deterministic: the same model and checks, in the same order, give the
     same groups and IDs. Each group is placed at the position of its first check.
     """
-    types = {
-        type_definition.type: type_definition.relations or {}
-        for type_definition in model.type_definitions or []
-    }
+    finals = [aliases.final_relation(check) for check in checks]
+
+    # Comparing context and contextual tuples is the slow part, so only do it for checks
+    # that share a final relation, user and object with another check.
+    shared = Counter(
+        (final_relation, check.user, check.object)
+        for final_relation, check in zip(finals, checks, strict=True)
+        if final_relation is not None
+    )
 
     entries: list[tuple[str, ClientBatchCheckItem | tuple]] = []
     groups: dict[tuple, list[ClientBatchCheckItem]] = {}
-    finals: dict[tuple, str] = {}
 
-    for check in checks:
-        final_relation = _final_relation(types, check)
-        key = None
-        if final_relation is not None:
+    for position, (final_relation, check) in enumerate(
+        zip(finals, checks, strict=True)
+    ):
+        if final_relation is None:
+            entries.append(("as_is", check))
+            continue
+
+        key = (final_relation, check.user, check.object)
+        if shared[key] > 1:
             try:
-                key = (
-                    final_relation,
-                    check.user,
-                    check.object,
+                key += (
                     _context_key(check.context),
                     _contextual_tuples_key(check.contextual_tuples),
                 )
             except _Unmergeable:
-                key = None
-
-        if key is None:
-            entries.append(("as_is", check))
-            continue
+                # It can't be compared with the others, so it's a group of its own.
+                key += (_UNCOMPARABLE, position)
 
         if key not in groups:
             groups[key] = []
-            finals[key] = final_relation
             entries.append(("group", key))
         groups[key].append(check)
 
@@ -152,7 +241,7 @@ def resolve(
             EquivalentCheckGroup(
                 check=ClientBatchCheckItem(
                     user=first.user,
-                    relation=finals[entry],
+                    relation=entry[0],
                     object=first.object,
                     correlation_id=correlation_id,
                     contextual_tuples=first.contextual_tuples,
@@ -244,53 +333,13 @@ def _alias_chain(relations: dict[str, Userset], relation: str) -> list[str] | No
         chain.append(target)
 
 
-def _final_relation(types: dict[str, dict[str, Userset]], check) -> str | None:
-    """
-    Return the relation to send the check with, or None to send it as is.
-    """
-    if not all(
-        isinstance(value, str) for value in (check.user, check.relation, check.object)
-    ):
-        return None
-
-    object_type, separator, object_id = check.object.partition(":")
-    if not separator or object_type not in types:
-        return None
-
-    relations = types[object_type]
-    if check.relation not in relations:
-        return None
-
-    user_type, separator, user_rest = check.user.partition(":")
-    if not separator or user_type not in types:
-        return None
-
-    user_id, userset_separator, user_relation = user_rest.partition("#")
-    if userset_separator and user_relation not in types[user_type]:
-        return None
-
-    chain = _alias_chain(relations, check.relation)
+def _resolved_chain(
+    relations: dict[str, Userset], relation: str
+) -> tuple[str, frozenset[str]] | None:
+    chain = _alias_chain(relations, relation)
     if chain is None:
         return None
-
-    # The server says a userset always has its own relation on its own object, at every
-    # step of a chain, so a merged check could get a different answer.
-    if (
-        userset_separator
-        and (user_type, user_id) == (object_type, object_id)
-        and user_relation in chain
-    ):
-        return None
-
-    # The server's answer can depend on which of these tuples it reads first.
-    tuple_keys = [
-        (contextual_tuple.user, contextual_tuple.relation, contextual_tuple.object)
-        for contextual_tuple in check.contextual_tuples or []
-    ]
-    if len(set(tuple_keys)) != len(tuple_keys):
-        return None
-
-    return chain[-1]
+    return chain[-1], frozenset(chain)
 
 
 def _context_key(context) -> tuple:

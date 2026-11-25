@@ -1,16 +1,11 @@
 import asyncio
 import sys
-import threading
-import time
 
 from types import SimpleNamespace
 from unittest import IsolatedAsyncioTestCase, TestCase, skipIf
 
-from openfga_sdk.client.model_cache import (
-    AsyncModelCache,
-    ModelCache,
-    model_read_fails_call,
-)
+from openfga_sdk.client._model_cache_base import model_read_fails_call
+from openfga_sdk.client.model_cache import AsyncModelCache
 from openfga_sdk.exceptions import (
     AuthenticationError,
     ForbiddenException,
@@ -51,10 +46,10 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         results = await asyncio.gather(*lookups)
 
         self.assertEqual(reads, 1)
-        self.assertEqual([(r.model, r.hit) for r in results], [("model", False)] * 3)
+        self.assertEqual([(r.aliases, r.hit) for r in results], [("model", False)] * 3)
 
         later = await cache.get(KEY, load)
-        self.assertEqual((later.model, later.hit, reads), ("model", True, 1))
+        self.assertEqual((later.aliases, later.hit, reads), ("model", True, 1))
 
     async def test_a_failed_read_is_remembered_for_a_short_time(self):
         clock = FakeClock()
@@ -73,7 +68,7 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
 
         self.assertIs(first.error, error)
         self.assertIs(second.error, error)
-        self.assertIsNone(second.model)
+        self.assertIsNone(second.aliases)
         self.assertEqual(reads, 1)
 
         clock.now = 60
@@ -130,7 +125,7 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         cancelled.cancel()
         release.set()
 
-        self.assertEqual((await waiting).model, "model")
+        self.assertEqual((await waiting).aliases, "model")
         with self.assertRaises(asyncio.CancelledError):
             await cancelled
 
@@ -152,156 +147,34 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         async def load():
             return "model"
 
-        self.assertEqual((await cache.get(KEY, load)).model, "model")
+        self.assertEqual((await cache.get(KEY, load)).aliases, "model")
 
-
-class TestModelCache(TestCase):
-    def test_threads_share_one_read_and_later_lookups_hit(self):
-        cache = ModelCache()
-        started = threading.Event()
-        release = threading.Event()
-        reads = 0
-
-        def load():
-            nonlocal reads
-            reads += 1
-            started.set()
-            release.wait()
-            return "model"
-
-        results = []
-        owner = threading.Thread(target=lambda: results.append(cache.get(KEY, load)))
-        owner.start()
-        started.wait()
-        waiters = [
-            threading.Thread(target=lambda: results.append(cache.get(KEY, load)))
-            for _ in range(3)
-        ]
-        for waiter in waiters:
-            waiter.start()
-        release.set()
-        for thread in [owner, *waiters]:
-            thread.join()
-
-        self.assertEqual(reads, 1)
-        self.assertEqual([r.model for r in results], ["model"] * 4)
-        self.assertTrue(cache.get(KEY, load).hit)
-
-    def test_a_failed_read_is_remembered_for_a_short_time(self):
+    async def test_keys_on_both_the_store_and_the_model(self):
         clock = FakeClock()
-        cache = ModelCache(failure_ttl=60, clock=clock)
-        reads = 0
-        error = RateLimitExceededError(status=429)
-
-        def load():
-            nonlocal reads
-            reads += 1
-            raise error
-
-        self.assertIs(cache.get(KEY, load).error, error)
-        clock.now = 59
-        self.assertIs(cache.get(KEY, load).error, error)
-        self.assertEqual(reads, 1)
-
-        clock.now = 60
-        cache.get(KEY, load)
-        self.assertEqual(reads, 2)
-
-    def test_only_a_429_is_remembered(self):
-        for error, remembered in [
-            (RateLimitExceededError(status=429), True),
-            (ForbiddenException(status=403), False),
-            (UnauthorizedException(status=401), False),
-            (ValidationException(status=400), False),
-            (ServiceException(status=500), False),
-            (TimeoutError(), False),
-        ]:
-            with self.subTest(error=type(error).__name__):
-                cache = ModelCache()
-                reads = 0
-
-                def load():
-                    nonlocal reads
-                    reads += 1
-                    raise error
-
-                cache.get(KEY, load)
-                cache.get(KEY, load)
-                self.assertEqual(reads, 1 if remembered else 2)
-
-    def test_drops_the_least_recently_used_model(self):
-        cache = ModelCache(max_models=2)
-
-        def get(key):
-            return cache.get(key, lambda: f"model-{key}")
-
-        get("a")
-        get("b")
-        self.assertTrue(get("a").hit)
-        get("c")
-
-        self.assertTrue(get("a").hit)
-        self.assertFalse(get("b").hit)
-
-    def test_threads_waiting_on_a_failed_read_get_its_error(self):
-        cache = ModelCache()
-        started = threading.Event()
-        release = threading.Event()
-        error = RuntimeError("forbidden")
-
-        def load():
-            started.set()
-            release.wait()
-            raise error
-
-        results = []
-        owner = threading.Thread(target=lambda: results.append(cache.get(KEY, load)))
-        owner.start()
-        started.wait()
-        waiters = [
-            threading.Thread(target=lambda: results.append(cache.get(KEY, load)))
-            for _ in range(3)
-        ]
-        for waiter in waiters:
-            waiter.start()
-        time.sleep(0.05)
-        release.set()
-        for thread in [owner, *waiters]:
-            thread.join()
-
-        self.assertEqual([r.error for r in results], [error] * 4)
-
-    def test_remembers_a_bounded_number_of_failures(self):
-        cache = ModelCache(max_models=2)
+        cache = AsyncModelCache(clock=clock)
         reads = []
 
-        def get(key):
-            def load():
-                reads.append(key)
-                raise RateLimitExceededError(status=429)
+        async def get(store, model, error=None):
+            async def load():
+                reads.append((store, model))
+                if error is not None:
+                    raise error
+                return f"{store}/{model}"
 
-            return cache.get(key, load)
+            return await cache.get((store, model), load)
 
-        get("a")
-        get("b")
-        get("c")
-        get("b")
-        get("c")
-        self.assertEqual(reads, ["a", "b", "c"])
+        self.assertEqual((await get("a", "1")).aliases, "a/1")
+        self.assertEqual((await get("b", "1")).aliases, "b/1")
+        self.assertEqual((await get("a", "2")).aliases, "a/2")
+        self.assertTrue((await get("a", "1")).hit)
+        self.assertTrue((await get("b", "1")).hit)
+        self.assertTrue((await get("a", "2")).hit)
+        self.assertEqual(reads, [("a", "1"), ("b", "1"), ("a", "2")])
 
-        get("a")
-        self.assertEqual(reads, ["a", "b", "c", "a"])
-
-    def test_an_interrupted_read_is_not_cached(self):
-        cache = ModelCache()
-
-        def interrupt():
-            raise KeyboardInterrupt()
-
-        with self.assertRaises(KeyboardInterrupt):
-            cache.get(KEY, interrupt)
-
-        self.assertEqual(cache.get(KEY, lambda: "model").model, "model")
+        await get("c", "1", RateLimitExceededError(status=429))
+        self.assertEqual((await get("d", "1")).aliases, "d/1")
+        self.assertEqual((await get("c", "2")).aliases, "c/2")
+        self.assertEqual(reads[3:], [("c", "1"), ("d", "1"), ("c", "2")])
 
 
 def with_code(error, code):
