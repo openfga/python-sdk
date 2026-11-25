@@ -20,6 +20,7 @@ from openfga_sdk.exceptions import (
     ServiceException,
 )
 from openfga_sdk.oauth2_common import _TokenState, jitter
+from openfga_sdk.sync.rest import NETWORK_ERRORS
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
 
@@ -123,6 +124,11 @@ class OAuth2Client:
                 # The REST client raises on 429 and 5xx responses instead of returning them,
                 # so retry here, like the status check below intends. 501 isn't retried.
                 if attempt < max_retry and err.status != 501:
+                    time.sleep(jitter(attempt, min_wait_in_ms))
+                    continue
+                raise
+            except NETWORK_ERRORS:
+                if attempt < max_retry:
                     time.sleep(jitter(attempt, min_wait_in_ms))
                     continue
                 raise

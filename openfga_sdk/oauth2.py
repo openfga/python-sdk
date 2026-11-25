@@ -4,6 +4,7 @@ import random
 
 from datetime import datetime, timedelta
 
+import aiohttp
 import urllib3
 
 from openfga_sdk._version import USER_AGENT
@@ -19,6 +20,7 @@ from openfga_sdk.exceptions import (
     ServiceException,
 )
 from openfga_sdk.oauth2_common import _TokenState, jitter
+from openfga_sdk.rest import NETWORK_ERRORS
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
 
@@ -122,6 +124,14 @@ class OAuth2Client:
                 # The REST client raises on 429 and 5xx responses instead of returning them,
                 # so retry here, like the status check below intends. 501 isn't retried.
                 if attempt < max_retry and err.status != 501:
+                    await asyncio.sleep(jitter(attempt, min_wait_in_ms))
+                    continue
+                raise
+            except aiohttp.ClientConnectorCertificateError:
+                # Also a network error, but retrying won't fix it
+                raise
+            except NETWORK_ERRORS:
+                if attempt < max_retry:
                     await asyncio.sleep(jitter(attempt, min_wait_in_ms))
                     continue
                 raise

@@ -2,7 +2,7 @@ import json
 import logging
 import ssl
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -457,6 +457,9 @@ def test_stream_happy_path():
             # Single chunk with two JSON lines
             yield b'{"foo":"bar"}\n{"hello":"world"}'
 
+        def close(self):
+            pass
+
         def release_conn(self):
             pass
 
@@ -508,6 +511,9 @@ def test_stream_partial_chunks():
             yield b'{"foo":"b'
             yield b'ar"}\n{"hello":"world"}'
 
+        def close(self):
+            pass
+
         def release_conn(self):
             pass
 
@@ -558,15 +564,17 @@ def test_stream_exception_in_chunks():
             # Raise an exception while streaming
             raise ValueError("Boom!")
 
+        def close(self):
+            pass
+
         def release_conn(self):
             pass
 
     mock_response = FakeHTTPResponse()
     mock_pool_manager.request.return_value = mock_response
 
-    results = list(client.stream("GET", "http://example.com"))
-    # Exception is logged, we yield nothing
-    assert results == []
+    with pytest.raises(ValueError, match="Boom!"):
+        list(client.stream("GET", "http://example.com"))
     mock_pool_manager.request.assert_called_once()
 
 
@@ -609,8 +617,7 @@ def test_stream_releases_conn_on_error_status():
     mock_pool_manager.request.return_value = mock_response
 
     with pytest.raises(ServiceException):
-        # Must consume the generator to trigger the finally block
-        list(client.stream("GET", "http://example.com"))
+        client.stream("GET", "http://example.com")
 
     # The critical assertion: release_conn() must be called even though
     # handle_response_exception raised ServiceException
@@ -658,6 +665,51 @@ def test_stream_releases_conn_on_success():
 
     assert results == [{"ok": True}]
     mock_response.release_conn.assert_called_once()
+
+
+def test_stream_closes_response_when_closed_before_reading():
+    """Ensure a stream closed before reading closes the response before
+    releasing it, so a connection with unread data isn't reused."""
+    mock_config = MagicMock(
+        spec=[
+            "verify_ssl",
+            "ssl_ca_cert",
+            "cert_file",
+            "key_file",
+            "assert_hostname",
+            "retries",
+            "socket_options",
+            "connection_pool_maxsize",
+            "timeout_millisec",
+            "proxy",
+            "proxy_headers",
+        ]
+    )
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.timeout_millisec = 5000
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_pool_manager = MagicMock()
+    client.pool_manager = mock_pool_manager
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.reason = "OK"
+
+    mock_pool_manager.request.return_value = mock_response
+
+    stream = client.stream("GET", "http://example.com")
+    mock_response.release_conn.assert_not_called()
+
+    stream.close()
+
+    assert mock_response.method_calls == [call.close(), call.release_conn()]
 
 
 # Tests for SSL Context Reuse (fix for OpenSSL 3.0+ performance issues)

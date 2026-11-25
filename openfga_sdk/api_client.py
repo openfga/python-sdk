@@ -11,6 +11,8 @@ import urllib
 from email.utils import parsedate_to_datetime
 from multiprocessing.pool import ThreadPool
 
+import aiohttp
+
 from dateutil.parser import parse  # type: ignore[import-untyped]
 
 import openfga_sdk.models
@@ -333,6 +335,29 @@ class ApiClient:
                     if isinstance(operation_name, str):
                         e.operation_name = operation_name.lower()
                 raise e
+            except aiohttp.ClientConnectorCertificateError:
+                # Also a network error, but retrying won't fix it
+                raise
+            except rest.NETWORK_ERRORS:
+                if retry == max_retry:
+                    raise
+
+                _telemetry_attributes = TelemetryAttributes.fromResponse(
+                    credentials=self.configuration.credentials,
+                    attributes=_telemetry_attributes,
+                    start=start,
+                )
+
+                self._telemetry.metrics.request(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
+                await asyncio.sleep(
+                    min(random_time(retry, min_wait_in_ms), max_wait_in_sec)
+                )
+
+                continue
             except ApiException as e:
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
@@ -684,7 +709,7 @@ class ApiClient:
             )
 
         if _streaming:
-            return self.rest_client.stream(
+            return await self.rest_client.stream(
                 method,
                 url,
                 query_params=query_params,

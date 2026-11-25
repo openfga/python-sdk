@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import logging
@@ -22,6 +23,12 @@ from openfga_sdk.redaction import redact_response_body
 
 
 logger = logging.getLogger(__name__)
+
+NETWORK_ERRORS = (
+    aiohttp.ClientConnectionError,
+    aiohttp.ClientPayloadError,
+    asyncio.TimeoutError,
+)
 
 
 class RESTResponse(io.IOBase):
@@ -336,7 +343,7 @@ class RESTClientObject:
         :param body: Optional body for the request.
         :param post_params: Optional form/multipart parameters.
         :param _request_timeout: An optional request timeout in seconds.
-        :yields: Parsed JSON objects as Python data structures.
+        :return: An async iterator of parsed JSON objects.
         """
 
         # Build our request payload
@@ -351,36 +358,41 @@ class RESTClientObject:
             _request_timeout=_request_timeout,
         )
 
+        # Send the request and check its status before returning the stream
+        stream = self._stream(args)
+        await anext(stream)
+        return stream
+
+    async def _stream(self, args: dict):
+        """
+        Sends the request and yields once its status is checked, then yields
+        JSON objects from the response and releases it.
+        """
+
+        # Send request, collect response handler
+        response = await self.pool_manager.request(**args)
+
         # Initialize buffers for data chunks
         buffer = bytearray()
         leftover = b""
-        response: aiohttp.ClientResponse | None = None
 
         try:
-            # Send request, collect response handler
-            async with self.pool_manager.request(**args) as resp:
-                response = resp
-                try:
-                    # Iterate over streamed/chunked response data
-                    async for data, _ in resp.content.iter_chunks():
-                        if data:
-                            # Process data chunk
-                            leftover, decoded_objects = self._accumulate_json_lines(
-                                leftover, data, buffer
-                            )
+            # Handle any HTTP errors that may have occurred
+            await self.handle_response_exception(response)
+            yield
 
-                            # Yield any complete objects
-                            for obj in decoded_objects:
-                                yield obj
+            # Iterate over streamed/chunked response data
+            async for data, _ in response.content.iter_chunks():
+                if data:
+                    # Process data chunk
+                    leftover, decoded_objects = self._accumulate_json_lines(
+                        leftover, data, buffer
+                    )
 
-                except Exception as e:
-                    logger.exception("Stream reading error: %s", e)
+                    # Yield any complete objects
+                    for obj in decoded_objects:
+                        yield obj
 
-        except Exception as conn_err:
-            logger.exception("Connection or request setup error: %s", conn_err)
-
-        # Handle any remaining data after stream ends
-        if response is not None:
             # Check for any leftover data
             if leftover:
                 try:
@@ -396,16 +408,8 @@ class RESTClientObject:
             # Decode the complete/buffered data for logging purposes
             if isinstance(response, aiohttp.ClientResponse):
                 logger.debug("response body: %s", buffer.decode("utf-8"))
-
-            try:
-                # Handle any HTTP errors that may have occurred
-                await self.handle_response_exception(response)
-            finally:
-                # Release the response object back to the connection pool.
-                # This must always run, even if handle_response_exception raises,
-                # to avoid leaking the connection (preload_content=False means
-                # the connection is not auto-released).
-                response.release()
+        finally:
+            response.release()
 
     async def request(
         self,

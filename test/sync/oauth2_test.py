@@ -429,6 +429,50 @@ This is not a JSON response
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
+    def test_get_authentication_retries_network_errors(self, mock_request):
+        """
+        Token requests that fail with a network error are retried
+        """
+        response_body = '{"expires_in": 120, "access_token": "AABBCCDD"}'
+        mock_request.side_effect = [
+            urllib3.exceptions.ProtocolError("Connection aborted."),
+            urllib3.exceptions.ConnectTimeoutError(),
+            mock_response(response_body, 200),
+        ]
+
+        configuration = Configuration()
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        auth_header = client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 3)
+        self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+        rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_get_authentication_raises_network_error_when_retries_exhausted(
+        self, mock_request
+    ):
+        """
+        After max_retry retries, the last network error is raised
+        """
+        mock_request.side_effect = urllib3.exceptions.ProtocolError(
+            "Connection aborted."
+        )
+
+        configuration = Configuration()
+        configuration.retry_params.max_retry = 2
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        with self.assertRaises(urllib3.exceptions.ProtocolError):
+            client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 3)
+        rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
     def test_get_authentication_retries_5xx_responses(self, mock_request):
         """
         Receiving a 5xx response from the server should be retried
