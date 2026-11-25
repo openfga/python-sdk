@@ -8,6 +8,7 @@ import re
 import time
 import urllib
 
+from email.utils import parsedate_to_datetime
 from multiprocessing.pool import ThreadPool
 
 from dateutil.parser import parse  # type: ignore[import-untyped]
@@ -19,6 +20,7 @@ from openfga_sdk._version import USER_AGENT as DEFAULT_USER_AGENT
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import (
     MAX_BACKOFF_TIME_IN_SEC,
+    RETRY_AFTER_HEADER_NAME,
     RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC,
 )
 from openfga_sdk.exceptions import (
@@ -38,6 +40,9 @@ def random_time(loop_count, min_wait_in_ms) -> float:
     """
     minimum = math.ceil(2**loop_count * min_wait_in_ms)
     maximum = math.ceil(2 ** (loop_count + 1) * min_wait_in_ms)
+    # randrange() raises on an empty range, e.g. when min_wait_in_ms is 0
+    if maximum <= minimum:
+        return minimum / 1000
     return random.randrange(minimum, maximum) / 1000
 
 
@@ -299,6 +304,7 @@ class ApiClient:
                         configuration=self.configuration.telemetry,
                     )
 
+                    wait_time_in_sec: float
                     try:
                         wait_time_in_sec = self._parse_retry_after_header(e.header)
                     except ValueError:
@@ -423,23 +429,24 @@ class ApiClient:
                 return (return_data, response_data.status, response_data.headers)
 
     def _parse_retry_after_header(self, headers) -> int:
-        retry_after_header = headers.get("retry-after")
+        retry_after_header = headers.get(RETRY_AFTER_HEADER_NAME.lower())
         if not retry_after_header:
             raise ValueError("Retry-After header is not present")
 
+        # RFC 9110: Retry-After is either delay-seconds or an HTTP-date
         try:
-            parsed_http_date = self.__deserialize_datetime(retry_after_header).replace(
-                tzinfo=datetime.timezone.utc
-            )
-            now = datetime.datetime.now(datetime.timezone.utc)
-            wait_time_in_sec = (parsed_http_date - now).total_seconds()
-        except ApiException:
             wait_time_in_sec = int(retry_after_header)
+        except ValueError:
+            try:
+                retry_at = parsedate_to_datetime(retry_after_header)
+            except (OverflowError, ValueError) as e:
+                raise ValueError("Retry-After header is invalid") from e
+            if retry_at.tzinfo is None:
+                retry_at = retry_at.replace(tzinfo=datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.timezone.utc)
+            wait_time_in_sec = (retry_at - now).total_seconds()
 
-        if (
-            wait_time_in_sec > RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC
-            or wait_time_in_sec < 1
-        ):
+        if not 1 <= wait_time_in_sec <= RETRY_HEADER_MAX_ALLOWABLE_DURATION_IN_SEC:
             raise ValueError("Retry-After header is invalid")
 
         return math.ceil(wait_time_in_sec)

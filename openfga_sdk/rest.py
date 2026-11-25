@@ -18,6 +18,7 @@ from openfga_sdk.exceptions import (
     UnauthorizedException,
     ValidationException,
 )
+from openfga_sdk.redaction import redact_response_body
 
 
 logger = logging.getLogger(__name__)
@@ -456,7 +457,8 @@ class RESTClientObject:
             wrapped_response = RESTResponse(raw_response, data)
 
             # Log the response body
-            logger.debug("response body: %s", data.decode("utf-8"))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("response body: %s", redact_response_body(data))
 
         # Handle any errors that may have occurred
         await self.handle_response_exception(raw_response)

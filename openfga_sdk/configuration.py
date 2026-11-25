@@ -1,5 +1,4 @@
 import copy
-import http
 import logging
 import sys
 import urllib
@@ -305,7 +304,8 @@ class Configuration:
         """Safe chars for path_param
         """
         self.retries = None
-        """Adding retries to override urllib3 default value 3
+        """urllib3 Retry for the sync client. Defaults to 3 retries with
+        Retry-After handling disabled; the SDK retries 429/5xx itself.
         """
         # Enable client side validation
         self.client_side_validation = True
@@ -422,15 +422,11 @@ class Configuration:
             # if debug status is True, turn on debug logging
             for _, logger in self.logger.items():
                 logger.setLevel(logging.DEBUG)
-            # turn on httplib debug
-            http.client.HTTPConnection.set_debuglevel(http.client.HTTPConnection, 1)
         else:
             # if debug status is False, turn off debug logging,
             # setting log level to default `logging.WARNING`
             for _, logger in self.logger.items():
                 logger.setLevel(logging.WARNING)
-            # turn off httplib debug
-            http.client.HTTPConnection.set_debuglevel(http.client.HTTPConnection, 0)
 
     @property
     def logger_format(self):

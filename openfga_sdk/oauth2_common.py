@@ -19,7 +19,11 @@ def jitter(loop_count, min_wait_in_ms):
     """
     minimum = math.ceil(2**loop_count * min_wait_in_ms)
     maximum = math.ceil(2 ** (loop_count + 1) * min_wait_in_ms)
-    jitter = random.randrange(minimum, maximum) / 1000
+    # randrange() raises on an empty range, e.g. when min_wait_in_ms is 0
+    if maximum <= minimum:
+        jitter = minimum / 1000
+    else:
+        jitter = random.randrange(minimum, maximum) / 1000
 
     # If running in pytest, set jitter to 0 to speed up tests
     if "pytest" in sys.modules:
