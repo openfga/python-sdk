@@ -336,6 +336,10 @@ class RESTClientObject:
         Streams JSON objects from a specified endpoint, handling partial chunks
         and leftover data at the end of the stream.
 
+        The request is sent and the status checked before returning, so errors
+        raise here. The returned iterator holds the connection until it is
+        exhausted or closed.
+
         :param method: The HTTP method (GET, POST, etc.).
         :param url: The endpoint URL.
         :param query_params: Query parameters to be appended to the URL.

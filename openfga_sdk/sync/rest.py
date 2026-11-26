@@ -23,7 +23,9 @@ from openfga_sdk.redaction import redact_response_body
 
 logger = logging.getLogger(__name__)
 
-# TimeoutError also covers NewConnectionError and NameResolutionError.
+# urllib3 errors retried by the sync client; the async client has its own tuple
+# in openfga_sdk.rest. TimeoutError also covers NewConnectionError and
+# NameResolutionError.
 NETWORK_ERRORS = (
     urllib3.exceptions.ProtocolError,
     urllib3.exceptions.ProxyError,
@@ -393,6 +395,10 @@ class RESTClientObject:
         """
         Streams JSON objects from a specified endpoint, reassembling partial chunks
         and yielding one decoded object at a time.
+
+        The request is sent and the status checked before returning, so errors
+        raise here. The returned iterator holds the connection until it is
+        exhausted or closed.
 
         :param method: The HTTP method (GET, POST, etc.).
         :param url: The endpoint URL.
