@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
+from openfga_sdk.configuration import RetryParams
 from openfga_sdk.exceptions import (
     AuthenticationError,
     FgaValidationException,
@@ -24,7 +25,6 @@ from test.client.batch_check_merge_test import (
     MODEL,
     MODEL_ID,
     MODELS_URL,
-    NO_RETRY,
     OTHER_MODEL_ID,
     STORE_ID,
     UNMERGED,
@@ -286,8 +286,8 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
             with self.assertLogs(
                 "openfga_sdk.client._batch_check_merge", "WARNING"
             ) as logs:
-                response = self.batch_check(client, checks(), NO_RETRY)
-            self.batch_check(client, checks(), NO_RETRY)
+                response = self.batch_check(client, checks())
+            self.batch_check(client, checks())
 
         self.assertEqual(len(logs.records), 1)
         self.assertIn("429", logs.output[0])
@@ -316,8 +316,8 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
                     with self.assertLogs(
                         "openfga_sdk.client._batch_check_merge", "WARNING"
                     ):
-                        response = self.batch_check(client, checks(), NO_RETRY)
-                        self.batch_check(client, checks(), NO_RETRY)
+                        response = self.batch_check(client, checks())
+                        self.batch_check(client, checks())
 
                 self.assertEqual(sent_checks(server), UNMERGED * 2)
                 self.assertEqual(response.checks_sent, 4)
@@ -329,6 +329,23 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
                     ],
                     status,
                 )
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_does_not_retry_the_model_read(self, mock_request):
+        retries = {"retry_params": RetryParams(max_retry=3, min_wait_in_ms=1)}
+        for model_error in [rate_limited, server_error]:
+            with self.subTest(error=model_error.__name__):
+                server = FakeServer(model_error=model_error)
+                mock_request.side_effect = server
+
+                with OpenFgaClient(self.configuration) as client:
+                    with self.assertLogs(
+                        "openfga_sdk.client._batch_check_merge", "WARNING"
+                    ):
+                        self.batch_check(client, checks(), retries)
+
+                self.assertEqual(server.model_reads, 1)
+                self.assertEqual(sent_checks(server), UNMERGED)
 
     @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
     @patch(

@@ -181,8 +181,6 @@ def token_request_failed():
     return AuthenticationError(http_resp=http_mock_response("{}", 400))
 
 
-NO_RETRY = {"retry_params": RetryParams(max_retry=0)}
-
 UNMERGED = [("a", "viewer"), ("b", "can_view"), ("c", "can_share"), ("d", "editor")]
 
 
@@ -422,8 +420,8 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
             with self.assertLogs(
                 "openfga_sdk.client._batch_check_merge", "WARNING"
             ) as logs:
-                response = await self.batch_check(client, checks(), NO_RETRY)
-            second = await self.batch_check(client, checks(), NO_RETRY)
+                response = await self.batch_check(client, checks())
+            second = await self.batch_check(client, checks())
 
         self.assertEqual(len(logs.records), 1)
         self.assertIn(MODEL_ID, logs.output[0])
@@ -451,8 +449,8 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
                     with self.assertLogs(
                         "openfga_sdk.client._batch_check_merge", "WARNING"
                     ):
-                        response = await self.batch_check(client, checks(), NO_RETRY)
-                        await self.batch_check(client, checks(), NO_RETRY)
+                        response = await self.batch_check(client, checks())
+                        await self.batch_check(client, checks())
 
                 self.assertEqual(sent_checks(server), UNMERGED * 2)
                 self.assertEqual(response.checks_sent, 4)
@@ -464,6 +462,23 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
                     ],
                     status,
                 )
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_does_not_retry_the_model_read(self, mock_request):
+        retries = {"retry_params": RetryParams(max_retry=3, min_wait_in_ms=1)}
+        for model_error in [rate_limited, server_error]:
+            with self.subTest(error=model_error.__name__):
+                server = FakeServer(model_error=model_error)
+                mock_request.side_effect = server
+
+                async with OpenFgaClient(self.configuration) as client:
+                    with self.assertLogs(
+                        "openfga_sdk.client._batch_check_merge", "WARNING"
+                    ):
+                        await self.batch_check(client, checks(), retries)
+
+                self.assertEqual(server.model_reads, 1)
+                self.assertEqual(sent_checks(server), UNMERGED)
 
     @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
     @patch(
@@ -710,7 +725,7 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
 
         async with OpenFgaClient(self.configuration) as client:
             with self.assertLogs("openfga_sdk.client._batch_check_merge", "WARNING"):
-                await self.batch_check(client, checks(), NO_RETRY)
+                await self.batch_check(client, checks())
 
         attributes = mock_fallback.call_args.kwargs["attributes"]
         self.assertEqual(attributes[TelemetryAttributes.http_response_status_code], 429)

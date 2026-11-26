@@ -992,7 +992,15 @@ To find aliases, the SDK reads the authorization model the first time it needs i
 - the model or the store doesn't exist
 - the credentials can't read the model (a 401 or 403, or the token request fails). If your credentials can only run checks, leave the option off.
 
-If reading the model fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks without merging them. After a 429 it waits about a minute before reading the model again. After any other failure it tries again on the next call.
+If reading the model fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks without merging them. It doesn't retry this read, even if you set `retry_params`, so a failed read costs one request. After a 429 it waits about a minute before reading the model again. After any other failure it tries again on the next call.
+
+Compared with leaving the option off, a call:
+
+- makes one extra request the first time the client needs a model, to read it. Later calls use the copy in memory, and calls running at the same time share one read.
+- spends a little time grouping the checks and copying the answers back. This happens in memory and is small next to a request.
+- sends fewer checks when some of them merge, so the checks themselves can finish sooner.
+
+Each client reads each model once. Some services rate limit model reads much lower than checks, so if many clients start at the same time, some may get a 429 and send checks unmerged for about a minute.
 
 If a merged check returns an error, every check it stands for gets that error. Correlation IDs must match `^[\w\d-]{1,36}$` (ASCII), and missing ones are generated. For metrics, see `fga-client.batch_check.*` and `fga-client.model_cache.lookup` in [OpenTelemetry](docs/opentelemetry.md).
 

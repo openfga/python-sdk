@@ -49,6 +49,7 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
+from openfga_sdk.configuration import RetryParams
 from openfga_sdk.constants import (
     CLIENT_BULK_REQUEST_ID_HEADER,
     CLIENT_MAX_BATCH_SIZE,
@@ -145,10 +146,14 @@ def _model_read_kwargs(
     options: dict[str, int | str | dict[str, int | str]] | None = None,
 ) -> dict[str, int | str | dict[str, int | str]]:
     """
-    Return the kwargs a BatchCheck call passes on to its authorization model read
+    Return the kwargs a BatchCheck call passes on to its authorization model read.
+    The read is never retried: if it fails, the checks are sent unmerged right away.
     """
-    kwargs = options_to_kwargs(options)
-    return {key: kwargs[key] for key in ("_headers", "_retry_params") if key in kwargs}
+    kwargs = {"_retry_params": RetryParams(max_retry=0)}
+    headers = options_to_kwargs(options).get("_headers")
+    if headers:
+        kwargs["_headers"] = headers
+    return kwargs
 
 
 def options_to_transaction_info(
@@ -979,9 +984,8 @@ class OpenFgaClient:
     ) -> ModelLookup:
         """
         Read an authorization model through the client's model cache, and work out its
-        aliases for merge_equivalent_checks
+        aliases for merge_equivalent_checks. The read is never retried.
         :param header(options) - Custom headers to send alongside the request
-        :param retryParams(options) - Override the retry parameters for this request
         """
 
         async def load():
