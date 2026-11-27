@@ -149,7 +149,9 @@ class TelemetryMetrics:
         configuration: TelemetryConfiguration | None = None,
     ) -> Counter:
         """
-        Record a BatchCheck call sent unmerged because the authorization model couldn't be read.
+        Record a BatchCheck call sent unmerged because the authorization model read
+        failed with an error that doesn't fail the call (such as a 429, a 5xx or a
+        timeout), or the checks couldn't be grouped.
         """
         return self._add(
             TelemetryCounters.fga_client_batch_check_merge_fallback,
