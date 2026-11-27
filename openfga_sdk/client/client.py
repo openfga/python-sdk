@@ -8,6 +8,7 @@ from typing import Any
 from openfga_sdk.api.open_fga_api import OpenFgaApi
 from openfga_sdk.api_client import ApiClient
 from openfga_sdk.client._batch_check_merge import (
+    TokenWatch,
     checks_to_send,
     log_model_read_failure,
     model_read_kwargs,
@@ -19,7 +20,7 @@ from openfga_sdk.client._equivalent_checks import (
     prepare_checks,
 )
 from openfga_sdk.client._model_cache import AsyncModelCache
-from openfga_sdk.client._model_cache_base import ModelLookup
+from openfga_sdk.client._model_cache_base import ModelLookup, TokenRequestFailed
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
@@ -932,7 +933,6 @@ class OpenFgaClient:
         if not checks:
             return ClientBatchCheckResponse([], checks_sent=0)
 
-        await self._fetch_token()
         lookup = await self._read_and_cache_model_aliases(
             store_id, authorization_model_id, options
         )
@@ -956,17 +956,6 @@ class OpenFgaClient:
             expand(checks, groups, results), checks_sent=len(groups)
         )
 
-    async def _fetch_token(self) -> None:
-        """
-        Get the access token before the model read, if the client uses client
-        credentials. The checks need the same token, so if it can't be fetched the call
-        fails with that error, as it would with the option off, instead of falling back
-        or being remembered as a model read failure.
-        """
-        oauth2_client = self._api._oauth2_client
-        if oauth2_client is not None:
-            await oauth2_client.get_authentication_header(self._api_client.rest_client)
-
     async def _read_and_cache_model_aliases(
         self,
         store_id: str,
@@ -975,17 +964,21 @@ class OpenFgaClient:
     ) -> ModelLookup:
         """
         Read an authorization model through the client's model cache, and work out its
-        aliases for merge_equivalent_checks. The read is never retried.
+        aliases for merge_equivalent_checks. The read is never retried. If it fails
+        because the SDK couldn't get an access token, the error is a TokenRequestFailed.
         :param header(options) - Custom headers to send alongside the request
         """
 
         async def load():
+            token = TokenWatch(self._api._oauth2_client)
             try:
                 response = await self._api.read_authorization_model(
                     authorization_model_id, **model_read_kwargs(options)
                 )
                 return ModelAliases(response.authorization_model)
             except Exception as error:
+                if token.token_request_failed():
+                    raise TokenRequestFailed(error) from error
                 log_model_read_failure(error, store_id, authorization_model_id)
                 raise
 

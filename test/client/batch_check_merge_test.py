@@ -81,6 +81,16 @@ def token_issued():
     return mock_response(json.dumps({"access_token": "token", "expires_in": 3600}))
 
 
+def short_lived_token_issued():
+    # Expires within the SDK's renewal buffer, so every request gets a new token
+    return mock_response(json.dumps({"access_token": "token", "expires_in": 300}))
+
+
+def short_lived_tokens_then_rate_limited(count):
+    responses = iter([short_lived_token_issued] * count)
+    return lambda: next(responses, rate_limited)()
+
+
 def no_token_issued():
     return mock_response("{}")
 
@@ -625,6 +635,51 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         self.assertEqual(server.model_reads, 1)
         self.assertEqual(sent_checks(server), [("merged-1", "viewer"), ("d", "editor")])
         self.assertEqual(response.checks_sent, 2)
+
+    @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_fails_when_the_model_read_cannot_renew_the_token(
+        self, mock_request, mock_fallback
+    ):
+        for renewals in [0, 1]:
+            with self.subTest(renewals_before_failing=renewals):
+                server = FakeServer(token=short_lived_token_issued)
+                mock_request.side_effect = server
+
+                async with OpenFgaClient(token_configuration()) as client:
+                    await client.batch_check(ClientBatchCheckRequest(checks=checks()))
+                    server.token = short_lived_tokens_then_rate_limited(renewals)
+
+                    with self.assertNoLogs(
+                        "openfga_sdk.client._batch_check_merge", "WARNING"
+                    ):
+                        with self.assertRaises(RateLimitExceededError):
+                            await self.batch_check(client, checks())
+
+                    server.token = short_lived_token_issued
+                    response = await self.batch_check(client, checks())
+
+                self.assertEqual(server.model_reads, 1)
+                self.assertEqual(response.checks_sent, 2)
+
+        mock_fallback.assert_not_called()
+
+    @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_sends_unmerged_when_the_read_fails_after_renewing_the_token(
+        self, mock_request, mock_fallback
+    ):
+        server = FakeServer(model_error=rate_limited, token=short_lived_token_issued)
+        mock_request.side_effect = server
+
+        async with OpenFgaClient(token_configuration()) as client:
+            with self.assertLogs("openfga_sdk.client._batch_check_merge", "WARNING"):
+                response = await self.batch_check(client, checks())
+
+        self.assertEqual(server.model_reads, 1)
+        self.assertEqual(sent_checks(server), UNMERGED)
+        self.assertEqual(response.checks_sent, 4)
+        mock_fallback.assert_called_once()
 
     @patch.object(rest.RESTClientObject, "request")
     async def test_fails_before_sending_when_the_model_does_not_exist(

@@ -26,13 +26,26 @@ NOT_FOUND_CODES = frozenset({"authorization_model_not_found", "store_id_not_foun
 ModelCacheKey = tuple[str, str]
 
 
+class TokenRequestFailed(Exception):
+    """
+    The model read failed because the SDK couldn't get an access token for it. The call
+    fails with `error`, as it would with the option off, and the failure isn't
+    remembered.
+    """
+
+    def __init__(self, error: Exception) -> None:
+        super().__init__(str(error))
+        self.error = error
+
+
 def model_read_fails_call(error: Exception | None) -> bool:
     """
     Whether a model read error fails the BatchCheck call instead of sending the checks
-    unmerged: the model or store doesn't exist, or the credentials can't read the model
-    (a 401 or 403). Token request failures never get here: the clients get the token
-    before the read, and fail the call if they can't.
+    unmerged: the SDK couldn't get an access token, the model or store doesn't exist, or
+    the credentials can't read the model (a 401 or 403).
     """
+    if isinstance(error, TokenRequestFailed):
+        return True
     return isinstance(error, ApiException) and (
         error.code in NOT_FOUND_CODES or error.status in CREDENTIAL_FAILURE_STATUSES
     )

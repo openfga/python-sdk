@@ -11,7 +11,11 @@ from openfga_sdk.client._equivalent_checks import (
     resolve,
     unmerged,
 )
-from openfga_sdk.client._model_cache_base import ModelLookup, model_read_fails_call
+from openfga_sdk.client._model_cache_base import (
+    ModelLookup,
+    TokenRequestFailed,
+    model_read_fails_call,
+)
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.configuration import RetryParams
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
@@ -32,6 +36,24 @@ def model_read_kwargs(
     if options is not None and options.get("headers"):
         kwargs["_headers"] = options["headers"]
     return kwargs
+
+
+class TokenWatch:
+    """
+    Tells whether a failed request failed because the SDK couldn't get an access token
+    for it. A request first gets a new token if there's none or the cached one is close
+    to expiring, and a successful token request always replaces the cached token. So if
+    the token was due for renewal before the request, and is the same one after it
+    failed, the token request is what failed.
+    """
+
+    def __init__(self, oauth2_client) -> None:
+        self._oauth2_client = oauth2_client
+        self._renewing = oauth2_client is not None and not oauth2_client._token_valid()
+        self._token = oauth2_client._token_state if self._renewing else None
+
+    def token_request_failed(self) -> bool:
+        return self._renewing and self._oauth2_client._token_state is self._token
 
 
 def log_model_read_failure(
@@ -67,8 +89,11 @@ def checks_to_send(
 
     if lookup.aliases is None:
         if model_read_fails_call(lookup.error):
-            # BatchCheck would fail too if the model is missing, and falling back on a
-            # 401 or 403 would hide wrong credentials. Fail before sending anything.
+            # BatchCheck would fail too without a token or if the model is missing, and
+            # falling back on a 401 or 403 would hide wrong credentials. Fail before
+            # sending anything.
+            if isinstance(lookup.error, TokenRequestFailed):
+                raise lookup.error.error
             raise lookup.error
         groups = unmerged(checks)
         metrics.fallback(getattr(lookup.error, "status", None))
