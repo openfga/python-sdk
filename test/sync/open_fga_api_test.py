@@ -119,6 +119,38 @@ class TestOpenFgaApiSync(IsolatedAsyncioTestCase):
     def tearDown(self):
         pass
 
+    @patch.object(ApiClient, "call_api")
+    def test_execute_streamed_api_request_closes_stream_when_closed_early(
+        self, mock_stream
+    ):
+        """Closing the returned iterator closes the underlying stream at once."""
+        closed = []
+
+        def spy_stream():
+            try:
+                yield {"result": {"object": "document:roadmap"}}
+                yield {"result": {"object": "document:budget"}}
+            finally:
+                closed.append(True)
+
+        mock_stream.return_value = spy_stream()
+
+        with ApiClient(self.configuration) as api_client:
+            api_instance = open_fga_api.OpenFgaApi(api_client)
+            stream = api_instance.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={},
+            )
+            self.assertEqual(next(stream), {"result": {"object": "document:roadmap"}})
+            self.assertEqual(closed, [])
+
+            stream.close()
+
+            self.assertEqual(closed, [True])
+
     @patch.object(rest.RESTClientObject, "request")
     def test_check(self, mock_request):
         """Test case for check

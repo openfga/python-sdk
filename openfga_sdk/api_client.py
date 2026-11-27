@@ -11,6 +11,8 @@ import urllib
 from email.utils import parsedate_to_datetime
 from multiprocessing.pool import ThreadPool
 
+import aiohttp
+
 from dateutil.parser import parse  # type: ignore[import-untyped]
 
 import openfga_sdk.models
@@ -291,19 +293,19 @@ class ApiClient:
                     _streaming=_streaming,
                 )
             except (RateLimitExceededError, ServiceException) as e:
+                _telemetry_attributes = TelemetryAttributes.fromResponse(
+                    response=e.body.decode("utf-8"),
+                    credentials=self.configuration.credentials,
+                    attributes=_telemetry_attributes,
+                    start=start,
+                )
+
+                self._telemetry.metrics.request(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
                 if retry < max_retry and e.status != 501:
-                    _telemetry_attributes = TelemetryAttributes.fromResponse(
-                        response=e.body.decode("utf-8"),
-                        credentials=self.configuration.credentials,
-                        attributes=_telemetry_attributes,
-                        start=start,
-                    )
-
-                    self._telemetry.metrics.request(
-                        attributes=_telemetry_attributes,
-                        configuration=self.configuration.telemetry,
-                    )
-
                     wait_time_in_sec: float
                     try:
                         wait_time_in_sec = self._parse_retry_after_header(e.header)
@@ -333,6 +335,29 @@ class ApiClient:
                     if isinstance(operation_name, str):
                         e.operation_name = operation_name.lower()
                 raise e
+            except aiohttp.ClientSSLError:
+                # Also a network error, but retrying won't fix it
+                raise
+            except rest.NETWORK_ERRORS:
+                _telemetry_attributes = TelemetryAttributes.fromResponse(
+                    credentials=self.configuration.credentials,
+                    attributes=_telemetry_attributes,
+                    start=start,
+                )
+
+                self._telemetry.metrics.request(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
+                if retry == max_retry:
+                    raise
+
+                await asyncio.sleep(
+                    min(random_time(retry, min_wait_in_ms), max_wait_in_sec)
+                )
+
+                continue
             except ApiException as e:
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
@@ -684,7 +709,7 @@ class ApiClient:
             )
 
         if _streaming:
-            return self.rest_client.stream(
+            return await self.rest_client.stream(
                 method,
                 url,
                 query_params=query_params,

@@ -79,6 +79,7 @@ from openfga_sdk.models.write_authorization_model_response import (
 )
 from openfga_sdk.sync import rest
 from openfga_sdk.sync.client.client import OpenFgaClient, set_heading_if_not_set
+from openfga_sdk.sync.open_fga_api import OpenFgaApi
 
 
 store_id = "01YCP46JKYM8FJCQ37NMBYHE5X"
@@ -4518,6 +4519,68 @@ class TestSyncClientConfigurationHeaders(TestCase):
                 _request_timeout=None,
             )
             api_client.close()
+
+    @patch.object(OpenFgaApi, "execute_streamed_api_request")
+    def test_execute_streamed_api_request_closes_stream_when_closed_early(
+        self, mock_stream
+    ):
+        """Closing the public iterator closes the underlying stream at once."""
+        closed = []
+
+        def spy_stream():
+            try:
+                yield {"result": {"object": "document:roadmap"}}
+                yield {"result": {"object": "document:budget"}}
+            finally:
+                closed.append(True)
+
+        mock_stream.return_value = spy_stream()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        with OpenFgaClient(configuration) as api_client:
+            stream = api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={},
+            )
+            self.assertEqual(next(stream), {"result": {"object": "document:roadmap"}})
+            self.assertEqual(closed, [])
+
+            stream.close()
+
+            self.assertEqual(closed, [True])
+
+    @patch.object(OpenFgaApi, "streamed_list_objects")
+    def test_streamed_list_objects_closes_stream_when_closed_early(self, mock_stream):
+        """Closing the public iterator closes the underlying stream at once."""
+        closed = []
+
+        def spy_stream():
+            try:
+                yield {"result": {"object": "document:roadmap"}}
+                yield {"result": {"object": "document:budget"}}
+            finally:
+                closed.append(True)
+
+        mock_stream.return_value = spy_stream()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        with OpenFgaClient(configuration) as api_client:
+            stream = api_client.streamed_list_objects(
+                ClientListObjectsRequest(
+                    user="user:anne", relation="viewer", type="document"
+                )
+            )
+            self.assertEqual(next(stream).object, "document:roadmap")
+            self.assertEqual(closed, [])
+
+            stream.close()
+
+            self.assertEqual(closed, [True])
 
     @patch.object(rest.RESTClientObject, "stream")
     def test_execute_streamed_api_request_empty_stream(self, mock_stream):

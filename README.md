@@ -128,7 +128,7 @@ import openfga_sdk
 
 We strongly recommend you initialize the `OpenFgaClient` only once and then re-use it throughout your app, otherwise you will incur the cost of having to re-initialize multiple times or at every request, the cost of reduced connection pooling and re-use, and would be particularly costly in the client credentials flow, as that flow will be preformed on every request.
 
-> The `OpenFgaClient` will by default retry API requests up to 3 times on 429 and 5xx errors.
+> The `OpenFgaClient` will by default retry API requests up to 3 times on 429 and 5xx errors and on network errors.
 
 #### No Credentials
 
@@ -1385,7 +1385,9 @@ response = await fga_client.execute_api_request(
 
 ### Retries
 
-If a network request fails with a 429 or 5xx error from the server, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.
+If a request fails with a 429 or 5xx error from the server, or with a network error such as a dropped connection or timeout, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.
+
+Network errors are retried for writes too, and the timeout applies to each attempt. A write that timed out may still have been applied, so its retry can fail as a duplicate unless the [conflict options](#conflict-options-for-write-operations) are set to `IGNORE`. In the async client, aiohttp's own resend of GET, PUT and DELETE requests after a dropped connection is turned off, so `retry_params` is the only retry policy. aiohttp 3.10.x has no switch for it, so on that version such a request can be sent once more than `max_retry` allows.
 
 The SDK honors `Retry-After` delay seconds or HTTP dates up to 30 minutes. Unparseable or out-of-range values fall back to exponential backoff. In the sync client, urllib3's own `Retry-After` handling is disabled unless you set `Configuration.retries`.
 

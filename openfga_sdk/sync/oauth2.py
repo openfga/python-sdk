@@ -10,6 +10,7 @@ import urllib3
 from openfga_sdk._version import USER_AGENT
 from openfga_sdk.configuration import Configuration
 from openfga_sdk.constants import (
+    MAX_BACKOFF_TIME_IN_SEC,
     TOKEN_EXPIRY_JITTER_IN_SEC,
     TOKEN_EXPIRY_THRESHOLD_BUFFER_IN_SEC,
 )
@@ -20,6 +21,7 @@ from openfga_sdk.exceptions import (
     ServiceException,
 )
 from openfga_sdk.oauth2_common import _TokenState, jitter
+from openfga_sdk.sync.rest import NETWORK_ERRORS
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 from openfga_sdk.telemetry.telemetry import Telemetry
 
@@ -107,6 +109,15 @@ class OAuth2Client:
             else 0
         )
 
+        max_wait_in_sec = (
+            self.configuration.retry_params.max_wait_in_sec
+            if (
+                self.configuration.retry_params is not None
+                and self.configuration.retry_params.max_wait_in_sec is not None
+            )
+            else MAX_BACKOFF_TIME_IN_SEC
+        )
+
         for attempt in range(max_retry + 1):
             try:
                 raw_response = client.request(
@@ -123,13 +134,18 @@ class OAuth2Client:
                 # The REST client raises on 429 and 5xx responses instead of returning them,
                 # so retry here, like the status check below intends. 501 isn't retried.
                 if attempt < max_retry and err.status != 501:
-                    time.sleep(jitter(attempt, min_wait_in_ms))
+                    time.sleep(min(jitter(attempt, min_wait_in_ms), max_wait_in_sec))
+                    continue
+                raise
+            except NETWORK_ERRORS:
+                if attempt < max_retry:
+                    time.sleep(min(jitter(attempt, min_wait_in_ms), max_wait_in_sec))
                     continue
                 raise
 
             if 500 <= raw_response.status <= 599 or raw_response.status == 429:
                 if attempt < max_retry and raw_response.status != 501:
-                    time.sleep(jitter(attempt, min_wait_in_ms))
+                    time.sleep(min(jitter(attempt, min_wait_in_ms), max_wait_in_sec))
                     continue
 
             if 200 <= raw_response.status <= 299:

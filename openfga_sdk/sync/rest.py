@@ -23,6 +23,15 @@ from openfga_sdk.redaction import redact_response_body
 
 logger = logging.getLogger(__name__)
 
+# urllib3 errors retried by the sync client; the async client has its own tuple
+# in openfga_sdk.rest. TimeoutError also covers NewConnectionError and
+# NameResolutionError.
+NETWORK_ERRORS = (
+    urllib3.exceptions.ProtocolError,
+    urllib3.exceptions.ProxyError,
+    urllib3.exceptions.TimeoutError,
+)
+
 
 class RESTResponse(io.IOBase):
     """
@@ -168,10 +177,11 @@ class RESTClientObject:
         if hasattr(configuration, "retries") and configuration.retries is not None:
             addition_pool_args["retries"] = configuration.retries
         else:
-            # The SDK retries 429/5xx itself; keep urllib3 from also retrying
-            # idempotent requests and sleeping for an uncapped Retry-After.
+            # The SDK retries connect and read errors, 429 and 5xx itself; keep
+            # urllib3 from also retrying them or sleeping for an uncapped
+            # Retry-After. urllib3 still follows redirects and retries TLS errors.
             addition_pool_args["retries"] = urllib3.Retry(
-                total=3, respect_retry_after_header=False
+                total=3, connect=False, read=False, respect_retry_after_header=False
             )
 
         if (
@@ -386,6 +396,10 @@ class RESTClientObject:
         Streams JSON objects from a specified endpoint, reassembling partial chunks
         and yielding one decoded object at a time.
 
+        The request is sent and the status checked before returning, so errors
+        raise here. The returned iterator holds the connection until it is
+        exhausted or closed.
+
         :param method: The HTTP method (GET, POST, etc.).
         :param url: The endpoint URL.
         :param query_params: Query parameters to be appended to the URL.
@@ -393,7 +407,7 @@ class RESTClientObject:
         :param body: Optional body for the request.
         :param post_params: Optional form/multipart parameters.
         :param _request_timeout: An optional request timeout in seconds or (connect, read) tuple.
-        :yields: Parsed JSON objects as Python data structures.
+        :return: An iterator of parsed JSON objects.
         """
 
         # Build our request payload
@@ -408,14 +422,30 @@ class RESTClientObject:
             _request_timeout=_request_timeout,
         )
 
-        # Initialize buffers for data chunks
-        buffer = bytearray()
-        leftover = b""
+        # Send the request and check its status before returning the stream
+        stream = self._stream(args)
+        next(stream)
+        return stream
+
+    def _stream(self, args: dict):
+        """
+        Sends the request and yields once its status is checked, then yields
+        JSON objects from the response and releases the connection.
+        """
 
         # Send request, collect response handler
         response = self.pool_manager.request(**args)
 
+        # Initialize buffers for data chunks
+        buffer = bytearray()
+        leftover = b""
+
         try:
+            # Handle any HTTP errors that may have occurred
+            self.handle_response_exception(response)
+            # stream() resumes from here, so the errors above raise there
+            yield
+
             # Iterate over streamed/chunked response data
             for chunk in response.stream(1024):
                 # Process data chunk
@@ -426,11 +456,6 @@ class RESTClientObject:
                 # Yield any complete objects
                 yield from decoded_objects
 
-        except Exception as e:
-            logger.exception("Stream error: %s", e)
-
-        # Handle any remaining data after stream ends
-        if response is not None:
             # Check for any leftover data
             if leftover:
                 try:
@@ -442,16 +467,10 @@ class RESTClientObject:
 
                 except json.JSONDecodeError:
                     logger.debug("Incomplete leftover data at end of stream.")
-
-            try:
-                # Handle any HTTP errors that may have occurred
-                self.handle_response_exception(response)
-            finally:
-                # Release the response object back to the connection pool.
-                # This must always run, even if handle_response_exception raises,
-                # to avoid leaking the connection (preload_content=False means
-                # urllib3 does not auto-release).
-                response.release_conn()
+        finally:
+            # Close first so a connection with unread data isn't reused
+            response.close()
+            response.release_conn()
 
     def request(
         self,

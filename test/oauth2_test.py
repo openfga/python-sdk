@@ -1,9 +1,11 @@
 import asyncio
+import ssl
 
 from datetime import datetime, timedelta
 from unittest import IsolatedAsyncioTestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import aiohttp
 import urllib3
 
 from openfga_sdk import rest
@@ -313,6 +315,99 @@ This is not a JSON response
             await client.get_authentication_header(rest_client)
 
         self.assertEqual(mock_request.call_count, 1)
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_retries_network_errors(self, mock_request):
+        """
+        Token requests that fail with a network error are retried
+        """
+        response_body = '{"expires_in": 120, "access_token": "AABBCCDD"}'
+        mock_request.side_effect = [
+            aiohttp.ServerDisconnectedError(),
+            asyncio.TimeoutError(),
+            mock_response(response_body, 200),
+        ]
+
+        configuration = Configuration()
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        auth_header = await client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 3)
+        self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_raises_network_error_when_retries_exhausted(
+        self, mock_request
+    ):
+        """
+        After max_retry retries, the last network error is raised
+        """
+        mock_request.side_effect = aiohttp.ServerDisconnectedError()
+
+        configuration = Configuration()
+        configuration.retry_params.max_retry = 2
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        with self.assertRaises(aiohttp.ServerDisconnectedError):
+            await client.get_authentication_header(rest_client)
+
+        self.assertEqual(mock_request.call_count, 3)
+        await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    async def test_get_authentication_does_not_retry_tls_errors(self, mock_request):
+        """
+        Certificate and other TLS errors are raised without retrying
+        """
+        errors = [
+            aiohttp.ClientConnectorCertificateError(
+                MagicMock(), ssl.SSLCertVerificationError("certificate verify failed")
+            ),
+            aiohttp.ClientConnectorSSLError(MagicMock(), ssl.SSLError("wrong version")),
+        ]
+        for error in errors:
+            with self.subTest(error=type(error).__name__):
+                mock_request.reset_mock()
+                mock_request.side_effect = error
+
+                configuration = Configuration()
+                rest_client = rest.RESTClientObject(configuration)
+                client = OAuth2Client(self._client_credentials(), configuration)
+
+                with self.assertRaises(type(error)):
+                    await client.get_authentication_header(rest_client)
+
+                self.assertEqual(mock_request.call_count, 1)
+                await rest_client.close()
+
+    @patch.object(rest.RESTClientObject, "request")
+    @patch("openfga_sdk.oauth2.jitter", return_value=10_000)
+    @patch("asyncio.sleep")
+    async def test_get_authentication_caps_retry_wait(
+        self, mock_sleep, mock_jitter, mock_request
+    ):
+        """
+        The wait between token requests is capped by max_wait_in_sec
+        """
+        response_body = '{"expires_in": 120, "access_token": "AABBCCDD"}'
+        mock_request.side_effect = [
+            aiohttp.ServerDisconnectedError(),
+            mock_response(response_body, 200),
+        ]
+
+        configuration = Configuration()
+        configuration.retry_params.max_wait_in_sec = 7
+        rest_client = rest.RESTClientObject(configuration)
+        client = OAuth2Client(self._client_credentials(), configuration)
+
+        await client.get_authentication_header(rest_client)
+
+        mock_sleep.assert_awaited_once_with(7)
         await rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")

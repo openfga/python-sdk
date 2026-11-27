@@ -351,17 +351,13 @@ async def test_stream_happy_path():
     mock_response.data = None
     mock_response.content = FakeContent()
 
-    mock_context_manager = AsyncMock()
-    mock_context_manager.__aenter__.return_value = mock_response
-    mock_context_manager.__aexit__.return_value = None
-
-    mock_session.request.return_value = mock_context_manager
+    mock_session.request = AsyncMock(return_value=mock_response)
 
     client.handle_response_exception = AsyncMock()
     client.close = AsyncMock()
 
     results = []
-    async for item in client.stream("GET", "http://example.com"):
+    async for item in await client.stream("GET", "http://example.com"):
         results.append(item)
 
     assert results == [{"foo": "bar"}, {"hello": "world"}]
@@ -398,21 +394,15 @@ async def test_stream_exception_in_chunks():
     mock_response.data = None
     mock_response.content = FakeContent()
 
-    mock_context_manager = AsyncMock()
-    mock_context_manager.__aenter__.return_value = mock_response
-    mock_context_manager.__aexit__.return_value = None
-
-    mock_session.request.return_value = mock_context_manager
+    mock_session.request = AsyncMock(return_value=mock_response)
 
     client.handle_response_exception = AsyncMock()
     client.close = AsyncMock()
 
     results = []
-    try:
-        async for item in client.stream("GET", "http://example.com"):
+    with pytest.raises(ValueError, match="Boom!"):
+        async for item in await client.stream("GET", "http://example.com"):
             results.append(item)
-    except ValueError:
-        pass
 
     assert results == []
     client.handle_response_exception.assert_awaited_once()
@@ -446,17 +436,13 @@ async def test_stream_partial_chunks():
     mock_response.data = None
     mock_response.content = FakeContent()
 
-    mock_context_manager = AsyncMock()
-    mock_context_manager.__aenter__.return_value = mock_response
-    mock_context_manager.__aexit__.return_value = None
-
-    mock_session.request.return_value = mock_context_manager
+    mock_session.request = AsyncMock(return_value=mock_response)
 
     client.handle_response_exception = AsyncMock()
     client.close = AsyncMock()
 
     results = []
-    async for item in client.stream("GET", "http://example.com"):
+    async for item in await client.stream("GET", "http://example.com"):
         results.append(item)
 
     assert results == [{"foo": "bar"}, {"hello": "world"}]
@@ -493,11 +479,7 @@ async def test_stream_releases_conn_on_error_status():
     mock_response.data = None
     mock_response.content = FakeContent()
 
-    mock_context_manager = AsyncMock()
-    mock_context_manager.__aenter__.return_value = mock_response
-    mock_context_manager.__aexit__.return_value = None
-
-    mock_session.request.return_value = mock_context_manager
+    mock_session.request = AsyncMock(return_value=mock_response)
 
     # Make handle_response_exception raise an exception
     client.handle_response_exception = AsyncMock(
@@ -505,10 +487,8 @@ async def test_stream_releases_conn_on_error_status():
     )
     client.close = AsyncMock()
 
-    results = []
     with pytest.raises(ServiceException):
-        async for item in client.stream("GET", "http://example.com"):
-            results.append(item)
+        await client.stream("GET", "http://example.com")
 
     # The critical assertion: release() must be called even though
     # handle_response_exception raised ServiceException
@@ -542,19 +522,90 @@ async def test_stream_releases_conn_on_success():
     mock_response.data = None
     mock_response.content = FakeContent()
 
-    mock_context_manager = AsyncMock()
-    mock_context_manager.__aenter__.return_value = mock_response
-    mock_context_manager.__aexit__.return_value = None
-
-    mock_session.request.return_value = mock_context_manager
+    mock_session.request = AsyncMock(return_value=mock_response)
 
     client.handle_response_exception = AsyncMock()
     client.close = AsyncMock()
 
     results = []
-    async for item in client.stream("GET", "http://example.com"):
+    async for item in await client.stream("GET", "http://example.com"):
         results.append(item)
 
     assert results == [{"ok": True}]
     client.handle_response_exception.assert_awaited_once()
+    mock_response.release.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_releases_conn_when_closed_before_reading():
+    """Ensure release() is called when a stream is closed before reading."""
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_session = MagicMock()
+    client.pool_manager = mock_session
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.reason = "OK"
+
+    mock_session.request = AsyncMock(return_value=mock_response)
+
+    client.handle_response_exception = AsyncMock()
+    client.close = AsyncMock()
+
+    stream = await client.stream("GET", "http://example.com")
+    mock_response.release.assert_not_called()
+
+    await stream.aclose()
+
+    mock_response.release.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_releases_conn_when_closed_after_reading():
+    """Ensure release() is called when a stream is closed after some items."""
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_session = MagicMock()
+    client.pool_manager = mock_session
+
+    class FakeContent:
+        async def iter_chunks(self):
+            yield (b'{"foo":"bar"}\n', None)
+            yield (b'{"hello":"world"}\n', None)
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.reason = "OK"
+    mock_response.content = FakeContent()
+
+    mock_session.request = AsyncMock(return_value=mock_response)
+
+    client.handle_response_exception = AsyncMock()
+    client.close = AsyncMock()
+
+    stream = await client.stream("GET", "http://example.com")
+    assert await anext(stream) == {"foo": "bar"}
+    mock_response.release.assert_not_called()
+
+    await stream.aclose()
+
     mock_response.release.assert_called_once()
