@@ -30,7 +30,8 @@ def model_read_fails_call(error: Exception | None) -> bool:
     """
     Whether a model read error fails the BatchCheck call instead of sending the checks
     unmerged: the model or store doesn't exist, or the credentials can't read the model
-    (a 401 or 403, or the token request failed)
+    (a 401 or 403 from the read or the token request, or a token response with no
+    usable token)
     """
     if isinstance(error, AuthenticationError):
         return True

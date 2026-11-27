@@ -990,9 +990,9 @@ To find aliases, the SDK reads the authorization model the first time it needs i
 
 - no authorization model ID is set
 - the model or the store doesn't exist
-- the credentials can't read the model (a 401 or 403, or the token request fails). If your credentials can only run checks, leave the option off.
+- the credentials can't read the model (a 401 or 403 from the read or the token request, or a token response with no usable token). If your credentials can only run checks, leave the option off.
 
-If reading the model fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks without merging them. It doesn't retry this read, even if you set `retry_params`, so a failed read costs one request. After a 429 it waits about a minute before reading the model again. After any other failure it tries again on the next call.
+If reading the model fails for another reason, such as a 429, a 5xx or a timeout, including on the token request, the SDK logs a warning and sends the checks without merging them. It doesn't retry this read, even if you set `retry_params`, so a failed read costs one request. After a 429 it waits about a minute before reading the model again. After any other failure it tries again on the next call.
 
 Compared with leaving the option off, a call:
 
