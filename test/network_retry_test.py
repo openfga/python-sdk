@@ -14,7 +14,6 @@ import pytest
 import urllib3
 
 from openfga_sdk import OpenFgaClient as AsyncOpenFgaClient
-from openfga_sdk.api.open_fga_api import OpenFgaApi as AsyncOpenFgaApi
 from openfga_sdk.api_client import ApiClient as AsyncApiClient
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models import ClientListObjectsRequest
@@ -420,8 +419,8 @@ async def test_async_closing_streamed_list_objects_releases_response(server, rel
 
 @pytest.mark.asyncio
 async def test_async_closing_streamed_api_request_releases_response(server, releases):
-    async with AsyncApiClient(make_configuration(server.url)) as api_client:
-        stream = AsyncOpenFgaApi(api_client).execute_streamed_api_request(
+    async with AsyncOpenFgaClient(make_client_configuration(server.url)) as client:
+        stream = client.execute_streamed_api_request(
             operation_name="StreamedListObjects",
             method="POST",
             path="/stores/{store_id}/streamed-list-objects",

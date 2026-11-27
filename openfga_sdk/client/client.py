@@ -1168,14 +1168,17 @@ class OpenFgaClient:
 
         :return: AsyncIterator yielding parsed JSON chunks from the streaming response.
         """
-        async for chunk in self._api.execute_streamed_api_request(
-            operation_name=operation_name,
-            method=method,
-            path=path,
-            path_params=path_params,
-            body=body,
-            query_params=query_params,
-            headers=headers,
-            options=options,
-        ):
-            yield chunk
+        async with aclosing(
+            self._api.execute_streamed_api_request(
+                operation_name=operation_name,
+                method=method,
+                path=path,
+                path_params=path_params,
+                body=body,
+                query_params=query_params,
+                headers=headers,
+                options=options,
+            )
+        ) as stream:
+            async for chunk in stream:
+                yield chunk
