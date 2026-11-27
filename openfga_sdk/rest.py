@@ -165,6 +165,11 @@ class RESTClientObject:
         self.proxy_headers = configuration.proxy_headers
         self._timeout_millisec = configuration.timeout_millisec
         self.pool_manager = aiohttp.ClientSession(connector=connector, trust_env=True)
+        # aiohttp 3.10+ resends GET, HEAD, PUT and DELETE once by itself when a
+        # kept-alive connection drops, outside retry_params. There is no public
+        # switch; this private one exists from 3.11.
+        if hasattr(self.pool_manager, "_retry_connection"):
+            self.pool_manager._retry_connection = False
 
     async def close(self) -> None:
         """

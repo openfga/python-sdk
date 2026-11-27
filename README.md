@@ -1387,7 +1387,7 @@ response = await fga_client.execute_api_request(
 
 If a request fails with a 429 or 5xx error from the server, or with a network error such as a dropped connection or timeout, the SDK will automatically retry the request up to 3 times with a minimum wait time of 100 milliseconds between each attempt.
 
-Network errors are retried for writes too, and the timeout applies to each attempt. A write that timed out may still have been applied, so its retry can fail as a duplicate unless the [conflict options](#conflict-options-for-write-operations) are set to `IGNORE`. In the async client, aiohttp may also resend a GET, PUT or DELETE request once by itself if the connection drops.
+Network errors are retried for writes too, and the timeout applies to each attempt. A write that timed out may still have been applied, so its retry can fail as a duplicate unless the [conflict options](#conflict-options-for-write-operations) are set to `IGNORE`. In the async client, aiohttp's own resend of GET, PUT and DELETE requests after a dropped connection is turned off (aiohttp 3.11+), so `retry_params` is the only retry policy.
 
 The SDK honors `Retry-After` delay seconds or HTTP dates up to 30 minutes. Unparseable or out-of-range values fall back to exponential backoff. In the sync client, urllib3's own `Retry-After` handling is disabled unless you set `Configuration.retries`.
 

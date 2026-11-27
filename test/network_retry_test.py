@@ -13,11 +13,16 @@ import aiohttp
 import pytest
 import urllib3
 
+from openfga_sdk import OpenFgaClient as AsyncOpenFgaClient
+from openfga_sdk.api.open_fga_api import OpenFgaApi as AsyncOpenFgaApi
 from openfga_sdk.api_client import ApiClient as AsyncApiClient
+from openfga_sdk.client import ClientConfiguration
+from openfga_sdk.client.models import ClientListObjectsRequest
 from openfga_sdk.configuration import Configuration, RetryParams
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from openfga_sdk.exceptions import ServiceException
 from openfga_sdk.rest import RESTClientObject as AsyncRESTClientObject
+from openfga_sdk.sync import OpenFgaClient as SyncOpenFgaClient
 from openfga_sdk.sync.api_client import ApiClient as SyncApiClient
 from openfga_sdk.sync.open_fga_api import OpenFgaApi as SyncOpenFgaApi
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
@@ -28,6 +33,15 @@ CALL_ARGS = {"response_types_map": {}, "_return_http_data_only": True}
 OBJECTS = [{"result": {"object": f"document:{i}"}} for i in range(3)]
 NDJSON = b"".join(json.dumps(obj).encode() + b"\n" for obj in OBJECTS)
 RETRY_AFTER_IN_SEC = 7
+STORE_ID = "01YCP46JKYM8FJCQ37NMBYHE5X"
+LIST_OBJECTS = ClientListObjectsRequest(
+    user="user:anne", relation="viewer", type="document"
+)
+# aiohttp 3.10 replays idempotent requests with no way to turn it off.
+aiohttp_replay_is_configurable = pytest.mark.skipif(
+    aiohttp.__version__.startswith("3.10."),
+    reason="aiohttp 3.10 has no switch for its connection replay",
+)
 # The first retry waits random_time(0, min_wait_in_ms) seconds.
 MIN_WAIT_IN_SEC = RetryParams().min_wait_in_ms / 1000
 
@@ -43,6 +57,12 @@ exhausted_cases = pytest.mark.parametrize(
 
 def make_configuration(url, **kwargs):
     return Configuration(api_url=url, retry_params=RetryParams(max_retry=1), **kwargs)
+
+
+def make_client_configuration(url):
+    return ClientConfiguration(
+        api_url=url, store_id=STORE_ID, retry_params=RetryParams(max_retry=0)
+    )
 
 
 @dataclass
@@ -119,6 +139,28 @@ def sleeps(monkeypatch):
     monkeypatch.setattr(time, "sleep", waits.append)
     monkeypatch.setattr(asyncio, "sleep", async_sleep)
     return waits
+
+
+@pytest.fixture
+def releases(monkeypatch):
+    """Counts the HTTP responses handed back to the aiohttp or urllib3 pool."""
+    count = [0]
+    release = aiohttp.ClientResponse.release
+    release_conn = urllib3.response.HTTPResponse.release_conn
+
+    def counting_release(self):
+        count[0] += 1
+        return release(self)
+
+    def counting_release_conn(self):
+        count[0] += 1
+        return release_conn(self)
+
+    monkeypatch.setattr(aiohttp.ClientResponse, "release", counting_release)
+    monkeypatch.setattr(
+        urllib3.response.HTTPResponse, "release_conn", counting_release_conn
+    )
+    return count
 
 
 @pytest.fixture
@@ -277,6 +319,21 @@ async def test_async_does_not_retry_tls_errors(sleeps, monkeypatch, error):
     assert sleeps == []
 
 
+# aiohttp would otherwise resend the GET once on its own, outside retry_params.
+@aiohttp_replay_is_configurable
+@pytest.mark.asyncio
+async def test_async_disables_aiohttp_replay(server, sleeps):
+    server.actions.append("drop")
+    async with AsyncApiClient(make_configuration(server.url)) as client:
+        with pytest.raises(aiohttp.ServerDisconnectedError):
+            await client.call_api(
+                "/stores", "GET", _retry_params=RetryParams(max_retry=0), **CALL_ARGS
+            )
+
+    assert server.requests == ["GET"]
+    assert sleeps == []
+
+
 # max_retry=1 allows two token requests; the default would allow four.
 def test_sync_token_request_uses_client_retry_params(server, sleeps):
     server.actions.extend(["drop"] * 4)
@@ -320,22 +377,69 @@ def test_sync_stream_retries_until_connected(server, sleeps, failure):
     assert server.requests == ["POST", "POST"]
 
 
+# Once the body has started, a failure raises to the caller instead of
+# restarting the stream, which would repeat the objects already yielded.
 @pytest.mark.asyncio
 async def test_async_stream_raises_without_retry_once_connected(server, sleeps):
     server.actions.append("truncate")
+    received = []
     async with AsyncApiClient(make_configuration(server.url)) as client:
         stream = await client.call_api("/stream", "POST", _streaming=True, **CALL_ARGS)
         with pytest.raises(aiohttp.ClientPayloadError):
-            [obj async for obj in stream]
+            async for obj in stream:
+                received.append(obj)
 
+    assert received == OBJECTS[:1]
     assert server.requests == ["POST"]
+    assert sleeps == []
 
 
 def test_sync_stream_raises_without_retry_once_connected(server, sleeps):
     server.actions.append("truncate")
+    received = []
     with SyncApiClient(make_configuration(server.url)) as client:
         stream = client.call_api("/stream", "POST", _streaming=True, **CALL_ARGS)
         with pytest.raises(urllib3.exceptions.ProtocolError):
-            list(stream)
+            received.extend(stream)
 
+    assert received == OBJECTS[:1]
     assert server.requests == ["POST"]
+    assert sleeps == []
+
+
+@pytest.mark.asyncio
+async def test_async_closing_streamed_list_objects_releases_response(server, releases):
+    async with AsyncOpenFgaClient(make_client_configuration(server.url)) as client:
+        stream = client.streamed_list_objects(LIST_OBJECTS)
+        first = await anext(stream)
+        await stream.aclose()
+
+        assert first.object == "document:0"
+        assert releases == [1]
+
+
+@pytest.mark.asyncio
+async def test_async_closing_streamed_api_request_releases_response(server, releases):
+    async with AsyncApiClient(make_configuration(server.url)) as api_client:
+        stream = AsyncOpenFgaApi(api_client).execute_streamed_api_request(
+            operation_name="StreamedListObjects",
+            method="POST",
+            path="/stores/{store_id}/streamed-list-objects",
+            path_params={"store_id": STORE_ID},
+            body={},
+        )
+        first = await anext(stream)
+        await stream.aclose()
+
+        assert first == OBJECTS[0]
+        assert releases == [1]
+
+
+def test_sync_closing_streamed_list_objects_releases_response(server, releases):
+    with SyncOpenFgaClient(make_client_configuration(server.url)) as client:
+        stream = client.streamed_list_objects(LIST_OBJECTS)
+        first = next(stream)
+        stream.close()
+
+        assert first.object == "document:0"
+        assert releases[0] >= 1
