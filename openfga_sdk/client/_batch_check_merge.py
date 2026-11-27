@@ -13,10 +13,25 @@ from openfga_sdk.client._equivalent_checks import (
 )
 from openfga_sdk.client._model_cache_base import ModelLookup, model_read_fails_call
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
+from openfga_sdk.configuration import RetryParams
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 
 
 logger = logging.getLogger(__name__)
+
+
+def model_read_kwargs(
+    options: dict[str, int | str | dict[str, int | str]] | None = None,
+) -> dict[str, int | str | dict[str, int | str]]:
+    """
+    Return the kwargs for the authorization model read of a BatchCheck call: the
+    call's headers, and no retries. A failed read either fails the call (see
+    model_read_fails_call) or sends the checks unmerged right away.
+    """
+    kwargs = {"_retry_params": RetryParams(max_retry=0)}
+    if options is not None and options.get("headers"):
+        kwargs["_headers"] = options["headers"]
+    return kwargs
 
 
 def log_model_read_failure(

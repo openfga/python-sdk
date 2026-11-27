@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator
 from contextlib import aclosing
 from typing import Any
 
@@ -10,6 +10,7 @@ from openfga_sdk.api_client import ApiClient
 from openfga_sdk.client._batch_check_merge import (
     checks_to_send,
     log_model_read_failure,
+    model_read_kwargs,
 )
 from openfga_sdk.client._equivalent_checks import (
     ModelAliases,
@@ -50,7 +51,6 @@ from openfga_sdk.client.models.write_single_response import (
     construct_write_single_response,
 )
 from openfga_sdk.client.models.write_transaction_opts import WriteTransactionOpts
-from openfga_sdk.configuration import RetryParams
 from openfga_sdk.constants import (
     CLIENT_BULK_REQUEST_ID_HEADER,
     CLIENT_MAX_BATCH_SIZE,
@@ -140,20 +140,6 @@ def options_to_kwargs(
             kwargs["_headers"] = options["headers"]
         if options.get("retry_params"):
             kwargs["_retry_params"] = options["retry_params"]
-    return kwargs
-
-
-def _model_read_kwargs(
-    options: dict[str, int | str | dict[str, int | str]] | None = None,
-) -> dict[str, int | str | dict[str, int | str]]:
-    """
-    Return the kwargs a BatchCheck call passes on to its authorization model read.
-    The read is never retried: if it fails, the checks are sent unmerged right away.
-    """
-    kwargs = {"_retry_params": RetryParams(max_retry=0)}
-    headers = options_to_kwargs(options).get("_headers")
-    if headers:
-        kwargs["_headers"] = headers
     return kwargs
 
 
@@ -891,21 +877,15 @@ class OpenFgaClient:
                 error=result.error,
             )
 
-        def add_results(response):
+        for response in await self._send_batch_checks(
+            checks,
+            self._get_authorization_model_id(options),
+            options,
+            max_parallel_requests,
+        ):
             result.extend(
-                [
-                    map_response(c_id, c_result)
-                    for c_id, c_result in response.result.items()
-                ]
-            )
-
-        if checks:
-            await self._send_batch_checks(
-                checks,
-                self._get_authorization_model_id(options),
-                options,
-                max_parallel_requests,
-                add_results,
+                map_response(c_id, c_result)
+                for c_id, c_result in response.result.items()
             )
 
         return ClientBatchCheckResponse(result)
@@ -916,17 +896,16 @@ class OpenFgaClient:
         authorization_model_id: str | None,
         options: dict[str, int | str | dict[str, int | str]],
         max_parallel_requests: int,
-        on_response: Callable[[BatchCheckResponse], None],
-    ) -> None:
+    ) -> list[BatchCheckResponse]:
         """
         Send each chunk of checks as one BatchCheck request, with at most
-        max_parallel_requests in flight, and pass each response to on_response
+        max_parallel_requests in flight, and return the responses in chunk order
         """
         sem = asyncio.Semaphore(max_parallel_requests)
         consistency = self._get_consistency(options)
 
-        async def send(checks):
-            response = await self._single_batch_check(
+        def send(checks):
+            return self._single_batch_check(
                 BatchCheckRequest(
                     checks=checks,
                     authorization_model_id=authorization_model_id,
@@ -935,9 +914,8 @@ class OpenFgaClient:
                 sem,
                 options,
             )
-            on_response(response)
 
-        await asyncio.gather(*[send(checks) for checks in chunks])
+        return await asyncio.gather(*[send(checks) for checks in chunks])
 
     async def _merged_batch_check(
         self,
@@ -962,7 +940,7 @@ class OpenFgaClient:
         )
 
         results = {}
-        await self._send_batch_checks(
+        for response in await self._send_batch_checks(
             [
                 [construct_batch_item(group.check) for group in chunk]
                 for chunk in _chuck_array(groups, max_batch_size)
@@ -970,8 +948,8 @@ class OpenFgaClient:
             authorization_model_id,
             options,
             max_parallel_requests,
-            lambda response: results.update(response.result or {}),
-        )
+        ):
+            results.update(response.result or {})
 
         return ClientBatchCheckResponse(
             expand(checks, groups, results), checks_sent=len(groups)
@@ -992,7 +970,7 @@ class OpenFgaClient:
         async def load():
             try:
                 response = await self._api.read_authorization_model(
-                    authorization_model_id, **_model_read_kwargs(options)
+                    authorization_model_id, **model_read_kwargs(options)
                 )
                 return ModelAliases(response.authorization_model)
             except Exception as error:
