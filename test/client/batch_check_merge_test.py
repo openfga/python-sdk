@@ -4,6 +4,7 @@ import json
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
 
+import aiohttp
 import urllib3
 
 from openfga_sdk import rest
@@ -170,6 +171,10 @@ def server_error():
 
 def timed_out():
     return TimeoutError("timed out")
+
+
+def connection_dropped():
+    return aiohttp.ClientConnectionError("connection reset")
 
 
 def store_not_found():
@@ -466,7 +471,7 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
     @patch.object(rest.RESTClientObject, "request")
     async def test_does_not_retry_the_model_read(self, mock_request):
         retries = {"retry_params": RetryParams(max_retry=3, min_wait_in_ms=1)}
-        for model_error in [rate_limited, server_error]:
+        for model_error in [rate_limited, server_error, connection_dropped]:
             with self.subTest(error=model_error.__name__):
                 server = FakeServer(model_error=model_error)
                 mock_request.side_effect = server

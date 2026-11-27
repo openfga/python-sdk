@@ -4,6 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
 from unittest.mock import patch
 
+import urllib3
+
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.models.batch_check_request import ClientBatchCheckRequest
 from openfga_sdk.configuration import RetryParams
@@ -40,6 +42,10 @@ from test.client.batch_check_merge_test import (
     token_request_failed,
     unauthorized,
 )
+
+
+def connection_dropped():
+    return urllib3.exceptions.ProtocolError("connection aborted")
 
 
 def mock_response(body, status=200):
@@ -333,7 +339,7 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
     @patch.object(rest.RESTClientObject, "request")
     def test_does_not_retry_the_model_read(self, mock_request):
         retries = {"retry_params": RetryParams(max_retry=3, min_wait_in_ms=1)}
-        for model_error in [rate_limited, server_error]:
+        for model_error in [rate_limited, server_error, connection_dropped]:
             with self.subTest(error=model_error.__name__):
                 server = FakeServer(model_error=model_error)
                 mock_request.side_effect = server
