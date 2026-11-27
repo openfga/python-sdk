@@ -390,6 +390,7 @@ class RESTClientObject:
         try:
             # Handle any HTTP errors that may have occurred
             await self.handle_response_exception(response)
+            # stream() resumes from here, so the errors above raise there
             yield
 
             # Iterate over streamed/chunked response data

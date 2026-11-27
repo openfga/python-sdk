@@ -102,7 +102,7 @@ async def test_async_closing_streamed_list_objects_releases_response(server, rel
         await stream.aclose()
 
         assert first.object == "document:0"
-        assert releases == [1]
+        assert releases == ["aiohttp"]
 
 
 @pytest.mark.asyncio
@@ -113,7 +113,7 @@ async def test_async_closing_streamed_api_request_releases_response(server, rele
         await stream.aclose()
 
         assert first == server.objects[0]
-        assert releases == [1]
+        assert releases == ["aiohttp"]
 
 
 def test_sync_closing_streamed_list_objects_releases_response(server, releases):
@@ -123,7 +123,7 @@ def test_sync_closing_streamed_list_objects_releases_response(server, releases):
         stream.close()
 
         assert first.object == "document:0"
-        assert releases[0] >= 1
+        assert "urllib3" in releases
 
 
 def test_sync_closing_streamed_api_request_releases_response(server, releases):
@@ -133,4 +133,4 @@ def test_sync_closing_streamed_api_request_releases_response(server, releases):
         stream.close()
 
         assert first == server.objects[0]
-        assert releases[0] >= 1
+        assert "urllib3" in releases

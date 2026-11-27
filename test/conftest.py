@@ -100,24 +100,24 @@ def sleeps(monkeypatch):
 
 @pytest.fixture
 def releases(monkeypatch):
-    """Counts the HTTP responses handed back to the aiohttp or urllib3 pool."""
-    count = [0]
+    """Records "aiohttp" or "urllib3" each time a response is handed back to its pool."""
+    events = []
     release = aiohttp.ClientResponse.release
     release_conn = urllib3.response.HTTPResponse.release_conn
 
-    def counting_release(self):
-        count[0] += 1
+    def recording_release(self):
+        events.append("aiohttp")
         return release(self)
 
-    def counting_release_conn(self):
-        count[0] += 1
+    def recording_release_conn(self):
+        events.append("urllib3")
         return release_conn(self)
 
-    monkeypatch.setattr(aiohttp.ClientResponse, "release", counting_release)
+    monkeypatch.setattr(aiohttp.ClientResponse, "release", recording_release)
     monkeypatch.setattr(
-        urllib3.response.HTTPResponse, "release_conn", counting_release_conn
+        urllib3.response.HTTPResponse, "release_conn", recording_release_conn
     )
-    return count
+    return events
 
 
 @pytest.fixture
