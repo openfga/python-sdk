@@ -42,6 +42,7 @@ class ClientConfiguration(Configuration):
             | None
         ) = None,
         headers: dict[str, str] | None = None,
+        follow_redirects: bool = True,
     ):
         super().__init__(
             api_scheme,
@@ -54,6 +55,7 @@ class ClientConfiguration(Configuration):
             timeout_millisec=timeout_millisec,
             telemetry=telemetry,
             headers=headers,
+            follow_redirects=follow_redirects,
         )
         self._authorization_model_id = authorization_model_id
 

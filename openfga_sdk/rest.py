@@ -164,6 +164,9 @@ class RESTClientObject:
         self.proxy = configuration.proxy
         self.proxy_headers = configuration.proxy_headers
         self._timeout_millisec = configuration.timeout_millisec
+        self._follow_redirects = (
+            getattr(configuration, "follow_redirects", True) is not False
+        )
         self.pool_manager = aiohttp.ClientSession(connector=connector, trust_env=True)
         # aiohttp 3.10+ resends GET, HEAD, PUT and DELETE once by itself when a
         # kept-alive connection drops. Turn that off, as aiohttp.test_utils does,
@@ -223,6 +226,7 @@ class RESTClientObject:
             "url": url,
             "timeout": timeout,
             "headers": headers,
+            "allow_redirects": self._follow_redirects,
         }
 
         if self.proxy:
