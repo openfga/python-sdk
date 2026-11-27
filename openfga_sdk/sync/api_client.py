@@ -317,10 +317,18 @@ class ApiClient:
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
                 if response_type is not None:
-                    e.parsed_exception = self.__deserialize(
-                        json.loads(e.body), response_type
-                    )
-                    e.body = None
+                    try:
+                        error_data = json.loads(e.body)
+                        if isinstance(error_data, dict):
+                            e.parsed_exception = self.__deserialize(
+                                error_data, response_type
+                            )
+                            e.body = None
+                    except Exception:
+                        # Non-JSON body (e.g. an HTML error page from a proxy) or
+                        # JSON that doesn't fit the expected model: keep the raw
+                        # body and leave parsed_exception unset.
+                        pass
                 # Set operation name from telemetry attributes
                 if (
                     isinstance(e, ApiException)
@@ -354,10 +362,18 @@ class ApiClient:
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)
                 if response_type is not None:
-                    e.parsed_exception = self.__deserialize(
-                        json.loads(e.body), response_type
-                    )
-                    e.body = None
+                    try:
+                        error_data = json.loads(e.body)
+                        if isinstance(error_data, dict):
+                            e.parsed_exception = self.__deserialize(
+                                error_data, response_type
+                            )
+                            e.body = None
+                    except Exception:
+                        # Non-JSON body (e.g. an HTML error page from a proxy) or
+                        # JSON that doesn't fit the expected model: keep the raw
+                        # body and leave parsed_exception unset.
+                        pass
 
                 _telemetry_attributes = TelemetryAttributes.fromResponse(
                     response=e,
