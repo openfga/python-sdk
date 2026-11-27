@@ -166,8 +166,10 @@ class RESTClientObject:
         self._timeout_millisec = configuration.timeout_millisec
         self.pool_manager = aiohttp.ClientSession(connector=connector, trust_env=True)
         # aiohttp 3.10+ resends GET, HEAD, PUT and DELETE once by itself when a
-        # kept-alive connection drops, outside retry_params. There is no public
-        # switch; this private one exists from 3.11.
+        # kept-alive connection drops. Turn that off, as aiohttp.test_utils does,
+        # so retry_params and the resend count are exact; such a request then
+        # waits for the SDK backoff instead of being resent at once. There is no
+        # public switch; this one exists from 3.11, 3.10 has none.
         if hasattr(self.pool_manager, "_retry_connection"):
             self.pool_manager._retry_connection = False
 
