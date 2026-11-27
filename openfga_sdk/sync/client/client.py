@@ -2,6 +2,7 @@ import uuid
 
 from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from typing import Any
 
 from openfga_sdk.client._batch_check_merge import (
@@ -1091,9 +1092,12 @@ class OpenFgaClient:
                 tuple_keys=convert_tuple_keys(body.contextual_tuples)
             )
 
-        for response in self._api.streamed_list_objects(body=req_body, **kwargs):
-            if response and "result" in response and "object" in response["result"]:
-                yield StreamedListObjectsResponse(response["result"]["object"])
+        with closing(
+            self._api.streamed_list_objects(body=req_body, **kwargs)
+        ) as stream:
+            for response in stream:
+                if response and "result" in response and "object" in response["result"]:
+                    yield StreamedListObjectsResponse(response["result"]["object"])
 
         return
 

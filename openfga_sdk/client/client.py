@@ -2,6 +2,7 @@ import asyncio
 import uuid
 
 from collections.abc import AsyncIterator, Callable
+from contextlib import aclosing
 from typing import Any
 
 from openfga_sdk.api.open_fga_api import OpenFgaApi
@@ -1097,11 +1098,14 @@ class OpenFgaClient:
                 tuple_keys=convert_tuple_keys(body.contextual_tuples)
             )
 
-        async for response in await self._api.streamed_list_objects(
-            body=req_body, **kwargs
-        ):
-            if response and "result" in response and "object" in response["result"]:
-                yield StreamedListObjectsResponse(response["result"]["object"])
+        # async for doesn't close its iterator, so closing this generator early
+        # would leave the response checked out until the client is closed.
+        async with aclosing(
+            await self._api.streamed_list_objects(body=req_body, **kwargs)
+        ) as stream:
+            async for response in stream:
+                if response and "result" in response and "object" in response["result"]:
+                    yield StreamedListObjectsResponse(response["result"]["object"])
 
     async def list_relations(
         self,
@@ -1298,14 +1302,17 @@ class OpenFgaClient:
 
         :return: AsyncIterator yielding parsed JSON chunks from the streaming response.
         """
-        async for chunk in self._api.execute_streamed_api_request(
-            operation_name=operation_name,
-            method=method,
-            path=path,
-            path_params=path_params,
-            body=body,
-            query_params=query_params,
-            headers=headers,
-            options=options,
-        ):
-            yield chunk
+        async with aclosing(
+            self._api.execute_streamed_api_request(
+                operation_name=operation_name,
+                method=method,
+                path=path,
+                path_params=path_params,
+                body=body,
+                query_params=query_params,
+                headers=headers,
+                options=options,
+            )
+        ) as stream:
+            async for chunk in stream:
+                yield chunk

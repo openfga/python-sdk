@@ -39,6 +39,9 @@ def random_time(loop_count, min_wait_in_ms) -> float:
     """
     minimum = math.ceil(2**loop_count * min_wait_in_ms)
     maximum = math.ceil(2 ** (loop_count + 1) * min_wait_in_ms)
+    # randrange() raises on an empty range, e.g. when min_wait_in_ms is 0
+    if maximum <= minimum:
+        return minimum / 1000
     return random.randrange(minimum, maximum) / 1000
 
 
@@ -288,19 +291,19 @@ class ApiClient:
                     _streaming=_streaming,
                 )
             except (RateLimitExceededError, ServiceException) as e:
+                _telemetry_attributes = TelemetryAttributes.fromResponse(
+                    response=e.body.decode("utf-8"),
+                    credentials=self.configuration.credentials,
+                    attributes=_telemetry_attributes,
+                    start=start,
+                )
+
+                self._telemetry.metrics.request(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
                 if retry < max_retry and e.status != 501:
-                    _telemetry_attributes = TelemetryAttributes.fromResponse(
-                        response=e.body.decode("utf-8"),
-                        credentials=self.configuration.credentials,
-                        attributes=_telemetry_attributes,
-                        start=start,
-                    )
-
-                    self._telemetry.metrics.request(
-                        attributes=_telemetry_attributes,
-                        configuration=self.configuration.telemetry,
-                    )
-
                     wait_time_in_sec: float
                     try:
                         wait_time_in_sec = self._parse_retry_after_header(e.header)
@@ -330,6 +333,23 @@ class ApiClient:
                     if isinstance(operation_name, str):
                         e.operation_name = operation_name.lower()
                 raise
+            except rest.NETWORK_ERRORS:
+                _telemetry_attributes = TelemetryAttributes.fromResponse(
+                    credentials=self.configuration.credentials,
+                    attributes=_telemetry_attributes,
+                    start=start,
+                )
+
+                self._telemetry.metrics.request(
+                    attributes=_telemetry_attributes,
+                    configuration=self.configuration.telemetry,
+                )
+
+                if retry == max_retry:
+                    raise
+
+                time.sleep(min(random_time(retry, min_wait_in_ms), max_wait_in_sec))
+                continue
             except ApiException as e:
                 e.body = e.body.decode("utf-8")
                 response_type = response_types_map.get(e.status, None)

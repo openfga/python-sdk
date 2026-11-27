@@ -58,7 +58,9 @@ class OpenFgaApi:
         if api_client.configuration is not None:
             credentials = api_client.configuration.credentials
             if credentials is not None and credentials.method == "client_credentials":
-                self._oauth2_client = OAuth2Client(credentials)
+                self._oauth2_client = OAuth2Client(
+                    credentials, api_client.configuration
+                )
 
         self._telemetry = Telemetry()
 
