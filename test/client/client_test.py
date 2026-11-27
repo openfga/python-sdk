@@ -10,6 +10,7 @@ import pytest
 import urllib3
 
 from openfga_sdk import rest
+from openfga_sdk.api.open_fga_api import OpenFgaApi
 from openfga_sdk.client import ClientConfiguration
 from openfga_sdk.client.client import OpenFgaClient, set_heading_if_not_set
 from openfga_sdk.client.models.assertion import ClientAssertion
@@ -4546,6 +4547,76 @@ class TestClientConfigurationHeaders(IsolatedAsyncioTestCase):
                 body={"type": "document", "relation": "viewer", "user": "user:anne"},
                 _request_timeout=None,
             )
+            await api_client.close()
+
+    @patch.object(OpenFgaApi, "execute_streamed_api_request")
+    @pytest.mark.asyncio
+    async def test_execute_streamed_api_request_closes_stream_when_closed_early(
+        self, mock_stream
+    ):
+        """Closing the public iterator closes the underlying stream at once."""
+        closed = []
+
+        async def spy_stream():
+            try:
+                yield {"result": {"object": "document:roadmap"}}
+                yield {"result": {"object": "document:budget"}}
+            finally:
+                closed.append(True)
+
+        mock_stream.return_value = spy_stream()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            stream = api_client.execute_streamed_api_request(
+                operation_name="StreamedListObjects",
+                method="POST",
+                path="/stores/{store_id}/streamed-list-objects",
+                path_params={"store_id": store_id},
+                body={},
+            )
+            self.assertEqual(
+                await anext(stream), {"result": {"object": "document:roadmap"}}
+            )
+            self.assertEqual(closed, [])
+
+            await stream.aclose()
+
+            self.assertEqual(closed, [True])
+            await api_client.close()
+
+    @patch.object(OpenFgaApi, "streamed_list_objects")
+    @pytest.mark.asyncio
+    async def test_streamed_list_objects_closes_stream_when_closed_early(
+        self, mock_stream
+    ):
+        """Closing the public iterator closes the underlying stream at once."""
+        closed = []
+
+        async def spy_stream():
+            try:
+                yield {"result": {"object": "document:roadmap"}}
+                yield {"result": {"object": "document:budget"}}
+            finally:
+                closed.append(True)
+
+        mock_stream.return_value = spy_stream()
+
+        configuration = self.configuration
+        configuration.store_id = store_id
+        async with OpenFgaClient(configuration) as api_client:
+            stream = api_client.streamed_list_objects(
+                ClientListObjectsRequest(
+                    user="user:anne", relation="viewer", type="document"
+                )
+            )
+            self.assertEqual((await anext(stream)).object, "document:roadmap")
+            self.assertEqual(closed, [])
+
+            await stream.aclose()
+
+            self.assertEqual(closed, [True])
             await api_client.close()
 
     @patch.object(rest.RESTClientObject, "stream")

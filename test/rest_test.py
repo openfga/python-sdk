@@ -568,3 +568,44 @@ async def test_stream_releases_conn_when_closed_before_reading():
     await stream.aclose()
 
     mock_response.release.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_releases_conn_when_closed_after_reading():
+    """Ensure release() is called when a stream is closed after some items."""
+    mock_config = MagicMock()
+    mock_config.ssl_ca_cert = None
+    mock_config.cert_file = None
+    mock_config.key_file = None
+    mock_config.verify_ssl = True
+    mock_config.connection_pool_maxsize = 4
+    mock_config.proxy = None
+    mock_config.proxy_headers = None
+    mock_config.timeout_millisec = 5000
+
+    client = RESTClientObject(configuration=mock_config)
+    mock_session = MagicMock()
+    client.pool_manager = mock_session
+
+    class FakeContent:
+        async def iter_chunks(self):
+            yield (b'{"foo":"bar"}\n', None)
+            yield (b'{"hello":"world"}\n', None)
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.reason = "OK"
+    mock_response.content = FakeContent()
+
+    mock_session.request = AsyncMock(return_value=mock_response)
+
+    client.handle_response_exception = AsyncMock()
+    client.close = AsyncMock()
+
+    stream = await client.stream("GET", "http://example.com")
+    assert await anext(stream) == {"foo": "bar"}
+    mock_response.release.assert_not_called()
+
+    await stream.aclose()
+
+    mock_response.release.assert_called_once()
