@@ -1389,8 +1389,6 @@ If a request fails with a 429 or 5xx error from the server, or with a network er
 
 Network errors are retried for writes too, and the timeout applies to each attempt. A write that timed out may still have been applied, so its retry can fail as a duplicate unless the [conflict options](#conflict-options-for-write-operations) are set to `IGNORE`. In the async client, aiohttp's own resend of GET, PUT and DELETE requests after a dropped connection is turned off, so `retry_params` is the only retry policy. aiohttp 3.10.x has no switch for it, so on that version such a request can be sent once more than `max_retry` allows.
 
-The SDK honors `Retry-After` delay seconds or HTTP dates up to 30 minutes. Unparseable or out-of-range values fall back to exponential backoff. In the sync client, urllib3's own `Retry-After` handling is disabled unless you set `Configuration.retries`.
-
 To customize this behavior, create a `RetryParams` object and assign values to the `max_retry` and `min_wait_in_ms` constructor parameters. `max_retry` determines the maximum number of retries (up to 15), while `min_wait_in_ms` sets the minimum wait time between retries in milliseconds.
 
 Apply your custom retry values by passing the object to the `ClientConfiguration` constructor's `retry_params` parameter.
