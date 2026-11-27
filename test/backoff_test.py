@@ -24,6 +24,13 @@ class TestBackoff(unittest.TestCase):
         for loop_count in range(3):
             self.assertEqual(jitter(loop_count, 0), 0)
 
+    def test_jitter_stays_in_range(self):
+        # jitter no longer returns 0 when pytest is imported, so this runs the real values
+        for loop_count in range(3):
+            wait = jitter(loop_count, 100)
+            self.assertGreaterEqual(wait, 2**loop_count * 100 / 1000)
+            self.assertLess(wait, 2 ** (loop_count + 1) * 100 / 1000)
+
 
 if __name__ == "__main__":
     unittest.main()

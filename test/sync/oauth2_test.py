@@ -354,8 +354,11 @@ This is not a JSON response
             ),
         )
 
+    @patch("time.sleep")
     @patch.object(rest.RESTClientObject, "request")
-    def test_get_authentication_retries_raised_429_and_5xx_errors(self, mock_request):
+    def test_get_authentication_retries_raised_429_and_5xx_errors(
+        self, mock_request, mock_sleep
+    ):
         """
         The REST client raises on 429 and 5xx responses, and those token requests should be retried
         """
@@ -380,10 +383,19 @@ This is not a JSON response
 
         self.assertEqual(mock_request.call_count, 4)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
+        # Exponential backoff from min_wait_in_ms=1: [1, 2), [2, 4), [4, 8) ms
+        waits = [call.args[0] for call in mock_sleep.call_args_list]
+        self.assertEqual(len(waits), 3)
+        for attempt, wait in enumerate(waits):
+            self.assertGreaterEqual(wait, 2**attempt / 1000)
+            self.assertLess(wait, 2 ** (attempt + 1) / 1000)
         rest_client.close()
 
+    @patch("time.sleep")
     @patch.object(rest.RESTClientObject, "request")
-    def test_get_authentication_stops_retrying_after_max_retry(self, mock_request):
+    def test_get_authentication_stops_retrying_after_max_retry(
+        self, mock_request, mock_sleep
+    ):
         """
         After max_retry retries, the last error is raised
         """
@@ -403,6 +415,7 @@ This is not a JSON response
             client.get_authentication_header(rest_client)
 
         self.assertEqual(mock_request.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
@@ -428,8 +441,9 @@ This is not a JSON response
         self.assertEqual(mock_request.call_count, 1)
         rest_client.close()
 
+    @patch("time.sleep")
     @patch.object(rest.RESTClientObject, "request")
-    def test_get_authentication_retries_network_errors(self, mock_request):
+    def test_get_authentication_retries_network_errors(self, mock_request, mock_sleep):
         """
         Token requests that fail with a network error are retried
         """
@@ -447,12 +461,14 @@ This is not a JSON response
         auth_header = client.get_authentication_header(rest_client)
 
         self.assertEqual(mock_request.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
         rest_client.close()
 
+    @patch("time.sleep")
     @patch.object(rest.RESTClientObject, "request")
     def test_get_authentication_raises_network_error_when_retries_exhausted(
-        self, mock_request
+        self, mock_request, mock_sleep
     ):
         """
         After max_retry retries, the last network error is raised
@@ -470,6 +486,7 @@ This is not a JSON response
             client.get_authentication_header(rest_client)
 
         self.assertEqual(mock_request.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
         rest_client.close()
 
     @patch.object(rest.RESTClientObject, "request")
@@ -497,8 +514,9 @@ This is not a JSON response
         mock_sleep.assert_called_once_with(7)
         rest_client.close()
 
+    @patch("time.sleep")
     @patch.object(rest.RESTClientObject, "request")
-    def test_get_authentication_retries_5xx_responses(self, mock_request):
+    def test_get_authentication_retries_5xx_responses(self, mock_request, mock_sleep):
         """
         Receiving a 5xx response from the server should be retried
         """
@@ -545,6 +563,7 @@ This is not a JSON response
 
         mock_request.assert_called()
         self.assertEqual(mock_request.call_count, 4)  # 3 retries, 1 success
+        self.assertEqual(mock_sleep.call_count, 3)
         self.assertEqual(auth_header, {"Authorization": "Bearer AABBCCDD"})
 
     @patch.object(rest.RESTClientObject, "request")
