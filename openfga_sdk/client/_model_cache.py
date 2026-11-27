@@ -7,12 +7,12 @@ import asyncio
 
 from collections.abc import Awaitable, Callable
 
+from openfga_sdk.client._equivalent_checks import ModelAliases
 from openfga_sdk.client._model_cache_base import (
     ModelCacheBase,
     ModelCacheKey,
     ModelLookup,
 )
-from openfga_sdk.client.equivalent_checks import ModelAliases
 
 
 class AsyncModelCache(ModelCacheBase):

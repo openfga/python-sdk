@@ -9,14 +9,14 @@ from openfga_sdk.client._batch_check_merge import (
     checks_to_send,
     log_model_read_failure,
 )
-from openfga_sdk.client._model_cache_base import ModelLookup
-from openfga_sdk.client.configuration import ClientConfiguration
-from openfga_sdk.client.equivalent_checks import (
+from openfga_sdk.client._equivalent_checks import (
     ModelAliases,
     expand,
     merge_enabled,
     prepare_checks,
 )
+from openfga_sdk.client._model_cache_base import ModelLookup
+from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
     ClientBatchCheckItem,
@@ -85,7 +85,7 @@ from openfga_sdk.models.write_authorization_model_request import (
 )
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.sync.api_client import ApiClient
-from openfga_sdk.sync.client.model_cache import ModelCache
+from openfga_sdk.sync.client._model_cache import ModelCache
 from openfga_sdk.sync.open_fga_api import OpenFgaApi
 from openfga_sdk.validation import is_well_formed_ulid_string
 

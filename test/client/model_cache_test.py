@@ -4,8 +4,8 @@ import sys
 from types import SimpleNamespace
 from unittest import IsolatedAsyncioTestCase, TestCase, skipIf
 
+from openfga_sdk.client._model_cache import AsyncModelCache
 from openfga_sdk.client._model_cache_base import model_read_fails_call
-from openfga_sdk.client.model_cache import AsyncModelCache
 from openfga_sdk.exceptions import (
     AuthenticationError,
     ForbiddenException,

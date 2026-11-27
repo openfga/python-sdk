@@ -3,7 +3,7 @@ import math
 
 import pytest
 
-from openfga_sdk.client.equivalent_checks import (
+from openfga_sdk.client._equivalent_checks import (
     EquivalentCheckGroup,
     ModelAliases,
     expand,

@@ -13,7 +13,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from openfga_sdk.client.equivalent_checks import ModelAliases
+from openfga_sdk.client._equivalent_checks import ModelAliases
 from openfga_sdk.exceptions import ApiException, AuthenticationError
 
 

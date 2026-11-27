@@ -6,12 +6,12 @@ of the public API.
 
 import logging
 
-from openfga_sdk.client._model_cache_base import ModelLookup, model_read_fails_call
-from openfga_sdk.client.equivalent_checks import (
+from openfga_sdk.client._equivalent_checks import (
     EquivalentCheckGroup,
     resolve,
     unmerged,
 )
+from openfga_sdk.client._model_cache_base import ModelLookup, model_read_fails_call
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.telemetry.attributes import TelemetryAttributes
 

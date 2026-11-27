@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from openfga_sdk.client.equivalent_checks import ModelAliases, resolve
+from openfga_sdk.client._equivalent_checks import ModelAliases, resolve
 from openfga_sdk.client.models.batch_check_item import ClientBatchCheckItem
 from openfga_sdk.client.models.tuple import ClientTuple
 from openfga_sdk.models.relationship_condition import RelationshipCondition

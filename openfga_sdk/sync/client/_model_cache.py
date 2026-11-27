@@ -8,12 +8,12 @@ import threading
 from collections.abc import Callable
 from concurrent.futures import Future
 
+from openfga_sdk.client._equivalent_checks import ModelAliases
 from openfga_sdk.client._model_cache_base import (
     ModelCacheBase,
     ModelCacheKey,
     ModelLookup,
 )
-from openfga_sdk.client.equivalent_checks import ModelAliases
 
 
 class ModelCache(ModelCacheBase):

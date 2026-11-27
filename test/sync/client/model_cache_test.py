@@ -10,7 +10,7 @@ from openfga_sdk.exceptions import (
     UnauthorizedException,
     ValidationException,
 )
-from openfga_sdk.sync.client.model_cache import ModelCache
+from openfga_sdk.sync.client._model_cache import ModelCache
 
 
 KEY = ("store", "model")
