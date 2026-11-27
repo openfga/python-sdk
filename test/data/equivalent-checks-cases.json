@@ -1,5 +1,5 @@
 {
-  "note": "Generated from equivalent-checks-cases.yaml, with every model as JSON. Don't edit this file: edit the YAML file and run `make -C pkg/go generate-equivalent-checks-json`.",
+  "note": "Generated from equivalent-checks-cases.yaml, with every model as JSON. It's committed because SDKs without a DSL parser download it from GitHub at a pinned commit. Don't edit this file: edit the YAML file and run `make -C pkg/go generate-equivalent-checks-json`.",
   "cases": [
     {
       "name": "merges an alias with the relation it points to",
@@ -4184,6 +4184,33 @@
     {
       "name": "merges checks with the same contextual tuples",
       "model": {
+        "conditions": {
+          "in_region": {
+            "expression": "region == \"eu\"",
+            "name": "in_region",
+            "parameters": {
+              "limits": {
+                "generic_types": [
+                  {
+                    "type_name": "TYPE_NAME_DOUBLE"
+                  }
+                ],
+                "type_name": "TYPE_NAME_MAP"
+              },
+              "region": {
+                "type_name": "TYPE_NAME_STRING"
+              },
+              "tags": {
+                "generic_types": [
+                  {
+                    "type_name": "TYPE_NAME_STRING"
+                  }
+                ],
+                "type_name": "TYPE_NAME_LIST"
+              }
+            }
+          }
+        },
         "schema_version": "1.1",
         "type_definitions": [
           {
@@ -4195,6 +4222,10 @@
                 "member": {
                   "directly_related_user_types": [
                     {
+                      "type": "user"
+                    },
+                    {
+                      "condition": "in_region",
                       "type": "user"
                     }
                   ]
@@ -4216,6 +4247,11 @@
                   "directly_related_user_types": [
                     {
                       "type": "user"
+                    },
+                    {
+                      "condition": "in_region",
+                      "type": "user",
+                      "wildcard": {}
                     },
                     {
                       "relation": "member",
@@ -4255,11 +4291,140 @@
               "user": "team:eng#member",
               "relation": "viewer",
               "object": "document:1"
+            },
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "eu",
+                  "limits": {
+                    "read": 1,
+                    "write": 2
+                  },
+                  "tags": ["x", "y"]
+                }
+              }
+            },
+            {
+              "user": "user:bob",
+              "relation": "member",
+              "object": "team:eng",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "us",
+                  "limits": {
+                    "read": 0.5
+                  },
+                  "tags": []
+                }
+              }
             }
           ]
         },
         {
           "id": "b",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "tags": ["x", "y"],
+                  "limits": {
+                    "write": 2.0,
+                    "read": 1.0
+                  },
+                  "region": "eu"
+                }
+              }
+            },
+            {
+              "user": "user:anne",
+              "relation": "member",
+              "object": "team:eng"
+            },
+            {
+              "user": "user:bob",
+              "relation": "member",
+              "object": "team:eng",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "tags": [],
+                  "region": "us",
+                  "limits": {
+                    "read": 0.5
+                  }
+                }
+              }
+            },
+            {
+              "user": "team:eng#member",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "user": "user:anne",
+          "relation": "can_view",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:bob",
+              "relation": "member",
+              "object": "team:eng",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "limits": {
+                    "read": 0.5
+                  },
+                  "tags": [],
+                  "region": "us"
+                }
+              }
+            },
+            {
+              "user": "team:eng#member",
+              "relation": "viewer",
+              "object": "document:1"
+            },
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "limits": {
+                    "write": 2,
+                    "read": 1
+                  },
+                  "region": "eu",
+                  "tags": ["x", "y"]
+                }
+              }
+            },
+            {
+              "user": "user:anne",
+              "relation": "member",
+              "object": "team:eng"
+            }
+          ]
+        },
+        {
+          "id": "d",
           "user": "user:anne",
           "relation": "viewer",
           "object": "document:1",
@@ -4273,6 +4438,37 @@
               "user": "team:eng#member",
               "relation": "viewer",
               "object": "document:1"
+            },
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "eu",
+                  "limits": {
+                    "read": 1,
+                    "write": 2
+                  },
+                  "tags": ["y", "x"]
+                }
+              }
+            },
+            {
+              "user": "user:bob",
+              "relation": "member",
+              "object": "team:eng",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "us",
+                  "limits": {
+                    "read": 0.5
+                  },
+                  "tags": []
+                }
+              }
             }
           ]
         }
@@ -4293,9 +4489,90 @@
               "user": "team:eng#member",
               "relation": "viewer",
               "object": "document:1"
+            },
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "eu",
+                  "limits": {
+                    "read": 1,
+                    "write": 2
+                  },
+                  "tags": ["x", "y"]
+                }
+              }
+            },
+            {
+              "user": "user:bob",
+              "relation": "member",
+              "object": "team:eng",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "us",
+                  "limits": {
+                    "read": 0.5
+                  },
+                  "tags": []
+                }
+              }
             }
           ],
-          "for": ["a", "b"]
+          "for": ["a", "b", "c"]
+        },
+        {
+          "id": "d",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:anne",
+              "relation": "member",
+              "object": "team:eng"
+            },
+            {
+              "user": "team:eng#member",
+              "relation": "viewer",
+              "object": "document:1"
+            },
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "eu",
+                  "limits": {
+                    "read": 1,
+                    "write": 2
+                  },
+                  "tags": ["y", "x"]
+                }
+              }
+            },
+            {
+              "user": "user:bob",
+              "relation": "member",
+              "object": "team:eng",
+              "condition": {
+                "name": "in_region",
+                "context": {
+                  "region": "us",
+                  "limits": {
+                    "read": 0.5
+                  },
+                  "tags": []
+                }
+              }
+            }
+          ],
+          "for": ["d"]
         }
       ]
     },
@@ -4418,7 +4695,7 @@
       ]
     },
     {
-      "name": "does not merge different contextual tuples",
+      "name": "does not merge contextual tuples with a different object, user or relation",
       "model": {
         "schema_version": "1.1",
         "type_definitions": [
@@ -4429,6 +4706,13 @@
             "metadata": {
               "relations": {
                 "can_view": {},
+                "editor": {
+                  "directly_related_user_types": [
+                    {
+                      "type": "user"
+                    }
+                  ]
+                },
                 "viewer": {
                   "directly_related_user_types": [
                     {
@@ -4443,6 +4727,9 @@
                 "computedUserset": {
                   "relation": "viewer"
                 }
+              },
+              "editor": {
+                "this": {}
               },
               "viewer": {
                 "this": {}
@@ -4478,6 +4765,32 @@
               "object": "document:2"
             }
           ]
+        },
+        {
+          "id": "c",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:bob",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ]
+        },
+        {
+          "id": "d",
+          "user": "user:anne",
+          "relation": "can_view",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:anne",
+              "relation": "editor",
+              "object": "document:1"
+            }
+          ]
         }
       ],
       "expected_sent": [
@@ -4508,6 +4821,223 @@
             }
           ],
           "for": ["b"]
+        },
+        {
+          "id": "c",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:bob",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ],
+          "for": ["c"]
+        },
+        {
+          "id": "d",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:anne",
+              "relation": "editor",
+              "object": "document:1"
+            }
+          ],
+          "for": ["d"]
+        }
+      ]
+    },
+    {
+      "name": "does not merge contextual tuples with a different userset or wildcard user",
+      "model": {
+        "schema_version": "1.1",
+        "type_definitions": [
+          {
+            "type": "user"
+          },
+          {
+            "metadata": {
+              "relations": {
+                "admin": {
+                  "directly_related_user_types": [
+                    {
+                      "type": "user"
+                    }
+                  ]
+                },
+                "member": {
+                  "directly_related_user_types": [
+                    {
+                      "type": "user"
+                    }
+                  ]
+                }
+              }
+            },
+            "relations": {
+              "admin": {
+                "this": {}
+              },
+              "member": {
+                "this": {}
+              }
+            },
+            "type": "team"
+          },
+          {
+            "metadata": {
+              "relations": {
+                "can_view": {},
+                "viewer": {
+                  "directly_related_user_types": [
+                    {
+                      "type": "user"
+                    },
+                    {
+                      "type": "user",
+                      "wildcard": {}
+                    },
+                    {
+                      "relation": "member",
+                      "type": "team"
+                    },
+                    {
+                      "relation": "admin",
+                      "type": "team"
+                    }
+                  ]
+                }
+              }
+            },
+            "relations": {
+              "can_view": {
+                "computedUserset": {
+                  "relation": "viewer"
+                }
+              },
+              "viewer": {
+                "this": {}
+              }
+            },
+            "type": "document"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "id": "a",
+          "user": "user:anne",
+          "relation": "can_view",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "team:eng#member",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "team:eng#admin",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "user": "user:anne",
+          "relation": "can_view",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ]
+        },
+        {
+          "id": "d",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:anne",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ]
+        }
+      ],
+      "expected_sent": [
+        {
+          "id": "a",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "team:eng#member",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ],
+          "for": ["a"]
+        },
+        {
+          "id": "b",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "team:eng#admin",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ],
+          "for": ["b"]
+        },
+        {
+          "id": "c",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:*",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ],
+          "for": ["c"]
+        },
+        {
+          "id": "d",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "contextual_tuples": [
+            {
+              "user": "user:anne",
+              "relation": "viewer",
+              "object": "document:1"
+            }
+          ],
+          "for": ["d"]
         }
       ]
     },
