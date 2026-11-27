@@ -692,6 +692,97 @@
       ]
     },
     {
+      "name": "keeps a check sent as is in its place between merged groups",
+      "model": {
+        "schema_version": "1.1",
+        "type_definitions": [
+          {
+            "type": "user"
+          },
+          {
+            "metadata": {
+              "relations": {
+                "can_view": {},
+                "viewer": {
+                  "directly_related_user_types": [
+                    {
+                      "type": "user"
+                    }
+                  ]
+                }
+              }
+            },
+            "relations": {
+              "can_view": {
+                "computedUserset": {
+                  "relation": "viewer"
+                }
+              },
+              "viewer": {
+                "this": {}
+              }
+            },
+            "type": "document"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "id": "a",
+          "user": "user:anne",
+          "relation": "can_view",
+          "object": "document:1"
+        },
+        {
+          "id": "b",
+          "user": "user:anne",
+          "relation": "can_veiw",
+          "object": "document:1"
+        },
+        {
+          "id": "c",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1"
+        },
+        {
+          "id": "d",
+          "user": "user:bob",
+          "relation": "can_view",
+          "object": "document:1"
+        },
+        {
+          "id": "e",
+          "user": "user:bob",
+          "relation": "viewer",
+          "object": "document:1"
+        }
+      ],
+      "expected_sent": [
+        {
+          "id": "merged-1",
+          "user": "user:anne",
+          "relation": "viewer",
+          "object": "document:1",
+          "for": ["a", "c"]
+        },
+        {
+          "id": "b",
+          "user": "user:anne",
+          "relation": "can_veiw",
+          "object": "document:1",
+          "for": ["b"]
+        },
+        {
+          "id": "merged-2",
+          "user": "user:bob",
+          "relation": "viewer",
+          "object": "document:1",
+          "for": ["d", "e"]
+        }
+      ]
+    },
+    {
       "name": "stops the chain at a union",
       "model": {
         "schema_version": "1.1",
