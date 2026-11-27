@@ -67,9 +67,8 @@ def checks_to_send(
 
     if lookup.aliases is None:
         if model_read_fails_call(lookup.error):
-            # BatchCheck would fail too if the model is missing or no token can be
-            # fetched, and falling back on a 401 or 403 would hide wrong credentials.
-            # Fail before sending anything.
+            # BatchCheck would fail too if the model is missing, and falling back on a
+            # 401 or 403 would hide wrong credentials. Fail before sending anything.
             raise lookup.error
         groups = unmerged(checks)
         metrics.fallback(getattr(lookup.error, "status", None))

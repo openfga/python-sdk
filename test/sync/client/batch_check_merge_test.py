@@ -14,6 +14,8 @@ from openfga_sdk.exceptions import (
     FgaValidationException,
     ForbiddenException,
     NotFoundException,
+    RateLimitExceededError,
+    ServiceException,
     UnauthorizedException,
     ValidationException,
 )
@@ -29,7 +31,9 @@ from test.client.batch_check_merge_test import (
     MODELS_URL,
     OTHER_MODEL_ID,
     STORE_ID,
+    TOKEN_URL,
     UNMERGED,
+    bad_request,
     checks,
     forbidden,
     http_mock_response,
@@ -39,7 +43,7 @@ from test.client.batch_check_merge_test import (
     server_error,
     store_not_found,
     timed_out,
-    token_request_failed,
+    token_configuration,
     unauthorized,
 )
 
@@ -53,12 +57,25 @@ def mock_response(body, status=200):
     return rest.RESTResponse(obj, obj.data)
 
 
+def token_issued():
+    return mock_response(json.dumps({"access_token": "token", "expires_in": 3600}))
+
+
+def no_token_issued():
+    return mock_response("{}")
+
+
 class FakeServer:
     """
-    Answers model reads and BatchCheck requests, and records what was sent.
+    Answers token requests, model reads and BatchCheck requests, and records what was
+    sent.
     """
 
-    def __init__(self, model_error=None, answer=None, model_body=None):
+    def __init__(
+        self, model_error=None, answer=None, model_body=None, token=token_issued
+    ):
+        self.token = token
+        self.token_requests = 0
         self.model_error = model_error
         self.model_body = (
             {"authorization_model": MODEL} if model_body is None else model_body
@@ -72,6 +89,13 @@ class FakeServer:
         self.sent = []
 
     def __call__(self, method, url, **kwargs):
+        if method == "POST" and url == TOKEN_URL:
+            self.token_requests += 1
+            response = self.token()
+            if isinstance(response, Exception):
+                raise response
+            return response
+
         if method == "GET" and url.startswith(MODELS_URL):
             self.model_reads += 1
             self.model_ids_read.append(url.removeprefix(MODELS_URL))
@@ -381,25 +405,69 @@ class TestSyncBatchCheckMergeEquivalentChecks(TestCase):
         )
 
     @patch.object(rest.RESTClientObject, "request")
-    def test_fails_before_sending_when_the_store_does_not_exist_or_no_token(
-        self, mock_request
+    def test_fails_before_sending_when_the_store_does_not_exist(self, mock_request):
+        server = FakeServer(model_error=store_not_found)
+        mock_request.side_effect = server
+
+        with OpenFgaClient(self.configuration) as client:
+            with self.assertNoLogs("openfga_sdk.client._batch_check_merge", "WARNING"):
+                with self.assertRaises(NotFoundException):
+                    self.batch_check(client, checks())
+
+        self.assertEqual(server.sent, [])
+
+    @patch.object(TelemetryMetrics, "batchCheckMergeFallback")
+    @patch.object(rest.RESTClientObject, "request")
+    def test_fails_like_the_option_off_when_the_token_request_fails(
+        self, mock_request, mock_fallback
     ):
-        for model_error, error_type in [
-            (store_not_found, NotFoundException),
-            (token_request_failed, AuthenticationError),
+        for token, error_type in [
+            (unauthorized, UnauthorizedException),
+            (bad_request, ValidationException),
+            (rate_limited, RateLimitExceededError),
+            (server_error, ServiceException),
+            (connection_dropped, urllib3.exceptions.ProtocolError),
+            (no_token_issued, AuthenticationError),
         ]:
-            with self.subTest(error=model_error.__name__):
-                server = FakeServer(model_error=model_error)
-                mock_request.side_effect = server
+            with self.subTest(token=token.__name__):
+                token_requests = []
+                for merge in [False, True]:
+                    server = FakeServer(token=token)
+                    mock_request.side_effect = server
 
-                with OpenFgaClient(self.configuration) as client:
-                    with self.assertNoLogs(
-                        "openfga_sdk.client._batch_check_merge", "WARNING"
-                    ):
-                        with self.assertRaises(error_type):
-                            self.batch_check(client, checks())
+                    with OpenFgaClient(token_configuration()) as client:
+                        with self.assertNoLogs(
+                            "openfga_sdk.client._batch_check_merge", "WARNING"
+                        ):
+                            with self.assertRaises(error_type):
+                                client.batch_check(
+                                    ClientBatchCheckRequest(checks=checks()),
+                                    options={"merge_equivalent_checks": merge},
+                                )
 
-                self.assertEqual(server.sent, [])
+                    self.assertEqual(server.model_reads, 0)
+                    self.assertEqual(server.sent, [])
+                    token_requests.append(server.token_requests)
+
+                self.assertEqual(token_requests[1], token_requests[0])
+
+        mock_fallback.assert_not_called()
+
+    @patch.object(rest.RESTClientObject, "request")
+    def test_a_failed_token_request_is_not_remembered(self, mock_request):
+        server = FakeServer(token=rate_limited)
+        mock_request.side_effect = server
+
+        with OpenFgaClient(token_configuration()) as client:
+            with self.assertRaises(RateLimitExceededError):
+                self.batch_check(client, checks())
+
+            server.token = token_issued
+            response = self.batch_check(client, checks())
+
+        self.assertEqual(server.model_reads, 1)
+        self.assertEqual(sent_checks(server), [("merged-1", "viewer"), ("d", "editor")])
+        self.assertEqual(response.checks_sent, 2)
 
     @patch.object(rest.RESTClientObject, "request")
     def test_fails_before_sending_when_the_model_does_not_exist(self, mock_request):

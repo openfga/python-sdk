@@ -14,7 +14,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from openfga_sdk.client._equivalent_checks import ModelAliases
-from openfga_sdk.exceptions import ApiException, AuthenticationError
+from openfga_sdk.exceptions import ApiException
 
 
 MAX_MODELS = 32
@@ -30,11 +30,9 @@ def model_read_fails_call(error: Exception | None) -> bool:
     """
     Whether a model read error fails the BatchCheck call instead of sending the checks
     unmerged: the model or store doesn't exist, or the credentials can't read the model
-    (a 401 or 403 from the read or the token request, or a token response with no
-    usable token)
+    (a 401 or 403). Token request failures never get here: the clients get the token
+    before the read, and fail the call if they can't.
     """
-    if isinstance(error, AuthenticationError):
-        return True
     return isinstance(error, ApiException) and (
         error.code in NOT_FOUND_CODES or error.status in CREDENTIAL_FAILURE_STATUSES
     )

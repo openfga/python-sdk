@@ -7,7 +7,6 @@ from unittest import IsolatedAsyncioTestCase, TestCase, skipIf
 from openfga_sdk.client._model_cache import AsyncModelCache
 from openfga_sdk.client._model_cache_base import model_read_fails_call
 from openfga_sdk.exceptions import (
-    AuthenticationError,
     ForbiddenException,
     NotFoundException,
     RateLimitExceededError,
@@ -194,7 +193,6 @@ class TestModelReadFailsCall(TestCase):
             (with_code(NotFoundException(status=404), "store_id_not_found"), True),
             (UnauthorizedException(status=401), True),
             (ForbiddenException(status=403), True),
-            (AuthenticationError(status=500), True),
             (with_code(ValidationException(status=400), "validation_error"), False),
             (RateLimitExceededError(status=429), False),
             (ServiceException(status=500), False),

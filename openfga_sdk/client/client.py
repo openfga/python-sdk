@@ -932,6 +932,7 @@ class OpenFgaClient:
         if not checks:
             return ClientBatchCheckResponse([], checks_sent=0)
 
+        await self._fetch_token()
         lookup = await self._read_and_cache_model_aliases(
             store_id, authorization_model_id, options
         )
@@ -954,6 +955,17 @@ class OpenFgaClient:
         return ClientBatchCheckResponse(
             expand(checks, groups, results), checks_sent=len(groups)
         )
+
+    async def _fetch_token(self) -> None:
+        """
+        Get the access token before the model read, if the client uses client
+        credentials. The checks need the same token, so if it can't be fetched the call
+        fails with that error, as it would with the option off, instead of falling back
+        or being remembered as a model read failure.
+        """
+        oauth2_client = self._api._oauth2_client
+        if oauth2_client is not None:
+            await oauth2_client.get_authentication_header(self._api_client.rest_client)
 
     async def _read_and_cache_model_aliases(
         self,
