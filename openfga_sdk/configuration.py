@@ -164,6 +164,8 @@ class Configuration:
       in PEM format
     :param api_url: str - the URL of the FGA server
     :param timeout_millisec: int | None - the default timeout in milliseconds for requests
+    :param follow_redirects: bool - whether to follow HTTP redirects from the server.
+      Defaults to True. When False, a 3xx response is raised as an ApiException.
     """
 
     _default = None
@@ -202,6 +204,7 @@ class Configuration:
         ) = None,
         timeout_millisec: int | None = None,
         headers: dict[str, str] | None = None,
+        follow_redirects: bool = True,
     ):
         """Constructor"""
         self._url = api_url
@@ -216,6 +219,10 @@ class Configuration:
             self._retry_params = RetryParams()
 
         self._timeout_millisec = timeout_millisec or 5000 * 60
+        self.follow_redirects = follow_redirects
+        """Follow HTTP redirects returned by the server. When False, a 3xx
+           response is raised as an ApiException instead of being followed.
+        """
         """Default Base url
         """
         self.server_index = 0

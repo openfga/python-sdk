@@ -200,6 +200,9 @@ class RESTClientObject:
                 maxsize = 4
 
         self._timeout_millisec = configuration.timeout_millisec
+        self._follow_redirects = (
+            getattr(configuration, "follow_redirects", True) is not False
+        )
 
         if hasattr(configuration, "proxy") and configuration.proxy is not None:
             self.pool_manager: urllib3.ProxyManager | urllib3.PoolManager = (
@@ -287,6 +290,7 @@ class RESTClientObject:
             "timeout": timeout,
             "headers": headers,
             "preload_content": _preload_content,
+            "redirect": self._follow_redirects,
         }
 
         if query_params:
