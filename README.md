@@ -323,6 +323,17 @@ You need your store id to call the OpenFGA API (unless it is to call the [Create
 
 If your server is configured with [authentication enabled](https://openfga.dev/docs/getting-started/setup-openfga#configuring-authentication), you also need to have your credentials ready.
 
+To call a different store for a single request, pass `store_id` in the `options`. It overrides the store ID in the configuration for that request only, so one client can work with several stores. If the client has an `authorization_model_id` configured, pass the other store's model ID in the options as well:
+
+```python
+store = await fga_client.get_store(options={"store_id": "01JD9Z1F6Y0XWAGKM9KYQ8GXMC"})
+
+response = await fga_client.check(
+    body=ClientCheckRequest(user="user:anne", relation="viewer", object="document:roadmap"),
+    options={"store_id": "01JD9Z1F6Y0XWAGKM9KYQ8GXMC"},
+)
+```
+
 ### Calling the API
 
 #### Stores
