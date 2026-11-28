@@ -4,6 +4,8 @@ import pytest
 
 from opentelemetry.metrics import Counter, Histogram, Meter
 
+from openfga_sdk.telemetry.attributes import TelemetryAttributes
+from openfga_sdk.telemetry.configuration import TelemetryConfiguration
 from openfga_sdk.telemetry.counters import TelemetryCounters
 from openfga_sdk.telemetry.histograms import TelemetryHistograms
 from openfga_sdk.telemetry.metrics import TelemetryMetrics
@@ -80,3 +82,86 @@ def test_invalid_histogram_key():
     telemetry = TelemetryMetrics()
     with pytest.raises(ValueError):
         telemetry.histogram("invalid_histogram_key")
+
+
+@patch("openfga_sdk.telemetry.metrics.get_meter")
+def test_batch_check_merge_counters_use_their_attribute_filters(mock_get_meter):
+    mock_meter = MagicMock(spec=Meter)
+    mock_counter = MagicMock(spec=Counter)
+    mock_get_meter.return_value = mock_meter
+    mock_meter.create_counter.return_value = mock_counter
+
+    telemetry = TelemetryMetrics()
+    configuration = TelemetryConfiguration(
+        {
+            "metrics": {
+                "fga-client.model_cache.lookup": {
+                    "fga-client.model_cache.result": True,
+                },
+            }
+        }
+    )
+
+    telemetry.modelCacheLookup(
+        attributes={
+            TelemetryAttributes.fga_client_model_cache_result: "hit",
+            TelemetryAttributes.fga_client_request_store_id: "store",
+        },
+        configuration=configuration,
+    )
+    mock_counter.add.assert_called_once_with(
+        amount=1, attributes={"fga-client.model_cache.result": "hit"}
+    )
+
+    # Not configured, so not recorded
+    mock_counter.add.reset_mock()
+    telemetry.batchCheckChecksSent(2, configuration=configuration)
+    telemetry.batchCheckChecksRequested(4, configuration=configuration)
+    telemetry.batchCheckMergeFallback(configuration=configuration)
+    mock_counter.add.assert_not_called()
+
+
+@patch("openfga_sdk.telemetry.metrics.get_meter")
+def test_batch_check_merge_counters_are_on_by_default(mock_get_meter):
+    mock_meter = MagicMock(spec=Meter)
+    mock_counter = MagicMock(spec=Counter)
+    mock_get_meter.return_value = mock_meter
+    mock_meter.create_counter.return_value = mock_counter
+
+    telemetry = TelemetryMetrics()
+    configuration = TelemetryConfiguration(TelemetryConfiguration.getSdkDefaults())
+    attributes = {
+        TelemetryAttributes.fga_client_request_store_id: "store",
+        TelemetryAttributes.fga_client_request_model_id: "model",
+    }
+
+    telemetry.batchCheckChecksRequested(4, attributes, configuration)
+    telemetry.batchCheckChecksSent(2, attributes, configuration)
+    telemetry.batchCheckMergeFallback(
+        attributes={**attributes, TelemetryAttributes.http_response_status_code: 403},
+        configuration=configuration,
+    )
+    telemetry.modelCacheLookup(
+        attributes={
+            **attributes,
+            TelemetryAttributes.fga_client_model_cache_result: "miss",
+        },
+        configuration=configuration,
+    )
+
+    expected = {
+        "fga-client.request.store_id": "store",
+        "fga-client.request.model_id": "model",
+    }
+    assert [call.kwargs for call in mock_counter.add.call_args_list] == [
+        {"amount": 4, "attributes": expected},
+        {"amount": 2, "attributes": expected},
+        {
+            "amount": 1,
+            "attributes": {**expected, "http.response.status_code": 403},
+        },
+        {
+            "amount": 1,
+            "attributes": {**expected, "fga-client.model_cache.result": "miss"},
+        },
+    ]

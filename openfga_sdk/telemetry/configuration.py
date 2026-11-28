@@ -479,6 +479,7 @@ class TelemetryMetricConfiguration:
             TelemetryAttributes.fga_client_request_store_id: False,
             TelemetryAttributes.fga_client_response_model_id: False,
             TelemetryAttributes.fga_client_user: False,
+            TelemetryAttributes.fga_client_model_cache_result: False,
             TelemetryAttributes.http_client_request_duration: False,
             TelemetryAttributes.http_host: False,
             TelemetryAttributes.http_request_method: False,
@@ -616,6 +617,7 @@ class TelemetryMetricConfiguration:
             TelemetryAttributes.fga_client_request_store_id: True,
             TelemetryAttributes.fga_client_response_model_id: True,
             TelemetryAttributes.fga_client_user: False,
+            TelemetryAttributes.fga_client_model_cache_result: True,
             TelemetryAttributes.http_client_request_duration: False,
             TelemetryAttributes.http_host: True,
             TelemetryAttributes.http_request_method: True,
@@ -828,6 +830,10 @@ class TelemetryMetricsConfiguration(TelemetryMetricsConfigurationProtocol):
             TelemetryCounters.fga_client_credentials_request: None,
             TelemetryHistograms.fga_client_request_duration: None,
             TelemetryHistograms.fga_client_query_duration: None,
+            TelemetryCounters.fga_client_batch_check_checks_requested: None,
+            TelemetryCounters.fga_client_batch_check_checks_sent: None,
+            TelemetryCounters.fga_client_model_cache_lookup: None,
+            TelemetryCounters.fga_client_batch_check_merge_fallback: None,
         }
         self._valid = True
 
@@ -990,6 +996,10 @@ class TelemetryMetricsConfiguration(TelemetryMetricsConfigurationProtocol):
             TelemetryCounters.fga_client_credentials_request: TelemetryMetricConfiguration.getSdkDefaults(),
             TelemetryHistograms.fga_client_query_duration: TelemetryMetricConfiguration.getSdkDefaults(),
             TelemetryHistograms.fga_client_request_duration: TelemetryMetricConfiguration.getSdkDefaults(),
+            TelemetryCounters.fga_client_batch_check_checks_requested: TelemetryMetricConfiguration.getSdkDefaults(),
+            TelemetryCounters.fga_client_batch_check_checks_sent: TelemetryMetricConfiguration.getSdkDefaults(),
+            TelemetryCounters.fga_client_model_cache_lookup: TelemetryMetricConfiguration.getSdkDefaults(),
+            TelemetryCounters.fga_client_batch_check_merge_fallback: TelemetryMetricConfiguration.getSdkDefaults(),
         }
 
 

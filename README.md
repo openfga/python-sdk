@@ -965,6 +965,46 @@ response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), 
 # ]
 ```
 
+###### Merge equivalent checks
+
+If you set `merge_equivalent_checks` to `True` in the options, the SDK sends checks that will get the same answer only once, then copies that answer back to each of them. You still get one result for every check you passed in.
+
+Two kinds of checks are merged:
+
+- Checks on a relation that is an alias of another one. With `define can_view: viewer`, a check on `can_view` and a check on `viewer` with the same user, object, context and contextual tuples become one check on `viewer`. Chains like `define can_share: can_view` are followed too.
+- Exact repeats, with the same user, relation, object, context and contextual tuples.
+
+```python
+options = {
+    # Required, either here or in the configuration
+    "authorization_model_id": "01GXSA8YR785C4FYS3C0RTG7B1",
+    "merge_equivalent_checks": True,
+}
+response = await fga_client.batch_check(ClientBatchCheckRequest(checks=checks), options)
+# response.checks_sent is how many checks were sent to the server
+```
+
+The option is off by default, and nothing changes while it is off. Leaving it out or setting it to `None` keeps it off. Any other value that isn't a bool, like `"true"`, fails with a validation error.
+
+To find aliases, the SDK reads the authorization model the first time it needs it and keeps it in memory, so create the client once and reuse it. Each client keeps up to 32 models and drops the least recently used one. The call fails before any check is sent when:
+
+- no authorization model ID is set
+- the model or the store doesn't exist
+- the SDK can't get an access token, after retrying as usual. The checks need the same token, so the call would fail with the option off too.
+- the credentials can't read the model (a 401 or 403). If your credentials can only run checks, leave the option off.
+
+If reading the model fails for another reason, such as a 429, a 5xx or a timeout, the SDK logs a warning and sends the checks without merging them. It doesn't retry this read, even if you set `retry_params`, so a failed read costs one request. The next call reads the model again.
+
+Compared with leaving the option off, a call:
+
+- makes one extra request the first time the client needs a model, to read it. Later calls use the copy in memory, and calls running at the same time share one read.
+- spends a little time grouping the checks and copying the answers back. This happens in memory and is small next to a request.
+- sends fewer checks when some of them merge, so the checks themselves can finish sooner.
+
+Each client reads each model once, unless it uses more than 32 models. Some services rate limit model reads much lower than checks, so if many clients start at the same time, some may get a 429. Those clients send checks unmerged and read the model again on each call until a read succeeds.
+
+If a merged check returns an error, every check it stands for gets that error. Correlation IDs must match `^[\w\d-]{1,36}$` (ASCII), and missing ones are generated. For metrics, see `fga-client.batch_check.*` and `fga-client.model_cache.lookup` in [OpenTelemetry](docs/opentelemetry.md).
+
 ##### Client Batch Check
 
 

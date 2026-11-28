@@ -5,6 +5,19 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from typing import Any
 
+from openfga_sdk.client._batch_check_merge import (
+    TokenWatch,
+    checks_to_send,
+    log_model_read_failure,
+    model_read_kwargs,
+)
+from openfga_sdk.client._equivalent_checks import (
+    ModelAliases,
+    expand,
+    merge_enabled,
+    prepare_checks,
+)
+from openfga_sdk.client._model_cache_base import ModelLookup, TokenRequestFailed
 from openfga_sdk.client.configuration import ClientConfiguration
 from openfga_sdk.client.models.assertion import ClientAssertion
 from openfga_sdk.client.models.batch_check_item import (
@@ -48,7 +61,9 @@ from openfga_sdk.exceptions import (
     UnauthorizedException,
 )
 from openfga_sdk.models.assertion import Assertion
+from openfga_sdk.models.batch_check_item import BatchCheckItem
 from openfga_sdk.models.batch_check_request import BatchCheckRequest
+from openfga_sdk.models.batch_check_response import BatchCheckResponse
 from openfga_sdk.models.check_request import CheckRequest
 from openfga_sdk.models.contextual_tuple_keys import ContextualTupleKeys
 from openfga_sdk.models.create_store_request import CreateStoreRequest
@@ -71,6 +86,7 @@ from openfga_sdk.models.write_authorization_model_request import (
 )
 from openfga_sdk.models.write_request import WriteRequest
 from openfga_sdk.sync.api_client import ApiClient
+from openfga_sdk.sync.client._model_cache import ModelCache
 from openfga_sdk.sync.open_fga_api import OpenFgaApi
 from openfga_sdk.validation import is_well_formed_ulid_string
 
@@ -173,6 +189,7 @@ class OpenFgaClient:
         self._client_configuration = configuration
         self._api_client = ApiClient(configuration)
         self._api = OpenFgaApi(self._api_client)
+        self._model_cache = ModelCache()
 
         # Set default headers from configuration
         if configuration.headers:
@@ -777,6 +794,7 @@ class OpenFgaClient:
         :param authorization_model_id(options) - Overrides the authorization model id in the configuration
         :param max_parallel_requests(options) - Max number of requests to issue in parallel. Defaults to 10
         :param max_batch_size(options) - Max number of checks to include in a request. Defaults to 50
+        :param merge_equivalent_checks(options) - Send checks that are certain to get the same answer only once. Requires an authorization model id and read access to that model
         :param header(options) - Custom headers to send alongside the request
         :param retryParams(options) - Override the retry parameters for this request
         :param retryParams.maxRetry(options) - Override the max number of retries on each API request
@@ -806,6 +824,19 @@ class OpenFgaClient:
             elif isinstance(options["max_batch_size"], int):
                 max_batch_size = options["max_batch_size"]
 
+        if merge_enabled(options):
+            # Reading the model and sending the checks must use the same model and store.
+            authorization_model_id = self._get_authorization_model_id(options)
+            prepare_checks(body.checks, authorization_model_id)
+            return self._merged_batch_check(
+                body.checks,
+                self._api_client._get_store_id(),
+                authorization_model_id,
+                options,
+                max_parallel_requests,
+                max_batch_size,
+            )
+
         id_to_check: dict[str, ClientBatchCheckItem] = {}
 
         def track_and_transform(checks):
@@ -831,6 +862,8 @@ class OpenFgaClient:
             for i in range((len(body.checks) + max_batch_size - 1) // max_batch_size)
         ]
 
+        result = []
+
         def map_response(id, result):
             check = id_to_check[id]
             return ClientBatchCheckSingleResponse(
@@ -840,30 +873,110 @@ class OpenFgaClient:
                 error=result.error,
             )
 
-        def single_batch_check(checks):
-            res = self._single_batch_check(
+        for response in self._send_batch_checks(
+            checks,
+            self._get_authorization_model_id(options),
+            options,
+            max_parallel_requests,
+        ):
+            result.extend(
+                map_response(c_id, c_result)
+                for c_id, c_result in response.result.items()
+            )
+
+        return ClientBatchCheckResponse(result)
+
+    def _send_batch_checks(
+        self,
+        chunks: list[list[BatchCheckItem]],
+        authorization_model_id: str | None,
+        options: dict[str, int | str | dict[str, int | str]],
+        max_parallel_requests: int,
+    ) -> list[BatchCheckResponse]:
+        """
+        Send each chunk of checks as one BatchCheck request, with at most
+        max_parallel_requests in flight, and return the responses in chunk order
+        """
+        consistency = self._get_consistency(options)
+
+        def send(checks):
+            return self._single_batch_check(
                 BatchCheckRequest(
                     checks=checks,
-                    authorization_model_id=self._get_authorization_model_id(options),
-                    consistency=self._get_consistency(options),
+                    authorization_model_id=authorization_model_id,
+                    consistency=consistency,
                 ),
                 options,
             )
 
-            return res
-
-        result = []
-
         with ThreadPoolExecutor(max_workers=max_parallel_requests) as executor:
-            for response in executor.map(single_batch_check, checks):
-                result.extend(
-                    [
-                        map_response(c_id, c_result)
-                        for c_id, c_result in response.result.items()
-                    ]
-                )
+            return list(executor.map(send, chunks))
 
-        return ClientBatchCheckResponse(result)
+    def _merged_batch_check(
+        self,
+        checks: list[ClientBatchCheckItem],
+        store_id: str,
+        authorization_model_id: str,
+        options: dict[str, int | str | dict[str, int | str]],
+        max_parallel_requests: int,
+        max_batch_size: int,
+    ) -> ClientBatchCheckResponse:
+        """
+        Run a BatchCheck with merge_equivalent_checks on, for checks already validated
+        """
+        if not checks:
+            return ClientBatchCheckResponse([], checks_sent=0)
+
+        lookup = self._read_and_cache_model_aliases(
+            store_id, authorization_model_id, options
+        )
+        groups = checks_to_send(
+            self._api_client, store_id, authorization_model_id, lookup, checks
+        )
+
+        results = {}
+        for response in self._send_batch_checks(
+            [
+                [construct_batch_item(group.check) for group in chunk]
+                for chunk in _chuck_array(groups, max_batch_size)
+            ],
+            authorization_model_id,
+            options,
+            max_parallel_requests,
+        ):
+            results.update(response.result or {})
+
+        return ClientBatchCheckResponse(
+            expand(checks, groups, results), checks_sent=len(groups)
+        )
+
+    def _read_and_cache_model_aliases(
+        self,
+        store_id: str,
+        authorization_model_id: str,
+        options: dict[str, int | str | dict[str, int | str]] | None = None,
+    ) -> ModelLookup:
+        """
+        Read an authorization model through the client's model cache, and work out its
+        aliases for merge_equivalent_checks. The read is never retried. If it fails
+        because the SDK couldn't get an access token, the error is a TokenRequestFailed.
+        :param header(options) - Custom headers to send alongside the request
+        """
+
+        def load():
+            token = TokenWatch(self._api._oauth2_client)
+            try:
+                response = self._api.read_authorization_model(
+                    authorization_model_id, **model_read_kwargs(options)
+                )
+                return ModelAliases(response.authorization_model)
+            except Exception as error:
+                if token.token_request_failed():
+                    raise TokenRequestFailed(error) from error
+                log_model_read_failure(error, store_id, authorization_model_id)
+                raise
+
+        return self._model_cache.get((store_id, authorization_model_id), load)
 
     def expand(
         self,

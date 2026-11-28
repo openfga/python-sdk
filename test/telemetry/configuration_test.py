@@ -282,18 +282,22 @@ def test_default_telemetry_metrics_configuration():
     metrics_config = TelemetryMetricsConfiguration.getSdkDefaults()
 
     assert isinstance(metrics_config, dict)
-    assert len(metrics_config) == 3
+    assert len(metrics_config) == 7
 
     assert TelemetryCounters.fga_client_credentials_request in metrics_config
     assert TelemetryHistograms.fga_client_query_duration in metrics_config
     assert TelemetryHistograms.fga_client_request_duration in metrics_config
+    assert TelemetryCounters.fga_client_batch_check_checks_requested in metrics_config
+    assert TelemetryCounters.fga_client_batch_check_checks_sent in metrics_config
+    assert TelemetryCounters.fga_client_model_cache_lookup in metrics_config
+    assert TelemetryCounters.fga_client_batch_check_merge_fallback in metrics_config
 
 
 def test_default_telemetry_metric_configuration():
     metric_config = TelemetryMetricConfiguration.getSdkDefaults()
 
     assert isinstance(metric_config, dict)
-    assert len(metric_config) == 16
+    assert len(metric_config) == 17
 
     assert (
         metric_config[TelemetryAttributes.fga_client_request_batch_check_size] is False
@@ -304,6 +308,7 @@ def test_default_telemetry_metric_configuration():
     assert metric_config[TelemetryAttributes.fga_client_request_store_id] is True
     assert metric_config[TelemetryAttributes.fga_client_response_model_id] is True
     assert metric_config[TelemetryAttributes.fga_client_user] is False
+    assert metric_config[TelemetryAttributes.fga_client_model_cache_result] is True
     assert metric_config[TelemetryAttributes.http_client_request_duration] is False
     assert metric_config[TelemetryAttributes.http_host] is True
     assert metric_config[TelemetryAttributes.http_request_method] is True
