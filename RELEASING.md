@@ -24,11 +24,17 @@ routine breaking changes.
 
 1. Go to **Actions → release-please** and click **Run workflow**.
 2. Choose a bump type:
+   - `auto` — bump determined from the conventional commits since the last release (default)
    - `patch` — bugfixes, docs, small changes
    - `minor` — breaking changes (see above)
-   - `explicit` — you specify the exact version string (e.g. `0.11.0` or `0.11.0-beta.1`)
-3. The workflow creates a release PR. Review it, then merge.
-4. The GitHub Release and tag are created automatically on merge.
+   - `explicit` — uses the exact version entered in `release-version` (e.g. `0.11.0` or
+     `0.11.0-beta.1`); the other bump types ignore that field
+3. The workflow creates a release PR. It is built from `main` at dispatch time and not
+   refreshed — if anything else merges to `main` first, close it and re-run the workflow.
+   Review it, then merge.
+4. On merge, CI pushes a signed `vX.Y.Z` tag and a draft GitHub release; the tag build
+   publishes to PyPI and then undrafts the release. If the release stays a draft, check
+   that run.
 
 > **Note — release-please only understands `auto` or an explicit version string.**
 > The `patch`, `minor`, and `major` options in the workflow dropdown are conveniences
@@ -65,6 +71,10 @@ every beta, incrementing the suffix manually:
 0.11.0-beta.1  →  explicit: 0.11.0-beta.2  →  explicit: 0.11.0
 ```
 
+There is also a `release-please-develop` lane that cuts pre-releases from the `develop`
+branch — sync `develop` with `main` first. A version like `0.11.0-beta.1` appears on
+PyPI as `0.11.0b1`.
+
 ---
 
 ## What goes in the changelog
@@ -77,8 +87,32 @@ feat: add support for batch check          → Added
 fix: correct retry logic for transient errors  → Fixed
 docs: update API reference                 → Documentation
 perf: cache DNS lookups                    → Changed
-refactor: extract auth helper              → (hidden)
+refactor: extract auth helper               → Changed
 chore: bump dependencies                   → (hidden)
+```
+
+### Overriding a changelog entry
+
+If a commit message isn't user-facing, add this block to the PR description (before or
+after merging; re-run the release workflow to pick it up). release-please uses it instead
+of the commit message:
+
+```
+BEGIN_COMMIT_OVERRIDE
+feat: user-facing description of the change
+END_COMMIT_OVERRIDE
+```
+
+### Breaking changes
+
+Mark the type with `!` and add a `BREAKING CHANGE:` footer. PRs are squash-merged, and a
+single-commit PR's squash title defaults to the commit title, not the PR title. Put the `!`
+in both, and check the squash dialog shows it and the footer before merging:
+
+```
+feat!: remove the Foo option
+
+BREAKING CHANGE: the Foo option has been removed. Use Bar instead.
 ```
 
 ---
