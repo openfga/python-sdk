@@ -66,10 +66,6 @@ class AsyncModelCache(ModelCacheBase):
     ) -> ModelAliases:
         try:
             aliases = await load()
-        except Exception as error:
-            self._remember_failure(key, error)
-            raise
-        else:
             self._store(key, aliases)
             return aliases
         finally:

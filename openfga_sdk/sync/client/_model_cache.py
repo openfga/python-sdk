@@ -52,7 +52,6 @@ class ModelCache(ModelCacheBase):
             aliases = load()
         except Exception as error:
             with self._lock:
-                self._remember_failure(key, error)
                 self._loading.pop(key, None)
             future.set_exception(error)
             return ModelLookup(error=error)

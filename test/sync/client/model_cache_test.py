@@ -16,14 +16,6 @@ from openfga_sdk.sync.client._model_cache import ModelCache
 KEY = ("store", "model")
 
 
-class FakeClock:
-    def __init__(self):
-        self.now = 0.0
-
-    def __call__(self):
-        return self.now
-
-
 class TestModelCache(TestCase):
     def test_threads_share_one_read_and_later_lookups_hit(self):
         cache = ModelCache()
@@ -56,34 +48,14 @@ class TestModelCache(TestCase):
         self.assertEqual([r.aliases for r in results], ["model"] * 4)
         self.assertTrue(cache.get(KEY, load).hit)
 
-    def test_a_failed_read_is_remembered_for_a_short_time(self):
-        clock = FakeClock()
-        cache = ModelCache(failure_ttl=60, clock=clock)
-        reads = 0
-        error = RateLimitExceededError(status=429)
-
-        def load():
-            nonlocal reads
-            reads += 1
-            raise error
-
-        self.assertIs(cache.get(KEY, load).error, error)
-        clock.now = 59
-        self.assertIs(cache.get(KEY, load).error, error)
-        self.assertEqual(reads, 1)
-
-        clock.now = 60
-        cache.get(KEY, load)
-        self.assertEqual(reads, 2)
-
-    def test_only_a_429_is_remembered(self):
-        for error, remembered in [
-            (RateLimitExceededError(status=429), True),
-            (ForbiddenException(status=403), False),
-            (UnauthorizedException(status=401), False),
-            (ValidationException(status=400), False),
-            (ServiceException(status=500), False),
-            (TimeoutError(), False),
+    def test_a_failed_read_is_not_cached(self):
+        for error in [
+            RateLimitExceededError(status=429),
+            ForbiddenException(status=403),
+            UnauthorizedException(status=401),
+            ValidationException(status=400),
+            ServiceException(status=500),
+            TimeoutError(),
         ]:
             with self.subTest(error=type(error).__name__):
                 cache = ModelCache()
@@ -94,9 +66,9 @@ class TestModelCache(TestCase):
                     reads += 1
                     raise error
 
-                cache.get(KEY, load)
-                cache.get(KEY, load)
-                self.assertEqual(reads, 1 if remembered else 2)
+                self.assertIs(cache.get(KEY, load).error, error)
+                self.assertIs(cache.get(KEY, load).error, error)
+                self.assertEqual(reads, 2)
 
     def test_drops_the_least_recently_used_model(self):
         cache = ModelCache(max_models=2)
@@ -139,27 +111,6 @@ class TestModelCache(TestCase):
             thread.join()
 
         self.assertEqual([r.error for r in results], [error] * 4)
-
-    def test_remembers_a_bounded_number_of_failures(self):
-        cache = ModelCache(max_models=2)
-        reads = []
-
-        def get(key):
-            def load():
-                reads.append(key)
-                raise RateLimitExceededError(status=429)
-
-            return cache.get(key, load)
-
-        get("a")
-        get("b")
-        get("c")
-        get("b")
-        get("c")
-        self.assertEqual(reads, ["a", "b", "c"])
-
-        get("a")
-        self.assertEqual(reads, ["a", "b", "c", "a"])
 
     def test_an_interrupted_read_is_not_cached(self):
         cache = ModelCache()

@@ -486,7 +486,7 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         self.assertIn(MODEL_ID, logs.output[0])
         self.assertIn(STORE_ID, logs.output[0])
         self.assertIn("429", logs.output[0])
-        self.assertEqual(server.model_reads, 1)
+        self.assertEqual(server.model_reads, 2)
         self.assertEqual(sent_checks(server), UNMERGED * 2)
         self.assertEqual(response.checks_sent, 4)
         self.assertEqual(second.checks_sent, 4)
@@ -513,7 +513,6 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
 
                 self.assertEqual(sent_checks(server), UNMERGED * 2)
                 self.assertEqual(response.checks_sent, 4)
-                # Only a 429 is remembered, so the next call reads again.
                 self.assertEqual(server.model_reads, 2)
                 self.assertEqual(
                     mock_fallback.call_args.kwargs["attributes"][
@@ -621,7 +620,7 @@ class TestBatchCheckMergeEquivalentChecks(IsolatedAsyncioTestCase):
         mock_fallback.assert_not_called()
 
     @patch.object(rest.RESTClientObject, "request")
-    async def test_a_failed_token_request_is_not_remembered(self, mock_request):
+    async def test_the_next_call_works_after_a_failed_token_request(self, mock_request):
         server = FakeServer(token=rate_limited)
         mock_request.side_effect = server
 

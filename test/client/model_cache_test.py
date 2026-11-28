@@ -19,14 +19,6 @@ from openfga_sdk.exceptions import (
 KEY = ("store", "model")
 
 
-class FakeClock:
-    def __init__(self):
-        self.now = 0.0
-
-    def __call__(self):
-        return self.now
-
-
 class TestAsyncModelCache(IsolatedAsyncioTestCase):
     async def test_parallel_lookups_share_one_read_and_later_lookups_hit(self):
         cache = AsyncModelCache()
@@ -50,9 +42,8 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         later = await cache.get(KEY, load)
         self.assertEqual((later.aliases, later.hit, reads), ("model", True, 1))
 
-    async def test_a_failed_read_is_remembered_for_a_short_time(self):
-        clock = FakeClock()
-        cache = AsyncModelCache(failure_ttl=60, clock=clock)
+    async def test_a_failed_read_is_not_cached(self):
+        cache = AsyncModelCache()
         reads = 0
         error = RateLimitExceededError(status=429)
 
@@ -62,23 +53,17 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
             raise error
 
         first = await cache.get(KEY, load)
-        clock.now = 59
         second = await cache.get(KEY, load)
 
         self.assertIs(first.error, error)
         self.assertIs(second.error, error)
         self.assertIsNone(second.aliases)
-        self.assertEqual(reads, 1)
-
-        clock.now = 60
-        await cache.get(KEY, load)
         self.assertEqual(reads, 2)
 
     @skipIf(sys.version_info < (3, 12), "eager tasks need Python 3.12+")
     async def test_retries_a_failed_read_that_finished_eagerly(self):
         asyncio.get_running_loop().set_task_factory(asyncio.eager_task_factory)
-        clock = FakeClock()
-        cache = AsyncModelCache(failure_ttl=60, clock=clock)
+        cache = AsyncModelCache()
         reads = 0
 
         async def load():
@@ -89,7 +74,6 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         await cache.get(KEY, load)
         self.assertEqual(cache._loading, {})
 
-        clock.now = 60
         await cache.get(KEY, load)
         self.assertEqual(reads, 2)
 
@@ -149,8 +133,7 @@ class TestAsyncModelCache(IsolatedAsyncioTestCase):
         self.assertEqual((await cache.get(KEY, load)).aliases, "model")
 
     async def test_keys_on_both_the_store_and_the_model(self):
-        clock = FakeClock()
-        cache = AsyncModelCache(clock=clock)
+        cache = AsyncModelCache()
         reads = []
 
         async def get(store, model, error=None):
